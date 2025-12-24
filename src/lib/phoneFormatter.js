@@ -10,15 +10,13 @@ export const formatPhoneNumber = (value) => {
   let formatted = '+55 ';
 
   if (digitsOnly.length <= 2) {
-    formatted += digitsOnly;
-  } else if (digitsOnly.length <= 3) {
-    formatted += digitsOnly.slice(0, 2) + ' ' + digitsOnly.slice(2);
-  } else if (digitsOnly.length <= 7) {
-    formatted += digitsOnly.slice(0, 2) + ' ' + digitsOnly.slice(2);
-  } else if (digitsOnly.length <= 11) {
-    formatted += digitsOnly.slice(0, 2) + ' ' + digitsOnly.slice(2, 3) + ' ' + digitsOnly.slice(3);
+    formatted += '(' + digitsOnly;
+  } else if (digitsOnly.length <= 6) {
+    formatted += '(' + digitsOnly.slice(0, 2) + ') ' + digitsOnly.slice(2);
+  } else if (digitsOnly.length <= 10) {
+    formatted += '(' + digitsOnly.slice(0, 2) + ') ' + digitsOnly.slice(2, 6) + '-' + digitsOnly.slice(6);
   } else {
-    formatted += digitsOnly.slice(0, 2) + ' ' + digitsOnly.slice(2, 3) + ' ' + digitsOnly.slice(3, 11);
+    formatted += '(' + digitsOnly.slice(0, 2) + ') ' + digitsOnly.slice(2, 7) + '-' + digitsOnly.slice(7, 11);
   }
 
   return formatted;

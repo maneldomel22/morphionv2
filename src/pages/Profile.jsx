@@ -7,7 +7,8 @@ import { useSafeView } from '../hooks/useSafeView';
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [privacyMessage, setPrivacyMessage] = useState({ type: '', text: '' });
@@ -25,7 +26,8 @@ export default function Profile() {
           .maybeSingle();
 
         setProfile(data);
-        setFullName(data?.full_name || '');
+        setFirstName(data?.first_name || '');
+        setLastName(data?.last_name || '');
       }
     }
     loadProfile();
@@ -41,7 +43,10 @@ export default function Profile() {
 
       const { error } = await supabase
         .from('profiles')
-        .update({ full_name: fullName })
+        .update({
+          first_name: firstName,
+          last_name: lastName
+        })
         .eq('id', user.id);
 
       if (error) throw error;
@@ -121,15 +126,27 @@ export default function Profile() {
         <Card>
           <h3 className="text-lg font-semibold mb-6 text-textPrimary">Informações Pessoais</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-textPrimary mb-2">Nome Completo</label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Seu nome completo"
-                className="w-full px-4 py-3 bg-surfaceMuted/30 border rounded-xl text-textPrimary placeholder:text-textSecondary focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.2)] transition-all duration-200"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-textPrimary mb-2">Nome</label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Seu nome"
+                  className="w-full px-4 py-3 bg-surfaceMuted/30 border rounded-xl text-textPrimary placeholder:text-textSecondary focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.2)] transition-all duration-200"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-textPrimary mb-2">Sobrenome</label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Seu sobrenome"
+                  className="w-full px-4 py-3 bg-surfaceMuted/30 border rounded-xl text-textPrimary placeholder:text-textSecondary focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.2)] transition-all duration-200"
+                />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-textPrimary mb-2">Email</label>

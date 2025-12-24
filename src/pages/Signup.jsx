@@ -22,7 +22,6 @@ export default function Signup() {
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
-    console.log('handleSignup called');
 
     if (!email || !password || !firstName || !lastName || !phone) {
       setError('Preencha todos os campos');
@@ -40,10 +39,8 @@ export default function Signup() {
     }
 
     setLoading(true);
-    console.log('Starting signup process...');
 
     try {
-      console.log('Calling supabase.auth.signUp...');
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -56,12 +53,9 @@ export default function Signup() {
         }
       });
 
-      console.log('SignUp response:', { authData, signUpError });
-
       if (signUpError) throw signUpError;
 
       if (authData.user) {
-        console.log('Creating profile for user:', authData.user.id);
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -77,10 +71,8 @@ export default function Signup() {
           console.error('Erro ao criar perfil:', profileError);
         }
 
-        console.log('Navigating to dashboard...');
         navigate('/dashboard');
       } else {
-        console.log('No user returned from signup');
         setError('Erro ao criar conta. Tente novamente.');
       }
     } catch (err) {
