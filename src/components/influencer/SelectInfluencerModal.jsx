@@ -34,14 +34,13 @@ export default function SelectInfluencerModal({ isOpen, onClose, influencers, on
             Influencers Existentes
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-            {influencers.map((influencer) => (
-              <div
+            {influencers.map((influencer, index) => (
+              <InfluencerCard
                 key={influencer.id}
-                onClick={() => onSelectInfluencer(influencer)}
-                className="cursor-pointer"
-              >
-                <InfluencerCard influencer={influencer} />
-              </div>
+                influencer={influencer}
+                onSelect={() => onSelectInfluencer(influencer)}
+                index={index}
+              />
             ))}
           </div>
         </div>
