@@ -25,9 +25,28 @@ export default function Profile() {
           .eq('id', user.id)
           .maybeSingle();
 
+        // Se não tiver first_name e last_name, tenta popular do full_name
+        let firstName = data?.first_name || '';
+        let lastName = data?.last_name || '';
+
+        if (data && (!firstName || !lastName) && data.full_name) {
+          const names = data.full_name.trim().split(' ');
+          firstName = names[0] || '';
+          lastName = names.slice(1).join(' ') || '';
+
+          // Atualiza no banco
+          await supabase
+            .from('profiles')
+            .update({
+              first_name: firstName,
+              last_name: lastName
+            })
+            .eq('id', user.id);
+        }
+
         setProfile(data);
-        setFirstName(data?.first_name || '');
-        setLastName(data?.last_name || '');
+        setFirstName(firstName);
+        setLastName(lastName);
       }
     }
     loadProfile();

@@ -19,6 +19,27 @@ export default function Header({ onMenuClick }) {
           .select('*')
           .eq('id', user.id)
           .maybeSingle();
+
+        // Se não tiver first_name e last_name, tenta popular do full_name
+        if (data && (!data.first_name || !data.last_name) && data.full_name) {
+          const names = data.full_name.trim().split(' ');
+          const firstName = names[0] || '';
+          const lastName = names.slice(1).join(' ') || '';
+
+          // Atualiza no banco
+          await supabase
+            .from('profiles')
+            .update({
+              first_name: firstName,
+              last_name: lastName
+            })
+            .eq('id', user.id);
+
+          // Atualiza o estado local
+          data.first_name = firstName;
+          data.last_name = lastName;
+        }
+
         setProfile(data);
       }
     }
