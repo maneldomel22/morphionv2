@@ -20,8 +20,8 @@ export default function Header({ onMenuClick }) {
           .eq('id', user.id)
           .maybeSingle();
 
-        // Se não tiver first_name e last_name, tenta popular
-        if (data && (!data.first_name || !data.last_name)) {
+        // Se não tiver first_name E last_name, tenta popular
+        if (data && !data.first_name && !data.last_name) {
           let firstName = '';
           let lastName = '';
 
