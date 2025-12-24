@@ -23,14 +23,9 @@ export default function SensitiveContentWrapper({
 
       {!revealed && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mb-2 px-3 py-1.5 bg-blue-500/90 text-white rounded-lg text-xs flex items-center gap-1.5 shadow-lg">
-            <Settings className="w-3.5 h-3.5" />
-            <span>Desativar em Configurações → Privacidade → Safe View</span>
-          </div>
-
           {showWarning && (
-            <div className="mb-3 px-4 py-2 bg-red-500 text-white rounded-full text-xs font-bold flex items-center gap-2 shadow-lg">
-              <AlertTriangle className="w-4 h-4" />
+            <div className="mb-3 px-3 py-1 bg-red-500 text-white rounded-full text-xs font-bold flex items-center gap-1.5 shadow-lg">
+              <AlertTriangle className="w-3.5 h-3.5" />
               <span>18+</span>
             </div>
           )}
@@ -40,11 +35,18 @@ export default function SensitiveContentWrapper({
               e.stopPropagation();
               setRevealed(true);
             }}
-            className="px-4 py-2 bg-white/90 hover:bg-white text-gray-900 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all hover:scale-105 shadow-lg"
+            className="px-4 py-2 bg-white/90 hover:bg-white text-gray-900 rounded-lg font-medium text-sm flex items-center gap-2 transition-all hover:scale-105 shadow-lg"
           >
             <Eye className="w-4 h-4" />
-            Revelar Conteúdo
+            Revelar
           </button>
+
+          <div className="absolute bottom-3 left-0 right-0 flex justify-center">
+            <div className="px-2 py-1 bg-black/20 text-white/60 rounded text-[10px] flex items-center gap-1">
+              <Settings className="w-2.5 h-2.5" />
+              <span>Desativar em Privacidade</span>
+            </div>
+          </div>
         </div>
       )}
 
