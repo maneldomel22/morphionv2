@@ -44,7 +44,7 @@ export default function SensitiveContentWrapper({
           <div className="absolute bottom-3 left-0 right-0 flex justify-center px-4">
             <div className="px-2 py-1 bg-black/20 text-white/60 rounded text-[10px] flex items-center gap-1 text-center max-w-full">
               <Settings className="w-2.5 h-2.5 flex-shrink-0" />
-              <span>Para desativar a proteção de conteúdo vá para configurações - privacidade - e desative o safe view</span>
+              <span>Para desativar vá para configurações - privacidade - safe view</span>
             </div>
           </div>
         </div>
