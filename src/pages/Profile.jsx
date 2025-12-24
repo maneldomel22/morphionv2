@@ -78,15 +78,7 @@ export default function Profile() {
   const handleSafeViewToggle = async () => {
     setUpdatingSafeView(true);
     const success = await updateSafeView(!safeViewEnabled);
-    if (success) {
-      setPrivacyMessage({
-        type: 'success',
-        text: safeViewEnabled
-          ? 'Safe View desativado. Conteúdo sensível será exibido sem filtro.'
-          : 'Safe View ativado. Conteúdo sensível será protegido.'
-      });
-      setTimeout(() => setPrivacyMessage({ type: '', text: '' }), 3000);
-    } else {
+    if (!success) {
       setPrivacyMessage({
         type: 'error',
         text: 'Erro ao atualizar preferência. Tente novamente.'
