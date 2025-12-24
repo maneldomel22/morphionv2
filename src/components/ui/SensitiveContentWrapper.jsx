@@ -24,8 +24,8 @@ export default function SensitiveContentWrapper({
       {!revealed && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
           {showWarning && (
-            <div className="mb-3 px-3 py-1 bg-red-500 text-white rounded-full text-xs font-bold flex items-center gap-1.5 shadow-lg">
-              <AlertTriangle className="w-3.5 h-3.5" />
+            <div className="mb-4 px-5 py-2.5 bg-red-500/80 text-white rounded-full text-base font-bold flex items-center gap-2 shadow-md">
+              <AlertTriangle className="w-5 h-5" />
               <span>18+</span>
             </div>
           )}
@@ -35,9 +35,9 @@ export default function SensitiveContentWrapper({
               e.stopPropagation();
               setRevealed(true);
             }}
-            className="px-4 py-2 bg-white/90 hover:bg-white text-gray-900 rounded-lg font-medium text-sm flex items-center gap-2 transition-all hover:scale-105 shadow-lg"
+            className="px-3.5 py-1.5 bg-white/70 hover:bg-white/80 text-gray-700 rounded-lg font-medium text-sm flex items-center gap-2 transition-all shadow-sm"
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="w-3.5 h-3.5" />
             Revelar
           </button>
 
