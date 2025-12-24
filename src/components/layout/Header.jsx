@@ -52,8 +52,9 @@ export default function Header({ onMenuClick }) {
               })
               .eq('id', user.id);
 
-            data.first_name = firstName;
-            data.last_name = lastName;
+            // Atualiza o perfil com os novos dados
+            setProfile({ ...data, first_name: firstName, last_name: lastName });
+            return;
           }
         }
 
@@ -118,8 +119,8 @@ export default function Header({ onMenuClick }) {
               <div className="absolute right-0 mt-2 w-56 sm:w-64 max-w-[calc(100vw-2rem)] bg-surface backdrop-blur-xl rounded-2xl border border-[rgba(var(--border-default),var(--border-default-opacity))] shadow-2xl overflow-hidden z-40 animate-fadeIn">
                 <div className="p-4 border-b border-[rgba(var(--border-default),var(--border-default-opacity))]">
                   <p className="text-sm font-medium text-textPrimary truncate">
-                    {profile?.first_name && profile?.last_name
-                      ? `${profile.first_name} ${profile.last_name}`
+                    {profile?.first_name
+                      ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}`
                       : profile?.full_name || 'Usuário'}
                   </p>
                   <p className="text-xs text-textTertiary truncate mt-1">
