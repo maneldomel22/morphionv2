@@ -1,31 +1,6 @@
 import { supabase } from '../lib/supabase';
 
 export const authService = {
-  async createProfile(userId, email, firstName, lastName, phone) {
-    console.log('Creating profile with:', { userId, email, firstName, lastName, phone });
-
-    const { data, error } = await supabase
-      .from('profiles')
-      .insert([{
-        id: userId,
-        email: email,
-        first_name: firstName,
-        last_name: lastName,
-        phone: phone,
-        credits: 100
-      }])
-      .select()
-      .maybeSingle();
-
-    if (error) {
-      console.error('Profile creation error:', error);
-      throw error;
-    }
-
-    console.log('Profile created successfully:', data);
-    return data;
-  },
-
   async getProfile(userId) {
     const { data, error } = await supabase
       .from('profiles')

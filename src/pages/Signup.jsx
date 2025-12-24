@@ -56,21 +56,6 @@ export default function Signup() {
       if (signUpError) throw signUpError;
 
       if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            email: authData.user.email,
-            first_name: firstName,
-            last_name: lastName,
-            phone: phone,
-            credits: 10
-          });
-
-        if (profileError && profileError.code !== '23505') {
-          console.error('Erro ao criar perfil:', profileError);
-        }
-
         navigate('/dashboard');
       } else {
         setError('Erro ao criar conta. Tente novamente.');

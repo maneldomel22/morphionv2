@@ -77,8 +77,6 @@ export function AuthProvider({ children }) {
   };
 
   const signUp = async (email, password, firstName, lastName, phone) => {
-    console.log('SignUp called with:', { email, firstName, lastName, phone });
-
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -91,30 +89,10 @@ export function AuthProvider({ children }) {
       }
     });
 
-    console.log('Auth signUp response:', { data, error });
-
-    if (error) {
-      console.error('Auth signUp error:', error);
-      throw error;
-    }
+    if (error) throw error;
 
     if (data.user) {
-      console.log('User created, checking for profile...');
-      let profileData = await authService.getProfile(data.user.id);
-      console.log('Existing profile:', profileData);
-
-      if (!profileData) {
-        console.log('Creating new profile...');
-        profileData = await authService.createProfile(
-          data.user.id,
-          email,
-          firstName,
-          lastName,
-          phone
-        );
-        console.log('Profile created:', profileData);
-      }
-
+      const profileData = await authService.getProfile(data.user.id);
       setUser(data.user);
       setProfile(profileData);
     }
