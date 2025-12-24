@@ -29,7 +29,7 @@ export default function Profile() {
         let firstName = data?.first_name || '';
         let lastName = data?.last_name || '';
 
-        if (data && (!firstName || !lastName)) {
+        if (data && !firstName && !lastName) {
           // Primeiro tenta do full_name
           if (data.full_name) {
             const names = data.full_name.trim().split(' ');
