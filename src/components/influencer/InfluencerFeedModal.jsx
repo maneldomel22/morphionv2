@@ -3,6 +3,7 @@ import { X, ExternalLink, Grid3x3, Loader2, User, Plus, Layers, Play } from 'luc
 import Modal from '../ui/Modal';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
+import SensitiveContentWrapper from '../ui/SensitiveContentWrapper';
 import { influencerService } from '../../services/influencerService';
 
 export default function InfluencerFeedModal({ isOpen, onClose, influencer, onPostClick, onDeletePost, onCreatePost, onCreateBulkPosts }) {
@@ -52,23 +53,29 @@ export default function InfluencerFeedModal({ isOpen, onClose, influencer, onPos
       <div className="space-y-8">
         <div className="flex items-start gap-6 pb-6 border-b border-borderColor">
           <div className="relative flex-shrink-0">
-            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-brandPrimary/30">
-              {influencer.image_url === 'generating' ? (
-                <div className="w-full h-full bg-brandPrimary/10 flex items-center justify-center">
-                  <Loader2 size={48} className="text-brandPrimary animate-spin" />
-                </div>
-              ) : influencer.image_url && influencer.image_url !== 'error' ? (
-                <img
-                  src={influencer.image_url + '?width=256&height=256&quality=80&format=webp'}
-                  alt={influencer.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-surfaceMuted flex items-center justify-center">
-                  <User size={56} className="text-textTertiary" />
-                </div>
-              )}
-            </div>
+            <SensitiveContentWrapper
+              isHot={influencer.mode === 'hot'}
+              showWarning={true}
+              blurAmount="blur-2xl"
+            >
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-brandPrimary/30">
+                {influencer.image_url === 'generating' ? (
+                  <div className="w-full h-full bg-brandPrimary/10 flex items-center justify-center">
+                    <Loader2 size={48} className="text-brandPrimary animate-spin" />
+                  </div>
+                ) : influencer.image_url && influencer.image_url !== 'error' ? (
+                  <img
+                    src={influencer.image_url + '?width=256&height=256&quality=80&format=webp'}
+                    alt={influencer.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-surfaceMuted flex items-center justify-center">
+                    <User size={56} className="text-textTertiary" />
+                  </div>
+                )}
+              </div>
+            </SensitiveContentWrapper>
           </div>
 
           <div className="flex-1">

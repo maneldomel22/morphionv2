@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Download, Heart, MessageCircle, Send, Bookmark, Sparkles, Flame, X } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
+import SensitiveContentWrapper from '../ui/SensitiveContentWrapper';
 
 export default function PostDetailModal({ post, influencer, isOpen, onClose, onCaptionGenerated }) {
   const [generatingCaption, setGeneratingCaption] = useState(false);
@@ -66,19 +67,26 @@ export default function PostDetailModal({ post, influencer, isOpen, onClose, onC
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex-1 bg-black flex items-center justify-center animate-fade-in">
-            {post.type === 'video' && post.video_url ? (
-              <video
-                src={post.video_url}
-                controls
-                className="w-full h-full max-h-[90vh] object-contain"
-              />
-            ) : (
-              <img
-                src={post.image_url}
-                alt={caption}
-                className="w-full h-full max-h-[90vh] object-contain"
-              />
-            )}
+            <SensitiveContentWrapper
+              isHot={post.mode === 'hot'}
+              showWarning={true}
+              blurAmount="blur-3xl"
+              className="w-full h-full flex items-center justify-center"
+            >
+              {post.type === 'video' && post.video_url ? (
+                <video
+                  src={post.video_url}
+                  controls
+                  className="w-full h-full max-h-[90vh] object-contain"
+                />
+              ) : (
+                <img
+                  src={post.image_url}
+                  alt={caption}
+                  className="w-full h-full max-h-[90vh] object-contain"
+                />
+              )}
+            </SensitiveContentWrapper>
           </div>
 
           <div className="w-96 flex flex-col bg-white dark:bg-gray-900 animate-slide-in-right">

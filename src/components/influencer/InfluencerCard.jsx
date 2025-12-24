@@ -1,5 +1,6 @@
 import { User, Grid3x3, Flame } from 'lucide-react';
 import OptimizedImage from './OptimizedImage';
+import SensitiveContentWrapper from '../ui/SensitiveContentWrapper';
 
 export default function InfluencerCard({ influencer, onSelect, index = 0 }) {
   return (
@@ -10,22 +11,28 @@ export default function InfluencerCard({ influencer, onSelect, index = 0 }) {
     >
       <div className="p-5 flex flex-col items-center text-center">
         <div className="relative mb-3">
-          <div className="w-20 h-20 rounded-full overflow-hidden ring-2 ring-gray-100 dark:ring-gray-700 group-hover:ring-blue-500 dark:group-hover:ring-blue-500 group-hover:scale-105 transition-all duration-300">
-            {influencer.image_url ? (
-              <OptimizedImage
-                src={influencer.image_url}
-                alt={influencer.name}
-                className="w-full h-full object-cover"
-                aspectRatio="square"
-                thumbnail={true}
-                thumbnailSize={160}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700">
-                <User className="w-10 h-10 text-gray-300 dark:text-gray-600" />
-              </div>
-            )}
-          </div>
+          <SensitiveContentWrapper
+            isHot={influencer.mode === 'hot'}
+            showWarning={false}
+            blurAmount="blur-xl"
+          >
+            <div className="w-20 h-20 rounded-full overflow-hidden ring-2 ring-gray-100 dark:ring-gray-700 group-hover:ring-blue-500 dark:group-hover:ring-blue-500 group-hover:scale-105 transition-all duration-300">
+              {influencer.image_url ? (
+                <OptimizedImage
+                  src={influencer.image_url}
+                  alt={influencer.name}
+                  className="w-full h-full object-cover"
+                  aspectRatio="square"
+                  thumbnail={true}
+                  thumbnailSize={160}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+                  <User className="w-10 h-10 text-gray-300 dark:text-gray-600" />
+                </div>
+              )}
+            </div>
+          </SensitiveContentWrapper>
           {influencer.mode && (
             <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center ${
               influencer.mode === 'hot'

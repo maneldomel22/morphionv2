@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ExternalLink, Grid3x3, User, ChevronRight, Loader2, AlertCircle, Trash2 } from 'lucide-react';
 import Card from '../ui/Card';
 import Badge from '../ui/Badge';
+import SensitiveContentWrapper from '../ui/SensitiveContentWrapper';
 
 export default function InfluencerProfileCard({ influencer, postCount, onViewFeed, onDelete }) {
   const [expanded, setExpanded] = useState(false);
@@ -18,27 +19,33 @@ export default function InfluencerProfileCard({ influencer, postCount, onViewFee
       >
         <div className="flex items-center gap-4 p-4">
           <div className="relative flex-shrink-0">
-            <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-brandPrimary/20">
-              {hasValidImage ? (
-                <img
-                  src={influencer.image_url + '?width=128&height=128&quality=80&format=webp'}
-                  alt={influencer.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : isGenerating ? (
-                <div className="w-full h-full bg-brandPrimary/10 flex items-center justify-center">
-                  <Loader2 size={24} className="text-brandPrimary animate-spin" />
-                </div>
-              ) : hasError ? (
-                <div className="w-full h-full bg-red-500/10 flex items-center justify-center">
-                  <AlertCircle size={24} className="text-red-500" />
-                </div>
-              ) : (
-                <div className="w-full h-full bg-surfaceMuted flex items-center justify-center">
-                  <User size={32} className="text-textTertiary" />
-                </div>
-              )}
-            </div>
+            <SensitiveContentWrapper
+              isHot={influencer.mode === 'hot'}
+              showWarning={false}
+              blurAmount="blur-lg"
+            >
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-brandPrimary/20">
+                {hasValidImage ? (
+                  <img
+                    src={influencer.image_url + '?width=128&height=128&quality=80&format=webp'}
+                    alt={influencer.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : isGenerating ? (
+                  <div className="w-full h-full bg-brandPrimary/10 flex items-center justify-center">
+                    <Loader2 size={24} className="text-brandPrimary animate-spin" />
+                  </div>
+                ) : hasError ? (
+                  <div className="w-full h-full bg-red-500/10 flex items-center justify-center">
+                    <AlertCircle size={24} className="text-red-500" />
+                  </div>
+                ) : (
+                  <div className="w-full h-full bg-surfaceMuted flex items-center justify-center">
+                    <User size={32} className="text-textTertiary" />
+                  </div>
+                )}
+              </div>
+            </SensitiveContentWrapper>
             <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-brandPrimary rounded-full border-2 border-surfaceDefault" />
           </div>
 

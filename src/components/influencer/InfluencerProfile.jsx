@@ -6,6 +6,7 @@ import PostDetailModal from './PostDetailModal';
 import OptimizedImage from './OptimizedImage';
 import CreateContentModal from './CreateContentModal';
 import EditInfluencerModal from './EditInfluencerModal';
+import SensitiveContentWrapper from '../ui/SensitiveContentWrapper';
 import { formatIdentityField } from '../../lib/identityFormatter';
 
 export default function InfluencerProfile({ influencer: initialInfluencer, onBack, onCreateContent, refreshKey }) {
@@ -171,19 +172,25 @@ export default function InfluencerProfile({ influencer: initialInfluencer, onBac
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 animate-scale-in">
         <div className="flex items-center gap-8 mb-6">
           <div className="relative flex-shrink-0 animate-bounce-in">
-            <div
-              className="w-36 h-36 rounded-full overflow-hidden border-4 border-gray-100 dark:border-gray-700 ring-2 ring-offset-2 ring-offset-white dark:ring-offset-gray-800 ring-gray-200 dark:ring-gray-700 cursor-pointer transition-all hover:scale-105 hover:ring-blue-500 group"
-              onClick={() => setShowFullscreenPhoto(true)}
+            <SensitiveContentWrapper
+              isHot={influencer.mode === 'hot'}
+              showWarning={true}
+              blurAmount="blur-2xl"
             >
-              <OptimizedImage
-                src={influencer.image_url}
-                alt={influencer.name}
-                className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
-                aspectRatio="square"
-                thumbnail={true}
-                thumbnailSize={288}
-              />
-            </div>
+              <div
+                className="w-36 h-36 rounded-full overflow-hidden border-4 border-gray-100 dark:border-gray-700 ring-2 ring-offset-2 ring-offset-white dark:ring-offset-gray-800 ring-gray-200 dark:ring-gray-700 cursor-pointer transition-all hover:scale-105 hover:ring-blue-500 group"
+                onClick={() => setShowFullscreenPhoto(true)}
+              >
+                <OptimizedImage
+                  src={influencer.image_url}
+                  alt={influencer.name}
+                  className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
+                  aspectRatio="square"
+                  thumbnail={true}
+                  thumbnailSize={288}
+                />
+              </div>
+            </SensitiveContentWrapper>
             {influencer.mode && (
               <div className={`absolute bottom-2 right-2 w-9 h-9 rounded-full flex items-center justify-center ${
                 influencer.mode === 'hot' ? 'bg-red-500' : 'bg-green-500'
@@ -417,7 +424,12 @@ export default function InfluencerProfile({ influencer: initialInfluencer, onBac
                     </button>
                   </div>
                 ) : (
-                  <>
+                  <SensitiveContentWrapper
+                    isHot={post.mode === 'hot'}
+                    showWarning={true}
+                    blurAmount="blur-xl"
+                    className="w-full h-full"
+                  >
                     {post.type === 'video' && post.video_url ? (
                       <div className="relative w-full h-full">
                         <OptimizedImage
@@ -461,12 +473,7 @@ export default function InfluencerProfile({ influencer: initialInfluencer, onBac
                       </button>
                     </div>
 
-                    {post.mode === 'hot' && (
-                      <div className="absolute top-2 left-2 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg">
-                        18+
-                      </div>
-                    )}
-                  </>
+                  </SensitiveContentWrapper>
                 )}
               </div>
             ))}
@@ -541,31 +548,37 @@ export default function InfluencerProfile({ influencer: initialInfluencer, onBac
             className="relative max-w-4xl max-h-[90vh] animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative">
-              <img
-                src={influencer.image_url}
-                alt={influencer.name}
-                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
-              />
+            <SensitiveContentWrapper
+              isHot={influencer.mode === 'hot'}
+              showWarning={true}
+              blurAmount="blur-3xl"
+            >
+              <div className="relative">
+                <img
+                  src={influencer.image_url}
+                  alt={influencer.name}
+                  className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+                />
 
-              {influencer.mode && (
-                <div className={`absolute top-4 right-4 px-4 py-2 rounded-full flex items-center gap-2 ${
-                  influencer.mode === 'hot' ? 'bg-red-500' : 'bg-green-500'
-                } shadow-lg`}>
-                  {influencer.mode === 'hot' ? (
-                    <>
-                      <Flame className="w-5 h-5 text-white" />
-                      <span className="text-white font-semibold">Hot 18+</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-lg text-white">✓</span>
-                      <span className="text-white font-semibold">Safe</span>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+                {influencer.mode && (
+                  <div className={`absolute top-4 right-4 px-4 py-2 rounded-full flex items-center gap-2 ${
+                    influencer.mode === 'hot' ? 'bg-red-500' : 'bg-green-500'
+                  } shadow-lg`}>
+                    {influencer.mode === 'hot' ? (
+                      <>
+                        <Flame className="w-5 h-5 text-white" />
+                        <span className="text-white font-semibold">Hot 18+</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-lg text-white">✓</span>
+                        <span className="text-white font-semibold">Safe</span>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </SensitiveContentWrapper>
 
             <div className="mt-6 text-center">
               <h3 className="text-2xl font-bold text-white mb-1">
