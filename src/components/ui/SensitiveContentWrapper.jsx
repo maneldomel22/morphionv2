@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import { Eye, EyeOff, AlertTriangle, Settings } from 'lucide-react';
 
 export default function SensitiveContentWrapper({
   children,
   isHot = false,
   showWarning = true,
   className = '',
-  blurAmount = 'blur-2xl'
+  blurAmount = 'blur-2xl',
+  safeViewEnabled = true
 }) {
   const [revealed, setRevealed] = useState(false);
 
-  if (!isHot) {
+  if (!isHot || !safeViewEnabled) {
     return children;
   }
 
@@ -22,12 +23,18 @@ export default function SensitiveContentWrapper({
 
       {!revealed && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="mb-2 px-3 py-1.5 bg-blue-500/90 text-white rounded-lg text-xs flex items-center gap-1.5 shadow-lg">
+            <Settings className="w-3.5 h-3.5" />
+            <span>Desativar em Configurações → Privacidade → Safe View</span>
+          </div>
+
           {showWarning && (
             <div className="mb-3 px-4 py-2 bg-red-500 text-white rounded-full text-xs font-bold flex items-center gap-2 shadow-lg">
               <AlertTriangle className="w-4 h-4" />
               <span>18+</span>
             </div>
           )}
+
           <button
             onClick={(e) => {
               e.stopPropagation();

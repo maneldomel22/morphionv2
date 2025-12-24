@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { CheckCircle2, AlertCircle, Loader2, Sparkles } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2, Sparkles, Eye, EyeOff, Shield } from 'lucide-react';
+import { useSafeView } from '../hooks/useSafeView';
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const { safeViewEnabled, updateSafeView, loading: safeViewLoading } = useSafeView();
+  const [updatingSafeView, setUpdatingSafeView] = useState(false);
 
   useEffect(() => {
     async function loadProfile() {
@@ -48,6 +51,26 @@ export default function Profile() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSafeViewToggle = async () => {
+    setUpdatingSafeView(true);
+    const success = await updateSafeView(!safeViewEnabled);
+    if (success) {
+      setMessage({
+        type: 'success',
+        text: safeViewEnabled
+          ? 'Safe View desativado. Conteúdo sensível será exibido sem filtro.'
+          : 'Safe View ativado. Conteúdo sensível será protegido.'
+      });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } else {
+      setMessage({
+        type: 'error',
+        text: 'Erro ao atualizar preferência. Tente novamente.'
+      });
+    }
+    setUpdatingSafeView(false);
   };
 
   return (
@@ -93,7 +116,7 @@ export default function Profile() {
         </Card>
       </div>
 
-      <div className="max-w-2xl">
+      <div className="max-w-2xl space-y-6">
         <Card>
           <h3 className="text-lg font-semibold mb-6 text-textPrimary">Informações Pessoais</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -152,6 +175,73 @@ export default function Profile() {
               )}
             </Button>
           </form>
+        </Card>
+
+        <Card>
+          <div className="flex items-start gap-4 mb-6">
+            <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
+              <Shield className="w-6 h-6 text-purple-500" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-textPrimary">Privacidade e Segurança</h3>
+              <p className="text-sm text-textSecondary mt-1">Controle como o conteúdo sensível é exibido</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-start justify-between p-4 bg-surfaceMuted/30 rounded-xl border border-borderColor">
+              <div className="flex-1 pr-4">
+                <div className="flex items-center gap-2 mb-2">
+                  {safeViewEnabled ? (
+                    <Eye className="w-5 h-5 text-green-500" />
+                  ) : (
+                    <EyeOff className="w-5 h-5 text-orange-500" />
+                  )}
+                  <h4 className="font-semibold text-textPrimary">Safe View (Visão Segura)</h4>
+                </div>
+                <p className="text-sm text-textSecondary">
+                  {safeViewEnabled
+                    ? 'Conteúdo sensível está protegido com filtro de desfoque. Você precisa revelar manualmente cada conteúdo.'
+                    : 'Conteúdo sensível será exibido sem filtros. Use com cautela em ambientes públicos.'
+                  }
+                </p>
+                {!safeViewEnabled && (
+                  <div className="mt-2 flex items-center gap-2 text-xs text-orange-600 dark:text-orange-400">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>Aviso: Conteúdo explícito será visível imediatamente</span>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={handleSafeViewToggle}
+                disabled={safeViewLoading || updatingSafeView}
+                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all duration-300 flex-shrink-0 ${
+                  safeViewEnabled
+                    ? 'bg-green-500'
+                    : 'bg-gray-300 dark:bg-gray-600'
+                } ${(safeViewLoading || updatingSafeView) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                    safeViewEnabled ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+                {updatingSafeView && (
+                  <Loader2 className="absolute inset-0 m-auto w-4 h-4 text-white animate-spin" />
+                )}
+              </button>
+            </div>
+
+            <div className="text-xs text-textTertiary bg-blue-500/5 border border-blue-500/10 rounded-lg p-3">
+              <p className="font-medium text-blue-600 dark:text-blue-400 mb-1">Como funciona:</p>
+              <ul className="space-y-1 ml-4 list-disc">
+                <li>Com Safe View ativado, conteúdo 18+ aparece com desfoque</li>
+                <li>Você pode revelar temporariamente cada conteúdo individualmente</li>
+                <li>Com Safe View desativado, todo conteúdo é exibido diretamente</li>
+              </ul>
+            </div>
+          </div>
         </Card>
       </div>
     </div>

@@ -3,11 +3,13 @@ import { Download, Heart, MessageCircle, Send, Bookmark, Sparkles, Flame, X } fr
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import SensitiveContentWrapper from '../ui/SensitiveContentWrapper';
+import { useSafeView } from '../../hooks/useSafeView';
 
 export default function PostDetailModal({ post, influencer, isOpen, onClose, onCaptionGenerated }) {
   const [generatingCaption, setGeneratingCaption] = useState(false);
   const [caption, setCaption] = useState(post?.caption || '');
   const [hashtags, setHashtags] = useState(post?.hashtags || '');
+  const { safeViewEnabled } = useSafeView();
 
   if (!post) return null;
 
@@ -72,6 +74,7 @@ export default function PostDetailModal({ post, influencer, isOpen, onClose, onC
               showWarning={true}
               blurAmount="blur-3xl"
               className="w-full h-full flex items-center justify-center"
+              safeViewEnabled={safeViewEnabled}
             >
               {post.type === 'video' && post.video_url ? (
                 <video

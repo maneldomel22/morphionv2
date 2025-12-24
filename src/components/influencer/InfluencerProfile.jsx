@@ -8,6 +8,7 @@ import CreateContentModal from './CreateContentModal';
 import EditInfluencerModal from './EditInfluencerModal';
 import SensitiveContentWrapper from '../ui/SensitiveContentWrapper';
 import { formatIdentityField } from '../../lib/identityFormatter';
+import { useSafeView } from '../../hooks/useSafeView';
 
 export default function InfluencerProfile({ influencer: initialInfluencer, onBack, onCreateContent, refreshKey }) {
   const [influencer, setInfluencer] = useState(initialInfluencer);
@@ -18,6 +19,7 @@ export default function InfluencerProfile({ influencer: initialInfluencer, onBac
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showImageQuiz, setShowImageQuiz] = useState(false);
+  const { safeViewEnabled } = useSafeView();
   const [showFullscreenPhoto, setShowFullscreenPhoto] = useState(false);
   const [showCharacteristics, setShowCharacteristics] = useState(false);
 
@@ -423,6 +425,7 @@ export default function InfluencerProfile({ influencer: initialInfluencer, onBac
                     showWarning={true}
                     blurAmount="blur-xl"
                     className="w-full h-full"
+                    safeViewEnabled={safeViewEnabled}
                   >
                     {post.type === 'video' && post.video_url ? (
                       <div className="relative w-full h-full">
