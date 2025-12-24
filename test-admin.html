@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin Connection</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #0B0D12;
+            color: #fff;
+        }
+        .log {
+            background: #121621;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 3px solid #3b82f6;
+        }
+        .error {
+            border-left-color: #ef4444;
+        }
+        .success {
+            border-left-color: #10b981;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Admin Panel Debug</h1>
+    <div id="logs"></div>
+    <button onclick="testConnection()">Test Connection</button>
+    <button onclick="checkUser()">Check User</button>
+    <button onclick="checkAdmin()">Check Admin Status</button>
+    <button onclick="clearLogs()">Clear Logs</button>
+
+    <script type="module">
+        import { createClient } from '@supabase/supabase-js';
+
+        const supabaseUrl = 'https://selmogfyeujesrayxrhs.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlbG1vZ2Z5ZXVqZXNyYXl4cmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MTAyNTcsImV4cCI6MjA3Njk4NjI1N30.oL-o4jF-sYjVTm3gBL0IKjStk46rUC_cd_XoxUhsKWU';
+
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            console.log(message);
+        }
+
+        window.testConnection = async function() {
+            try {
+                log('Testing Supabase connection...');
+                const { data, error } = await supabase.from('admins').select('count');
+
+                if (error) {
+                    log(`Error: ${error.message}`, 'error');
+                    log(`Error details: ${JSON.stringify(error)}`, 'error');
+                } else {
+                    log('Connection successful!', 'success');
+                    log(`Data: ${JSON.stringify(data)}`, 'success');
+                }
+            } catch (err) {
+                log(`Exception: ${err.message}`, 'error');
+            }
+        };
+
+        window.checkUser = async function() {
+            try {
+                log('Checking current user...');
+                const { data: { user }, error } = await supabase.auth.getUser();
+
+                if (error) {
+                    log(`Error: ${error.message}`, 'error');
+                } else if (user) {
+                    log(`User found: ${user.email} (${user.id})`, 'success');
+                } else {
+                    log('No user logged in', 'error');
+                }
+            } catch (err) {
+                log(`Exception: ${err.message}`, 'error');
+            }
+        };
+
+        window.checkAdmin = async function() {
+            try {
+                log('Checking admin status...');
+
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                if (userError || !user) {
+                    log('No user logged in', 'error');
+                    return;
+                }
+
+                log(`Checking if user ${user.id} is admin...`);
+
+                const { data, error } = await supabase
+                    .from('admins')
+                    .select('id')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (error) {
+                    log(`Error: ${error.message}`, 'error');
+                    log(`Error details: ${JSON.stringify(error)}`, 'error');
+                } else if (data) {
+                    log(`User IS admin!`, 'success');
+                    log(`Admin data: ${JSON.stringify(data)}`, 'success');
+                } else {
+                    log('User is NOT admin', 'error');
+                }
+            } catch (err) {
+                log(`Exception: ${err.message}`, 'error');
+            }
+        };
+
+        window.clearLogs = function() {
+            document.getElementById('logs').innerHTML = '';
+        };
+
+        // Auto-run tests on load
+        log('Page loaded. Click buttons to test.');
+        setTimeout(() => {
+            log('Running auto-tests...');
+            testConnection();
+            setTimeout(checkUser, 1000);
+            setTimeout(checkAdmin, 2000);
+        }, 500);
+    </script>
+</body>
+</html>
