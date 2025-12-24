@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Sparkles, Loader2, Zap, Users, Target } from 'lucide-react';
+import { Loader2, Zap, Users, Target } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -51,9 +51,7 @@ export default function Login() {
         <div className="relative z-10 flex flex-col justify-center px-16 max-w-2xl animate-fadeIn">
           <div className="mb-16">
             <div className="flex items-center gap-2.5 mb-20">
-              <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
+              <img src="/icon.png" alt="Morphion" className="w-9 h-9" />
               <span className="text-xl font-semibold tracking-tight">Morphion</span>
             </div>
 
@@ -88,9 +86,7 @@ export default function Login() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-[420px] animate-scaleIn">
           <div className="lg:hidden flex items-center gap-2.5 mb-12 justify-center">
-            <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
+            <img src="/icon.png" alt="Morphion" className="w-9 h-9" />
             <span className="text-xl font-semibold tracking-tight">Morphion</span>
           </div>
 
