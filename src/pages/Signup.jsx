@@ -157,15 +157,18 @@ export default function Signup() {
               />
             </div>
 
-            <div>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[rgb(var(--text-tertiary))] text-sm pointer-events-none">
+                +55
+              </span>
               <input
                 type="tel"
                 value={phone}
                 onChange={handlePhoneChange}
-                placeholder="Telefone"
+                placeholder="83 9 9974-6991"
                 required
-                maxLength="15"
-                className="w-full px-4 py-3.5 bg-[rgba(var(--surface-muted),0.4)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-[rgb(var(--text-primary))] placeholder:text-[rgb(var(--text-tertiary))] focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.15)] transition-all"
+                maxLength="17"
+                className="w-full pl-14 pr-4 py-3.5 bg-[rgba(var(--surface-muted),0.4)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-[rgb(var(--text-primary))] placeholder:text-[rgb(var(--text-tertiary))] focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.15)] transition-all"
               />
             </div>
 
