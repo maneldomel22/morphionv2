@@ -6,6 +6,8 @@ import { formatPhoneNumber } from '../lib/phoneFormatter';
 import { Sparkles, Mail, Lock, User, Loader2, AlertCircle, Phone } from 'lucide-react';
 
 export default function Auth() {
+  console.log('Auth component mounted!');
+
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,6 +18,8 @@ export default function Auth() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
+
+  console.log('Current mode:', mode, 'isLogin:', mode === 'login');
 
   const isLogin = mode === 'login';
 
@@ -291,6 +295,10 @@ export default function Auth() {
               <button
                 type="submit"
                 disabled={loading}
+                onClick={(e) => {
+                  console.log('BUTTON CLICKED!', e);
+                  console.log('Button type:', e.currentTarget.type);
+                }}
                 className="w-full py-4 gradient-primary text-white font-semibold rounded-xl shadow-lg hover:shadow-xl glow-on-hover transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 active:scale-95 flex items-center justify-center gap-2"
               >
                 {loading ? (
