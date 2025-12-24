@@ -88,7 +88,10 @@ export default function Auth() {
   };
 
   const switchMode = () => {
-    setMode(isLogin ? 'register' : 'login');
+    console.log('switchMode called, current mode:', mode);
+    const newMode = isLogin ? 'register' : 'login';
+    console.log('Switching to:', newMode);
+    setMode(newMode);
     setError('');
     setFirstName('');
     setLastName('');
@@ -151,10 +154,20 @@ export default function Auth() {
                 <span className="text-2xl font-bold">Morphion</span>
               </div>
 
+              <h2 className="text-2xl font-bold text-textPrimary mb-2">
+                {isLogin ? 'Entrar na sua conta' : 'Criar nova conta'}
+              </h2>
+              <p className="text-sm text-textSecondary mb-6">
+                {isLogin
+                  ? 'Digite suas credenciais para acessar'
+                  : 'Preencha seus dados para começar'}
+              </p>
+
               <div className="flex gap-1 p-1 bg-[rgb(var(--surface-muted))] rounded-xl mb-6">
                 <button
                   type="button"
                   onClick={() => {
+                    console.log('Login button clicked, isLogin:', isLogin);
                     if (!isLogin) switchMode();
                   }}
                   className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all duration-200 ${
@@ -168,6 +181,7 @@ export default function Auth() {
                 <button
                   type="button"
                   onClick={() => {
+                    console.log('Register button clicked, isLogin:', isLogin);
                     if (isLogin) switchMode();
                   }}
                   className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all duration-200 ${
