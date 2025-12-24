@@ -13,7 +13,6 @@ export default function Profile() {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [privacyMessage, setPrivacyMessage] = useState({ type: '', text: '' });
   const { safeViewEnabled, updateSafeView, loading: safeViewLoading } = useSafeView();
-  const [updatingSafeView, setUpdatingSafeView] = useState(false);
 
   useEffect(() => {
     async function loadProfile() {
@@ -76,7 +75,6 @@ export default function Profile() {
   };
 
   const handleSafeViewToggle = async () => {
-    setUpdatingSafeView(true);
     const success = await updateSafeView(!safeViewEnabled);
     if (!success) {
       setPrivacyMessage({
@@ -84,7 +82,6 @@ export default function Profile() {
         text: 'Erro ao atualizar preferência. Tente novamente.'
       });
     }
-    setUpdatingSafeView(false);
   };
 
   return (
@@ -241,21 +238,18 @@ export default function Profile() {
 
               <button
                 onClick={handleSafeViewToggle}
-                disabled={safeViewLoading || updatingSafeView}
+                disabled={safeViewLoading}
                 className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all duration-300 flex-shrink-0 ${
                   safeViewEnabled
                     ? 'bg-green-500'
                     : 'bg-gray-300 dark:bg-gray-600'
-                } ${(safeViewLoading || updatingSafeView) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                } ${safeViewLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 <span
                   className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
                     safeViewEnabled ? 'translate-x-7' : 'translate-x-1'
                   }`}
                 />
-                {updatingSafeView && (
-                  <Loader2 className="absolute inset-0 m-auto w-4 h-4 text-white animate-spin" />
-                )}
               </button>
             </div>
 

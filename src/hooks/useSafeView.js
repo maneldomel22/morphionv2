@@ -31,6 +31,9 @@ export function useSafeView() {
   }
 
   async function updateSafeView(enabled) {
+    const previousValue = safeViewEnabled;
+    setSafeViewEnabled(enabled);
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -40,11 +43,11 @@ export function useSafeView() {
           .eq('id', user.id);
 
         if (error) throw error;
-        setSafeViewEnabled(enabled);
         return true;
       }
     } catch (error) {
       console.error('Error updating safe view preference:', error);
+      setSafeViewEnabled(previousValue);
       return false;
     }
   }
