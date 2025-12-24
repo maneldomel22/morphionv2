@@ -1,41 +1,81 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Loader2, Zap, Users, Target } from 'lucide-react';
+import { formatPhoneNumber } from '../lib/phoneFormatter';
+import { Loader2, User, Phone } from 'lucide-react';
 
-export default function Login() {
+export default function Signup() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    async function checkSession() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate('/dashboard');
-      }
-    }
-    checkSession();
-  }, [navigate]);
+  const handlePhoneChange = (e) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setPhone(formatted);
+  };
 
-  const handleLogin = async (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!email || !password || !firstName || !lastName || !phone) {
+      setError('Preencha todos os campos');
+      return;
+    }
+
+    if (!email.includes('@')) {
+      setError('Email inválido');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('A senha deve ter no mínimo 6 caracteres');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
-        password
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            phone: phone
+          }
+        }
       });
 
-      if (signInError) throw signInError;
+      if (signUpError) throw signUpError;
 
-      navigate('/dashboard');
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            email: authData.user.email,
+            first_name: firstName,
+            last_name: lastName,
+            phone: phone,
+            credits: 10
+          });
+
+        if (profileError && profileError.code !== '23505') {
+          console.error('Erro ao criar perfil:', profileError);
+        }
+
+        navigate('/dashboard');
+      }
     } catch (err) {
-      setError(err.message || 'Erro ao fazer login. Verifique suas credenciais.');
+      console.error('Erro no signup:', err);
+      setError(err.message || 'Erro ao criar conta. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -56,29 +96,13 @@ export default function Login() {
             </div>
 
             <h1 className="text-5xl font-bold mb-4 leading-[1.15] tracking-tight">
-              Crie vídeos e imagens que parecem{' '}
-              <span className="text-[rgb(var(--brand-primary))]">reais</span> em segundos
+              Comece a criar conteúdo{' '}
+              <span className="text-[rgb(var(--brand-primary))]">realista</span> hoje
             </h1>
 
             <p className="text-lg text-[rgb(var(--text-secondary))] mb-10 leading-relaxed">
-              A plataforma nº 1 em realismo para UGC, influencers virtuais e criativos de alta conversão.
+              Junte-se a milhares de criadores que já usam Morphion para gerar vídeos e imagens incríveis.
             </p>
-
-            <div className="flex flex-wrap gap-2.5 mb-16">
-              {[
-                { icon: Zap, text: 'Influencers virtuais realistas' },
-                { icon: Users, text: 'Vídeos UGC sem prompt' },
-                { icon: Target, text: 'Geração em massa' }
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 bg-[rgba(var(--surface-muted),0.4)] backdrop-blur-sm border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-full text-sm text-[rgb(var(--text-secondary))]"
-                >
-                  <item.icon className="w-3.5 h-3.5 text-[rgb(var(--brand-primary))]" />
-                  <span>{item.text}</span>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </div>
@@ -91,10 +115,35 @@ export default function Login() {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-3xl font-bold mb-2 tracking-tight">Bem-vindo de volta</h2>
+            <h2 className="text-3xl font-bold mb-2 tracking-tight">Criar nova conta</h2>
+            <p className="text-[rgb(var(--text-secondary))]">Preencha os dados para começar</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleSignup} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Nome"
+                  required
+                  className="w-full px-4 py-3.5 bg-[rgba(var(--surface-muted),0.4)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-[rgb(var(--text-primary))] placeholder:text-[rgb(var(--text-tertiary))] focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.15)] transition-all"
+                />
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Sobrenome"
+                  required
+                  className="w-full px-4 py-3.5 bg-[rgba(var(--surface-muted),0.4)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-[rgb(var(--text-primary))] placeholder:text-[rgb(var(--text-tertiary))] focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.15)] transition-all"
+                />
+              </div>
+            </div>
+
             <div>
               <input
                 type="email"
@@ -108,10 +157,22 @@ export default function Login() {
 
             <div>
               <input
+                type="tel"
+                value={phone}
+                onChange={handlePhoneChange}
+                placeholder="Telefone"
+                required
+                maxLength="15"
+                className="w-full px-4 py-3.5 bg-[rgba(var(--surface-muted),0.4)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-[rgb(var(--text-primary))] placeholder:text-[rgb(var(--text-tertiary))] focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.15)] transition-all"
+              />
+            </div>
+
+            <div>
+              <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Senha"
+                placeholder="Senha (mínimo 6 caracteres)"
                 required
                 className="w-full px-4 py-3.5 bg-[rgba(var(--surface-muted),0.4)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-[rgb(var(--text-primary))] placeholder:text-[rgb(var(--text-tertiary))] focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.15)] transition-all"
               />
@@ -131,33 +192,24 @@ export default function Login() {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Entrando...</span>
+                  <span>Criando conta...</span>
                 </>
               ) : (
-                <span>Entrar</span>
+                <span>Criar conta</span>
               )}
             </button>
 
             <button
               type="button"
-              onClick={() => navigate('/signup')}
+              onClick={() => navigate('/login')}
               className="w-full py-3.5 border border-[rgba(var(--border-default),var(--border-default-opacity))] hover:border-[rgba(var(--border-hover),var(--border-hover-opacity))] text-[rgb(var(--text-primary))] font-medium rounded-xl transition-all active:scale-[0.98]"
             >
-              Criar conta
+              Já tenho conta
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              className="text-sm text-[rgb(var(--text-tertiary))] hover:text-[rgb(var(--text-secondary))] transition-colors"
-            >
-              Esqueci minha senha
-            </button>
-          </div>
-
           <p className="mt-8 text-center text-xs text-[rgb(var(--text-tertiary))] leading-relaxed">
-            Termos de Serviço · Política de Privacidade
+            Ao criar uma conta, você concorda com nossos Termos de Serviço e Política de Privacidade
           </p>
         </div>
       </div>

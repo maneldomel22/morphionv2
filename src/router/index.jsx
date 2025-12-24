@@ -1,7 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import Login from '../pages/Login';
-import Auth from '../pages/Auth';
+import Signup from '../pages/Signup';
 import Dashboard from '../pages/Dashboard';
 import Metrics from '../pages/Metrics';
 import SoraManual from '../pages/SoraManual';
@@ -25,8 +25,16 @@ export const router = createBrowserRouter([
     element: <Login />
   },
   {
-    path: '/auth',
-    element: <Auth />
+    path: '/signup',
+    element: <Signup />
+  },
+  {
+    path: '/signin',
+    element: <Login />
+  },
+  {
+    path: '/createaccount',
+    element: <Signup />
   },
   {
     path: '/',
