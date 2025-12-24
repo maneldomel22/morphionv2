@@ -25,43 +25,9 @@ export default function Profile() {
           .eq('id', user.id)
           .maybeSingle();
 
-        // Se não tiver first_name e last_name, tenta popular
-        let firstName = data?.first_name || '';
-        let lastName = data?.last_name || '';
-
-        if (data && !firstName && !lastName) {
-          // Primeiro tenta do full_name
-          if (data.full_name) {
-            const names = data.full_name.trim().split(' ');
-            firstName = names[0] || '';
-            lastName = names.slice(1).join(' ') || '';
-          }
-          // Se não tiver full_name, extrai do email
-          else if (data.email) {
-            const emailName = data.email.split('@')[0];
-            // Remove números e caracteres especiais, capitaliza
-            firstName = emailName
-              .replace(/[0-9_.]/g, ' ')
-              .trim()
-              .split(' ')[0];
-            firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
-          }
-
-          // Só atualiza se conseguiu extrair algum nome
-          if (firstName) {
-            await supabase
-              .from('profiles')
-              .update({
-                first_name: firstName,
-                last_name: lastName
-              })
-              .eq('id', user.id);
-          }
-        }
-
         setProfile(data);
-        setFirstName(firstName);
-        setLastName(lastName);
+        setFirstName(data?.first_name || '');
+        setLastName(data?.last_name || '');
       }
     }
     loadProfile();
