@@ -20,24 +20,41 @@ export default function Header({ onMenuClick }) {
           .eq('id', user.id)
           .maybeSingle();
 
-        // Se não tiver first_name e last_name, tenta popular do full_name
-        if (data && (!data.first_name || !data.last_name) && data.full_name) {
-          const names = data.full_name.trim().split(' ');
-          const firstName = names[0] || '';
-          const lastName = names.slice(1).join(' ') || '';
+        // Se não tiver first_name e last_name, tenta popular
+        if (data && (!data.first_name || !data.last_name)) {
+          let firstName = '';
+          let lastName = '';
 
-          // Atualiza no banco
-          await supabase
-            .from('profiles')
-            .update({
-              first_name: firstName,
-              last_name: lastName
-            })
-            .eq('id', user.id);
+          // Primeiro tenta do full_name
+          if (data.full_name) {
+            const names = data.full_name.trim().split(' ');
+            firstName = names[0] || '';
+            lastName = names.slice(1).join(' ') || '';
+          }
+          // Se não tiver full_name, extrai do email
+          else if (data.email) {
+            const emailName = data.email.split('@')[0];
+            // Remove números e caracteres especiais, capitaliza
+            firstName = emailName
+              .replace(/[0-9_.]/g, ' ')
+              .trim()
+              .split(' ')[0];
+            firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+          }
 
-          // Atualiza o estado local
-          data.first_name = firstName;
-          data.last_name = lastName;
+          // Só atualiza se conseguiu extrair algum nome
+          if (firstName) {
+            await supabase
+              .from('profiles')
+              .update({
+                first_name: firstName,
+                last_name: lastName
+              })
+              .eq('id', user.id);
+
+            data.first_name = firstName;
+            data.last_name = lastName;
+          }
         }
 
         setProfile(data);
