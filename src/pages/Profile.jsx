@@ -10,6 +10,7 @@ export default function Profile() {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [privacyMessage, setPrivacyMessage] = useState({ type: '', text: '' });
   const { safeViewEnabled, updateSafeView, loading: safeViewLoading } = useSafeView();
   const [updatingSafeView, setUpdatingSafeView] = useState(false);
 
@@ -57,15 +58,15 @@ export default function Profile() {
     setUpdatingSafeView(true);
     const success = await updateSafeView(!safeViewEnabled);
     if (success) {
-      setMessage({
+      setPrivacyMessage({
         type: 'success',
         text: safeViewEnabled
           ? 'Safe View desativado. Conteúdo sensível será exibido sem filtro.'
           : 'Safe View ativado. Conteúdo sensível será protegido.'
       });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      setTimeout(() => setPrivacyMessage({ type: '', text: '' }), 3000);
     } else {
-      setMessage({
+      setPrivacyMessage({
         type: 'error',
         text: 'Erro ao atualizar preferência. Tente novamente.'
       });
@@ -232,6 +233,25 @@ export default function Profile() {
                 )}
               </button>
             </div>
+
+            {privacyMessage.text && (
+              <div className={`flex items-center gap-2 p-4 rounded-xl animate-fadeIn ${
+                privacyMessage.type === 'success'
+                  ? 'bg-[rgba(var(--success),0.1)] border border-[rgba(var(--success),0.3)]'
+                  : 'bg-[rgba(var(--error),0.1)] border border-[rgba(var(--error),0.3)]'
+              }`}>
+                {privacyMessage.type === 'success' ? (
+                  <CheckCircle2 className="w-5 h-5 text-[rgb(var(--success))] flex-shrink-0" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-[rgb(var(--error))] flex-shrink-0" />
+                )}
+                <span className={`text-sm ${
+                  privacyMessage.type === 'success' ? 'text-[rgb(var(--success))]' : 'text-[rgb(var(--error))]'
+                }`}>
+                  {privacyMessage.text}
+                </span>
+              </div>
+            )}
 
             <div className="text-xs text-textTertiary bg-blue-500/5 border border-blue-500/10 rounded-lg p-3">
               <p className="font-medium text-blue-600 dark:text-blue-400 mb-1">Como funciona:</p>
