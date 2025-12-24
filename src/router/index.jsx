@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import Login from '../pages/Login';
+import Auth from '../pages/Auth';
 import Dashboard from '../pages/Dashboard';
 import Metrics from '../pages/Metrics';
 import SoraManual from '../pages/SoraManual';
@@ -22,6 +23,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />
+  },
+  {
+    path: '/auth',
+    element: <Auth />
   },
   {
     path: '/',
