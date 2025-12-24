@@ -70,10 +70,13 @@ export default function Auth() {
       if (isLogin) {
         await signIn(email, password);
       } else {
-        await signUp(email, password, firstName, lastName, phone);
+        console.log('Starting signup process...');
+        const result = await signUp(email, password, firstName, lastName, phone);
+        console.log('Signup result:', result);
       }
       navigate('/dashboard');
     } catch (err) {
+      console.error('Signup/Login error:', err);
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);

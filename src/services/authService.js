@@ -2,6 +2,8 @@ import { supabase } from '../lib/supabase';
 
 export const authService = {
   async createProfile(userId, email, firstName, lastName, phone) {
+    console.log('Creating profile with:', { userId, email, firstName, lastName, phone });
+
     const { data, error } = await supabase
       .from('profiles')
       .insert([{
@@ -15,7 +17,12 @@ export const authService = {
       .select()
       .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Profile creation error:', error);
+      throw error;
+    }
+
+    console.log('Profile created successfully:', data);
     return data;
   },
 

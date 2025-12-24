@@ -1,5 +1,9 @@
 export const formatPhoneNumber = (value) => {
-  const digitsOnly = value.replace(/\D/g, '');
+  let digitsOnly = value.replace(/\D/g, '');
+
+  if (digitsOnly.startsWith('55')) {
+    digitsOnly = digitsOnly.slice(2);
+  }
 
   if (digitsOnly.length === 0) return '';
 
