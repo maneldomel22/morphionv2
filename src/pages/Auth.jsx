@@ -6,8 +6,6 @@ import { formatPhoneNumber } from '../lib/phoneFormatter';
 import { Sparkles, Mail, Lock, User, Loader2, AlertCircle, Phone } from 'lucide-react';
 
 export default function Auth() {
-  console.log('Auth component mounted!');
-
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,96 +17,72 @@ export default function Auth() {
   const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
 
-  console.log('Current mode:', mode, 'isLogin:', mode === 'login');
-
   const isLogin = mode === 'login';
 
   const validateForm = () => {
-    console.log('=== VALIDATING FORM ===');
-
     if (!email || !password) {
-      console.log('Validation failed: email or password empty');
       setError('Preencha todos os campos');
       return false;
     }
 
     if (!email.includes('@')) {
-      console.log('Validation failed: invalid email');
       setError('Email inválido');
       return false;
     }
 
     if (password.length < 6) {
-      console.log('Validation failed: password too short');
       setError('A senha deve ter no mínimo 6 caracteres');
       return false;
     }
 
     if (!isLogin && !firstName.trim()) {
-      console.log('Validation failed: firstName empty');
       setError('Digite seu nome');
       return false;
     }
 
     if (!isLogin && !lastName.trim()) {
-      console.log('Validation failed: lastName empty');
       setError('Digite seu sobrenome');
       return false;
     }
 
     if (!isLogin && !phone.trim()) {
-      console.log('Validation failed: phone empty');
       setError('Digite seu telefone');
       return false;
     }
 
     const phoneDigits = phone.replace(/\D/g, '');
-    console.log('Phone digits count:', phoneDigits.length);
 
     if (!isLogin && phoneDigits.length < 10) {
-      console.log('Validation failed: phone too short');
       setError('Telefone inválido');
       return false;
     }
 
-    console.log('Validation passed!');
     return true;
   };
 
   const handleSubmit = async (e) => {
-    console.log('=== FORM SUBMITTED ===');
     e.preventDefault();
     setError('');
 
-    console.log('Form data:', { email, password, firstName, lastName, phone, isLogin });
-
     const isValid = validateForm();
-    console.log('Form is valid:', isValid);
 
     if (!isValid) {
-      console.log('Form validation failed');
       return;
     }
 
-    console.log('Setting loading to true');
     setLoading(true);
 
     try {
       if (isLogin) {
-        console.log('Calling signIn...');
         await signIn(email, password);
       } else {
-        console.log('Starting signup process...');
-        const result = await signUp(email, password, firstName, lastName, phone);
-        console.log('Signup result:', result);
+        await signUp(email, password, firstName, lastName, phone);
       }
-      console.log('Navigating to dashboard...');
       navigate('/dashboard');
     } catch (err) {
       console.error('Signup/Login error:', err);
       setError(getErrorMessage(err));
     } finally {
-      console.log('Setting loading to false');
       setLoading(false);
     }
   };
@@ -116,6 +90,11 @@ export default function Auth() {
   const switchMode = () => {
     setMode(isLogin ? 'register' : 'login');
     setError('');
+    setEmail('');
+    setPassword('');
+    setFirstName('');
+    setLastName('');
+    setPhone('');
   };
 
   return (
@@ -295,10 +274,6 @@ export default function Auth() {
               <button
                 type="submit"
                 disabled={loading}
-                onClick={(e) => {
-                  console.log('BUTTON CLICKED!', e);
-                  console.log('Button type:', e.currentTarget.type);
-                }}
                 className="w-full py-4 gradient-primary text-white font-semibold rounded-xl shadow-lg hover:shadow-xl glow-on-hover transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 active:scale-95 flex items-center justify-center gap-2"
               >
                 {loading ? (
