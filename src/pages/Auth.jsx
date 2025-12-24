@@ -90,8 +90,6 @@ export default function Auth() {
   const switchMode = () => {
     setMode(isLogin ? 'register' : 'login');
     setError('');
-    setEmail('');
-    setPassword('');
     setFirstName('');
     setLastName('');
     setPhone('');
@@ -156,7 +154,9 @@ export default function Auth() {
               <div className="flex gap-1 p-1 bg-[rgb(var(--surface-muted))] rounded-xl mb-6">
                 <button
                   type="button"
-                  onClick={() => isLogin || switchMode()}
+                  onClick={() => {
+                    if (!isLogin) switchMode();
+                  }}
                   className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all duration-200 ${
                     isLogin
                       ? 'bg-[rgb(var(--surface-elevated))] text-textPrimary shadow-lg'
@@ -167,7 +167,9 @@ export default function Auth() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => !isLogin || switchMode()}
+                  onClick={() => {
+                    if (isLogin) switchMode();
+                  }}
                   className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all duration-200 ${
                     !isLogin
                       ? 'bg-[rgb(var(--surface-elevated))] text-textPrimary shadow-lg'
