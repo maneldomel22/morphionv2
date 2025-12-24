@@ -20,65 +20,91 @@ export default function Auth() {
   const isLogin = mode === 'login';
 
   const validateForm = () => {
+    console.log('=== VALIDATING FORM ===');
+
     if (!email || !password) {
+      console.log('Validation failed: email or password empty');
       setError('Preencha todos os campos');
       return false;
     }
 
     if (!email.includes('@')) {
+      console.log('Validation failed: invalid email');
       setError('Email inválido');
       return false;
     }
 
     if (password.length < 6) {
+      console.log('Validation failed: password too short');
       setError('A senha deve ter no mínimo 6 caracteres');
       return false;
     }
 
     if (!isLogin && !firstName.trim()) {
+      console.log('Validation failed: firstName empty');
       setError('Digite seu nome');
       return false;
     }
 
     if (!isLogin && !lastName.trim()) {
+      console.log('Validation failed: lastName empty');
       setError('Digite seu sobrenome');
       return false;
     }
 
     if (!isLogin && !phone.trim()) {
+      console.log('Validation failed: phone empty');
       setError('Digite seu telefone');
       return false;
     }
 
-    if (!isLogin && phone.replace(/\D/g, '').length < 10) {
+    const phoneDigits = phone.replace(/\D/g, '');
+    console.log('Phone digits count:', phoneDigits.length);
+
+    if (!isLogin && phoneDigits.length < 10) {
+      console.log('Validation failed: phone too short');
       setError('Telefone inválido');
       return false;
     }
 
+    console.log('Validation passed!');
     return true;
   };
 
   const handleSubmit = async (e) => {
+    console.log('=== FORM SUBMITTED ===');
     e.preventDefault();
     setError('');
 
-    if (!validateForm()) return;
+    console.log('Form data:', { email, password, firstName, lastName, phone, isLogin });
 
+    const isValid = validateForm();
+    console.log('Form is valid:', isValid);
+
+    if (!isValid) {
+      console.log('Form validation failed');
+      return;
+    }
+
+    console.log('Setting loading to true');
     setLoading(true);
 
     try {
       if (isLogin) {
+        console.log('Calling signIn...');
         await signIn(email, password);
       } else {
         console.log('Starting signup process...');
         const result = await signUp(email, password, firstName, lastName, phone);
         console.log('Signup result:', result);
       }
+      console.log('Navigating to dashboard...');
       navigate('/dashboard');
     } catch (err) {
       console.error('Signup/Login error:', err);
       setError(getErrorMessage(err));
     } finally {
+      console.log('Setting loading to false');
       setLoading(false);
     }
   };
