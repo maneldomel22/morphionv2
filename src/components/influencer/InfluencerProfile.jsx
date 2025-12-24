@@ -180,6 +180,8 @@ export default function InfluencerProfile({ influencer: initialInfluencer, onBac
                 alt={influencer.name}
                 className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
                 aspectRatio="square"
+                thumbnail={true}
+                thumbnailSize={288}
               />
             </div>
             {influencer.mode && (

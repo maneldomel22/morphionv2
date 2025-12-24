@@ -59,7 +59,7 @@ export default function InfluencerFeedModal({ isOpen, onClose, influencer, onPos
                 </div>
               ) : influencer.image_url && influencer.image_url !== 'error' ? (
                 <img
-                  src={influencer.image_url}
+                  src={influencer.image_url + '?width=256&height=256&quality=80&format=webp'}
                   alt={influencer.name}
                   className="w-full h-full object-cover"
                 />

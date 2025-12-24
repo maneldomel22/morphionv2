@@ -28,11 +28,13 @@ export default function CreateContentModal({ isOpen, onClose, influencer, onSubm
 
         <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
           <div className="w-12 h-12 rounded-full overflow-hidden">
-            <img
-              src={influencer.image_url}
-              alt={influencer.name}
-              className="w-full h-full object-cover"
-            />
+            {influencer.image_url && (
+              <img
+                src={influencer.image_url + '?width=96&height=96&quality=80&format=webp'}
+                alt={influencer.name}
+                className="w-full h-full object-cover"
+              />
+            )}
           </div>
           <div>
             <p className="font-semibold text-gray-900 dark:text-white">{influencer.name}</p>

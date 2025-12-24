@@ -21,7 +21,7 @@ export default function InfluencerProfileCard({ influencer, postCount, onViewFee
             <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-brandPrimary/20">
               {hasValidImage ? (
                 <img
-                  src={influencer.image_url}
+                  src={influencer.image_url + '?width=128&height=128&quality=80&format=webp'}
                   alt={influencer.name}
                   className="w-full h-full object-cover"
                 />

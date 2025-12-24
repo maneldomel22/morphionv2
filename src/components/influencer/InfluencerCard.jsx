@@ -17,6 +17,8 @@ export default function InfluencerCard({ influencer, onSelect, index = 0 }) {
                 alt={influencer.name}
                 className="w-full h-full object-cover"
                 aspectRatio="square"
+                thumbnail={true}
+                thumbnailSize={160}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700">

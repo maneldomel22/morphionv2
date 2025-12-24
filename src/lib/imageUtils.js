@@ -153,3 +153,43 @@ export async function uploadImageToStorage(file, bucketName = 'images') {
 
   return publicUrl;
 }
+
+export function getOptimizedImageUrl(url, options = {}) {
+  if (!url) return url;
+
+  const {
+    width = null,
+    height = null,
+    quality = 75,
+    format = 'webp'
+  } = options;
+
+  try {
+    const urlObj = new URL(url);
+
+    if (!urlObj.hostname.includes('supabase')) {
+      return url;
+    }
+
+    const params = new URLSearchParams();
+
+    if (width) params.append('width', width);
+    if (height) params.append('height', height);
+    params.append('quality', quality);
+    if (format) params.append('format', format);
+
+    const separator = urlObj.search ? '&' : '?';
+    return `${url}${separator}${params.toString()}`;
+  } catch (error) {
+    return url;
+  }
+}
+
+export function getThumbnailUrl(url, size = 200) {
+  return getOptimizedImageUrl(url, {
+    width: size,
+    height: size,
+    quality: 80,
+    format: 'webp'
+  });
+}

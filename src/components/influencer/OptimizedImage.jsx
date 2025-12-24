@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { getOptimizedImageUrl } from '../../lib/imageUtils';
 
 export default function OptimizedImage({
   src,
@@ -6,7 +7,9 @@ export default function OptimizedImage({
   className = '',
   placeholderClassName = '',
   onLoad,
-  aspectRatio = 'square'
+  aspectRatio = 'square',
+  thumbnail = false,
+  thumbnailSize = 200
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
@@ -41,6 +44,15 @@ export default function OptimizedImage({
     video: 'aspect-[9/16]'
   };
 
+  const optimizedSrc = thumbnail
+    ? getOptimizedImageUrl(src, {
+        width: thumbnailSize,
+        height: thumbnailSize,
+        quality: 80,
+        format: 'webp'
+      })
+    : src;
+
   return (
     <div
       ref={imgRef}
@@ -51,7 +63,7 @@ export default function OptimizedImage({
       )}
       {isInView && (
         <img
-          src={src}
+          src={optimizedSrc}
           alt={alt}
           className={`${className} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
           onLoad={handleLoad}

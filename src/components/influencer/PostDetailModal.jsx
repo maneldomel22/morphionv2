@@ -84,11 +84,13 @@ export default function PostDetailModal({ post, influencer, isOpen, onClose, onC
           <div className="w-96 flex flex-col bg-white dark:bg-gray-900 animate-slide-in-right">
             <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-800 animate-fade-in" style={{ animationDelay: '100ms' }}>
               <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
-                <img
-                  src={influencer.image_url}
-                  alt={influencer.name}
-                  className="w-full h-full object-cover"
-                />
+                {influencer.image_url && (
+                  <img
+                    src={influencer.image_url + '?width=80&height=80&quality=80&format=webp'}
+                    alt={influencer.name}
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-sm text-gray-900 dark:text-white">
@@ -112,11 +114,13 @@ export default function PostDetailModal({ post, influencer, isOpen, onClose, onC
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0">
-                        <img
-                          src={influencer.image_url}
-                          alt={influencer.name}
-                          className="w-full h-full object-cover"
-                        />
+                        {influencer.image_url && (
+                          <img
+                            src={influencer.image_url + '?width=64&height=64&quality=80&format=webp'}
+                            alt={influencer.name}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
                       </div>
                       <div className="flex-1">
                         <p className="text-sm text-gray-900 dark:text-white">

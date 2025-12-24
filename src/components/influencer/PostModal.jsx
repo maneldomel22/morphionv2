@@ -145,7 +145,7 @@ export default function PostModal({ post, onClose, onDelete, influencer }) {
                 <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-brandPrimary/30 flex-shrink-0">
                   {influencer.image_url && influencer.image_url !== 'generating' && influencer.image_url !== 'error' ? (
                     <img
-                      src={influencer.image_url}
+                      src={influencer.image_url + '?width=80&height=80&quality=80&format=webp'}
                       alt={influencer.name}
                       className="w-full h-full object-cover"
                     />
