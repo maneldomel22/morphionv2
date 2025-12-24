@@ -1,5 +1,24 @@
 import { supabase } from '../lib/supabase';
 
+const normalizeLegacyVideo = (video) => {
+  if (!video) return video;
+
+  return {
+    ...video,
+    title: video.title || 'Sem título',
+    source_mode: video.source_mode || 'manual',
+    video_model: video.video_model || 'unknown',
+    folder_id: video.folder_id || null,
+    metadata: video.metadata && typeof video.metadata === 'object' ? video.metadata : {},
+    updated_at: video.updated_at || video.created_at,
+  };
+};
+
+const normalizeLegacyVideos = (videos) => {
+  if (!videos || !Array.isArray(videos)) return [];
+  return videos.map(normalizeLegacyVideo);
+};
+
 export const videoService = {
   async createVideo(videoData) {
     const { data: { user } } = await supabase.auth.getUser();
@@ -35,7 +54,7 @@ export const videoService = {
     const { data, error } = await query;
 
     if (error) throw error;
-    return data;
+    return normalizeLegacyVideos(data);
   },
 
   async getVideoById(id) {
@@ -50,7 +69,7 @@ export const videoService = {
       .maybeSingle();
 
     if (error) throw error;
-    return data;
+    return normalizeLegacyVideo(data);
   },
 
   async updateVideo(id, updates) {
@@ -155,7 +174,7 @@ export const videoService = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return normalizeLegacyVideos(data || []);
   },
 
   async uploadThumbnail(videoId, thumbnailBlob) {

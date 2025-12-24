@@ -94,7 +94,7 @@ function VideoCard({ video, view, openVideoDetails, onDelete, onGenerateVariatio
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="text-textPrimary font-medium mb-1 truncate">{video.title}</h4>
+          <h4 className="text-textPrimary font-medium mb-1 truncate">{video.title || 'Sem título'}</h4>
           <p className="text-textSecondary text-sm">{formatDate(video.created_at)}</p>
         </div>
         <Badge variant={status.variant} className="flex-shrink-0">{status.label}</Badge>
@@ -261,7 +261,7 @@ function VideoCard({ video, view, openVideoDetails, onDelete, onGenerateVariatio
       <div className="space-y-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <h4 className="text-textPrimary font-medium truncate text-sm">{video.title}</h4>
+            <h4 className="text-textPrimary font-medium truncate text-sm">{video.title || 'Sem título'}</h4>
             <p className="text-textSecondary text-xs">{formatDate(video.created_at)}</p>
           </div>
         </div>
@@ -678,18 +678,18 @@ export default function Library() {
     .filter(v => {
       if (!searchQuery) return true;
       const query = searchQuery.toLowerCase();
-      return v.title?.toLowerCase().includes(query) ||
-             v.dialogue?.toLowerCase().includes(query) ||
-             v.kie_prompt?.toLowerCase().includes(query);
+      return (v.title || '').toLowerCase().includes(query) ||
+             (v.dialogue || '').toLowerCase().includes(query) ||
+             (v.kie_prompt || '').toLowerCase().includes(query);
     })
     .sort((a, b) => {
       switch (sortBy) {
         case 'recent':
-          return new Date(b.created_at) - new Date(a.created_at);
+          return new Date(b.created_at || 0) - new Date(a.created_at || 0);
         case 'oldest':
-          return new Date(a.created_at) - new Date(b.created_at);
+          return new Date(a.created_at || 0) - new Date(b.created_at || 0);
         case 'name':
-          return a.title.localeCompare(b.title);
+          return (a.title || '').localeCompare(b.title || '');
         default:
           return 0;
       }

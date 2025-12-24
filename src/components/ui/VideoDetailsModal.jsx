@@ -178,7 +178,7 @@ export default function VideoDetailsModal({ video, isOpen, onClose, onRetry, onD
           <div className="flex items-center gap-2 sm:gap-3">
             {getStatusIcon()}
             <div className="flex-1 min-w-0">
-              <h3 className="text-base sm:text-lg font-semibold text-textPrimary truncate">{video.title}</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-textPrimary truncate">{video.title || 'Sem título'}</h3>
               <Badge variant={getStatusColor()}>{getStatusLabel()}</Badge>
             </div>
           </div>
@@ -197,27 +197,27 @@ export default function VideoDetailsModal({ video, isOpen, onClose, onRetry, onD
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-textSecondary text-sm mb-1">Avatar</p>
-            <p className="text-textPrimary font-medium">{video.avatar_name}</p>
+            <p className="text-textPrimary font-medium">{video.avatar_name || '-'}</p>
           </div>
           <div>
             <p className="text-textSecondary text-sm mb-1">Gênero</p>
-            <p className="text-textPrimary font-medium">{video.avatar_gender}</p>
+            <p className="text-textPrimary font-medium">{video.avatar_gender || '-'}</p>
           </div>
           <div>
             <p className="text-textSecondary text-sm mb-1">Duração</p>
-            <p className="text-textPrimary font-medium">{video.duration}</p>
+            <p className="text-textPrimary font-medium">{video.duration || '-'}</p>
           </div>
           <div>
             <p className="text-textSecondary text-sm mb-1">Proporção</p>
-            <p className="text-textPrimary font-medium">{video.aspect_ratio}</p>
+            <p className="text-textPrimary font-medium">{video.aspect_ratio || '-'}</p>
           </div>
           <div>
             <p className="text-textSecondary text-sm mb-1">Estilo</p>
-            <p className="text-textPrimary font-medium">{video.creative_style}</p>
+            <p className="text-textPrimary font-medium">{video.creative_style || '-'}</p>
           </div>
           <div>
             <p className="text-textSecondary text-sm mb-1">Créditos</p>
-            <p className="text-textPrimary font-medium">{video.credits_used}</p>
+            <p className="text-textPrimary font-medium">{video.credits_used || '-'}</p>
           </div>
         </div>
 
@@ -230,9 +230,9 @@ export default function VideoDetailsModal({ video, isOpen, onClose, onRetry, onD
           </div>
         )}
 
-        {video.metadata && (
+        {video.metadata && typeof video.metadata === 'object' && (
           <>
-            {video.metadata.scene_settings && (
+            {video.metadata.scene_settings && typeof video.metadata.scene_settings === 'object' && (
               <div>
                 <p className="text-textSecondary text-sm mb-2">Cenário</p>
                 <div className="bg-surfaceMuted/30 p-3 rounded-xl space-y-2">
@@ -252,7 +252,7 @@ export default function VideoDetailsModal({ video, isOpen, onClose, onRetry, onD
               </div>
             )}
 
-            {video.metadata.style_settings && (
+            {video.metadata.style_settings && typeof video.metadata.style_settings === 'object' && (
               <div>
                 <p className="text-textSecondary text-sm mb-2">Estilo de Gravação</p>
                 <div className="bg-surfaceMuted/30 p-3 rounded-xl space-y-2">
@@ -284,7 +284,7 @@ export default function VideoDetailsModal({ video, isOpen, onClose, onRetry, onD
               </div>
             )}
 
-            {video.metadata.product_data && (
+            {video.metadata.product_data && typeof video.metadata.product_data === 'object' && (
               <div>
                 <p className="text-textSecondary text-sm mb-2">Produto</p>
                 <div className="bg-surfaceMuted/30 p-3 rounded-xl space-y-2">
