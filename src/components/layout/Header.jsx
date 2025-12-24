@@ -14,13 +14,27 @@ export default function Header({ onMenuClick }) {
     async function loadProfile() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        console.log('[HEADER] User ID:', user.id);
+
         const { data } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .maybeSingle();
 
+        console.log('[HEADER] Dados completos do banco:', data);
+        console.log('[HEADER] first_name:', data?.first_name);
+        console.log('[HEADER] last_name:', data?.last_name);
+        console.log('[HEADER] full_name:', data?.full_name);
+        console.log('[HEADER] email:', data?.email);
+
         setProfile(data);
+
+        console.log('[HEADER] Nome que será exibido:',
+          data?.first_name
+            ? `${data.first_name}${data.last_name ? ' ' + data.last_name : ''}`
+            : data?.full_name || 'Usuário'
+        );
       }
     }
     loadProfile();

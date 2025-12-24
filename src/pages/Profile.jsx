@@ -19,15 +19,24 @@ export default function Profile() {
     async function loadProfile() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        console.log('[PROFILE] User ID:', user.id);
+
         const { data } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .maybeSingle();
 
+        console.log('[PROFILE] Dados completos do banco:', data);
+        console.log('[PROFILE] first_name:', data?.first_name);
+        console.log('[PROFILE] last_name:', data?.last_name);
+        console.log('[PROFILE] email:', data?.email);
+
         setProfile(data);
         setFirstName(data?.first_name || '');
         setLastName(data?.last_name || '');
+
+        console.log('[PROFILE] Valores setados - firstName:', data?.first_name || '(vazio)', 'lastName:', data?.last_name || '(vazio)');
       }
     }
     loadProfile();
@@ -37,6 +46,8 @@ export default function Profile() {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: '', text: '' });
+
+    console.log('[PROFILE SAVE] Tentando salvar - firstName:', firstName, 'lastName:', lastName);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -49,10 +60,15 @@ export default function Profile() {
         })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('[PROFILE SAVE] Erro ao salvar:', error);
+        throw error;
+      }
 
+      console.log('[PROFILE SAVE] Salvo com sucesso!');
       setMessage({ type: 'success', text: 'Perfil atualizado com sucesso!' });
     } catch (error) {
+      console.error('[PROFILE SAVE] Erro:', error);
       setMessage({ type: 'error', text: 'Erro ao atualizar perfil. Tente novamente.' });
     } finally {
       setLoading(false);
