@@ -76,13 +76,15 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const signUp = async (email, password, fullName) => {
+  const signUp = async (email, password, firstName, lastName, phone) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          full_name: fullName
+          first_name: firstName,
+          last_name: lastName,
+          phone: phone
         }
       }
     });
@@ -96,7 +98,9 @@ export function AuthProvider({ children }) {
         profileData = await authService.createProfile(
           data.user.id,
           email,
-          fullName
+          firstName,
+          lastName,
+          phone
         );
       }
 

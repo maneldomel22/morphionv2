@@ -1,13 +1,15 @@
 import { supabase } from '../lib/supabase';
 
 export const authService = {
-  async createProfile(userId, email, fullName) {
+  async createProfile(userId, email, firstName, lastName, phone) {
     const { data, error } = await supabase
       .from('profiles')
       .insert([{
         id: userId,
         email: email,
-        full_name: fullName,
+        first_name: firstName,
+        last_name: lastName,
+        phone: phone,
         credits: 100
       }])
       .select()

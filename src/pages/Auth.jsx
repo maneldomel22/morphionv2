@@ -2,13 +2,16 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getErrorMessage } from '../services/authService';
-import { Sparkles, Mail, Lock, User, Loader2, AlertCircle } from 'lucide-react';
+import { formatPhoneNumber } from '../lib/phoneFormatter';
+import { Sparkles, Mail, Lock, User, Loader2, AlertCircle, Phone } from 'lucide-react';
 
 export default function Auth() {
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -32,8 +35,23 @@ export default function Auth() {
       return false;
     }
 
-    if (!isLogin && !fullName.trim()) {
-      setError('Digite seu nome completo');
+    if (!isLogin && !firstName.trim()) {
+      setError('Digite seu nome');
+      return false;
+    }
+
+    if (!isLogin && !lastName.trim()) {
+      setError('Digite seu sobrenome');
+      return false;
+    }
+
+    if (!isLogin && !phone.trim()) {
+      setError('Digite seu telefone');
+      return false;
+    }
+
+    if (!isLogin && phone.replace(/\D/g, '').length < 10) {
+      setError('Telefone inválido');
       return false;
     }
 
@@ -52,7 +70,7 @@ export default function Auth() {
       if (isLogin) {
         await signIn(email, password);
       } else {
-        await signUp(email, password, fullName);
+        await signUp(email, password, firstName, lastName, phone);
       }
       navigate('/dashboard');
     } catch (err) {
@@ -151,21 +169,55 @@ export default function Auth() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {!isLogin && (
-                <div className="transition-all duration-200">
-                  <label className="block text-sm font-medium text-textSecondary mb-2">
-                    Nome Completo
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-textTertiary" />
-                    <input
-                      type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Digite seu nome"
-                      className="w-full pl-12 pr-4 py-3.5 bg-[rgba(var(--surface-muted),0.3)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-textPrimary placeholder-textTertiary focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.2)] transition-all duration-200"
-                    />
+                <>
+                  <div className="transition-all duration-200">
+                    <label className="block text-sm font-medium text-textSecondary mb-2">
+                      Nome
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-textTertiary" />
+                      <input
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="Digite seu nome"
+                        className="w-full pl-12 pr-4 py-3.5 bg-[rgba(var(--surface-muted),0.3)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-textPrimary placeholder-textTertiary focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.2)] transition-all duration-200"
+                      />
+                    </div>
                   </div>
-                </div>
+
+                  <div className="transition-all duration-200">
+                    <label className="block text-sm font-medium text-textSecondary mb-2">
+                      Sobrenome
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-textTertiary" />
+                      <input
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Digite seu sobrenome"
+                        className="w-full pl-12 pr-4 py-3.5 bg-[rgba(var(--surface-muted),0.3)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-textPrimary placeholder-textTertiary focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.2)] transition-all duration-200"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="transition-all duration-200">
+                    <label className="block text-sm font-medium text-textSecondary mb-2">
+                      Telefone
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-textTertiary" />
+                      <input
+                        type="text"
+                        value={phone}
+                        onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
+                        placeholder="+55 83 9 99746991"
+                        className="w-full pl-12 pr-4 py-3.5 bg-[rgba(var(--surface-muted),0.3)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-textPrimary placeholder-textTertiary focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.2)] transition-all duration-200"
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
               <div>
