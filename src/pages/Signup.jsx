@@ -165,7 +165,7 @@ export default function Signup() {
                 type="tel"
                 value={phone}
                 onChange={handlePhoneChange}
-                placeholder="83 9 9974-6991"
+                placeholder="00 0 0000-0000"
                 required
                 maxLength="17"
                 className="w-full pl-14 pr-4 py-3.5 bg-[rgba(var(--surface-muted),0.4)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-[rgb(var(--text-primary))] placeholder:text-[rgb(var(--text-tertiary))] focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.15)] transition-all"
