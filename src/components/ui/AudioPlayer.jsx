@@ -97,12 +97,61 @@ export default function AudioPlayer({ src, className = '' }) {
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className={`flex items-center gap-3 bg-transparent ${className}`}>
-      <audio ref={audioRef} src={src} preload="metadata" />
+    <>
+      <style>{`
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-10px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4);
+          }
+          50% {
+            box-shadow: 0 0 0 6px rgba(139, 92, 246, 0);
+          }
+        }
+
+        .volume-slider-enter {
+          animation: slideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .playing-pulse {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        input[type="range"].volume-slider::-webkit-slider-thumb {
+          transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        input[type="range"].volume-slider:hover::-webkit-slider-thumb {
+          transform: scale(1.3);
+        }
+
+        input[type="range"].volume-slider::-moz-range-thumb {
+          transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        input[type="range"].volume-slider:hover::-moz-range-thumb {
+          transform: scale(1.3);
+        }
+      `}</style>
+
+      <div className={`flex items-center gap-3 bg-transparent ${className}`}>
+        <audio ref={audioRef} src={src} preload="metadata" />
 
       <button
         onClick={togglePlay}
-        className="flex-shrink-0 w-9 h-9 flex items-center justify-center bg-brandPrimary/90 hover:bg-brandPrimary rounded-full transition-all"
+        className={`flex-shrink-0 w-9 h-9 flex items-center justify-center bg-brandPrimary/90 hover:bg-brandPrimary hover:scale-110 active:scale-95 rounded-full transition-all duration-200 ${
+          isPlaying ? 'playing-pulse' : ''
+        }`}
       >
         {isPlaying ? (
           <Pause size={16} className="text-white fill-white" />
@@ -117,14 +166,14 @@ export default function AudioPlayer({ src, className = '' }) {
         </span>
 
         <div
-          className="flex-1 h-1.5 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
+          className="flex-1 h-1.5 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden hover:h-2 transition-all"
           onClick={handleProgressClick}
         >
           <div
             className="h-full bg-brandPrimary/90 rounded-full transition-all relative"
             style={{ width: `${progress}%` }}
           >
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" />
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-0 group-hover:scale-100" />
           </div>
         </div>
 
@@ -136,7 +185,9 @@ export default function AudioPlayer({ src, className = '' }) {
       <div ref={volumeRef} className="relative flex items-center gap-2">
         <button
           onClick={toggleVolumeSlider}
-          className="text-textSecondary/70 hover:text-brandPrimary transition-colors p-1"
+          className={`text-textSecondary/70 hover:text-brandPrimary transition-all p-1 hover:scale-110 ${
+            showVolumeSlider ? 'text-brandPrimary scale-110' : ''
+          }`}
         >
           {isMuted || volume === 0 ? (
             <VolumeX size={16} />
@@ -153,24 +204,25 @@ export default function AudioPlayer({ src, className = '' }) {
             step="0.01"
             value={isMuted ? 0 : volume}
             onChange={handleVolumeChange}
-            className="w-16 h-1 bg-white/10 rounded-full appearance-none cursor-pointer animate-in fade-in slide-in-from-left-2 duration-200
+            className="volume-slider volume-slider-enter w-16 h-1 bg-white/10 rounded-full appearance-none cursor-pointer
                        [&::-webkit-slider-thumb]:appearance-none
                        [&::-webkit-slider-thumb]:w-2.5
                        [&::-webkit-slider-thumb]:h-2.5
                        [&::-webkit-slider-thumb]:rounded-full
                        [&::-webkit-slider-thumb]:bg-white
                        [&::-webkit-slider-thumb]:cursor-pointer
-                       [&::-webkit-slider-thumb]:shadow-md
+                       [&::-webkit-slider-thumb]:shadow-lg
                        [&::-moz-range-thumb]:w-2.5
                        [&::-moz-range-thumb]:h-2.5
                        [&::-moz-range-thumb]:rounded-full
                        [&::-moz-range-thumb]:bg-white
                        [&::-moz-range-thumb]:border-0
                        [&::-moz-range-thumb]:cursor-pointer
-                       [&::-moz-range-thumb]:shadow-md"
+                       [&::-moz-range-thumb]:shadow-lg"
           />
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
