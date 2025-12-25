@@ -7,6 +7,46 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
+async function checkKieTaskStatus(taskId: string, kieApiKey: string) {
+  const response = await fetch(
+    `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,
+    {
+      headers: {
+        "Authorization": `Bearer ${kieApiKey}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to check task ${taskId}`);
+  }
+
+  const data = await response.json();
+
+  if (data.code !== 200) {
+    throw new Error(`KIE API error for task ${taskId}: ${data.msg || 'Unknown error'}`);
+  }
+
+  let resultUrls: string[] = [];
+  if (data.data?.state === 'success' && data.data?.resultJson) {
+    try {
+      const parsedResult = typeof data.data.resultJson === 'string'
+        ? JSON.parse(data.data.resultJson)
+        : data.data.resultJson;
+      resultUrls = parsedResult.resultUrls || [];
+    } catch (error) {
+      console.error(`Failed to parse resultJson for task ${taskId}:`, error);
+    }
+  }
+
+  return {
+    state: data.data?.state,
+    resultUrls,
+    failCode: data.data?.failCode,
+    failMsg: data.data?.failMsg,
+  };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -15,8 +55,9 @@ Deno.serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const kieApiKey = Deno.env.get("KIE_API_KEY");
 
-    if (!supabaseUrl || !supabaseServiceKey) {
+    if (!supabaseUrl || !supabaseServiceKey || !kieApiKey) {
       throw new Error("Missing required environment variables");
     }
 
@@ -50,12 +91,16 @@ Deno.serve(async (req: Request) => {
       throw new Error("Influencer not found");
     }
 
-    if (influencer.creation_status === 'ready') {
+    const currentStatus = influencer.creation_status;
+    console.log("Current influencer status:", currentStatus);
+
+    if (currentStatus === 'ready') {
       return new Response(
         JSON.stringify({
           success: true,
           status: 'ready',
-          influencer
+          influencer,
+          progress: 100
         }),
         {
           headers: {
@@ -66,12 +111,55 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (influencer.creation_status === 'creating_video') {
+    if (currentStatus === 'failed') {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          status: 'failed',
+          influencer,
+          progress: 0
+        }),
+        {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    if (currentStatus === 'creating_video' && influencer.intro_video_task_id) {
+      const videoStatus = await checkKieTaskStatus(influencer.intro_video_task_id, kieApiKey);
+
+      if (videoStatus.state === 'fail') {
+        await supabase
+          .from("influencers")
+          .update({ creation_status: 'failed' })
+          .eq("id", influencer_id);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            status: 'failed',
+            influencer: { ...influencer, creation_status: 'failed' },
+            progress: 0
+          }),
+          {
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
           status: 'creating_video',
-          message: 'Video generation in progress'
+          influencer,
+          progress: 25,
+          kieState: videoStatus.state
         }),
         {
           headers: {
@@ -82,12 +170,13 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (influencer.creation_status === 'extracting_frame') {
+    if (currentStatus === 'extracting_frame' || currentStatus === 'creating_profile_image') {
       return new Response(
         JSON.stringify({
           success: true,
-          status: 'extracting_frame',
-          message: 'Extracting reference frame'
+          status: currentStatus,
+          influencer,
+          progress: 50
         }),
         {
           headers: {
@@ -98,49 +187,101 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (influencer.creation_status === 'optimizing_identity') {
-      const { data: profilePost } = await supabase
-        .from("influencer_posts")
-        .select("*")
-        .eq("influencer_id", influencer_id)
-        .eq("type", "profile")
-        .maybeSingle();
+    if (currentStatus === 'optimizing_identity') {
+      let allReady = true;
 
-      const { data: bodymapPost } = await supabase
-        .from("influencer_posts")
-        .select("*")
-        .eq("influencer_id", influencer_id)
-        .eq("type", "bodymap")
-        .maybeSingle();
+      if (influencer.profile_image_task_id) {
+        const profileStatus = await checkKieTaskStatus(influencer.profile_image_task_id, kieApiKey);
 
-      const profileReady = profilePost?.status === 'completed';
-      const bodymapReady = bodymapPost?.status === 'completed';
+        if (profileStatus.state === 'fail') {
+          await supabase
+            .from("influencers")
+            .update({ creation_status: 'failed' })
+            .eq("id", influencer_id);
 
-      if (profileReady && bodymapReady) {
+          return new Response(
+            JSON.stringify({
+              success: true,
+              status: 'failed',
+              influencer: { ...influencer, creation_status: 'failed' },
+              progress: 0
+            }),
+            {
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        }
+
+        if (profileStatus.state === 'success' && profileStatus.resultUrls.length > 0 && !influencer.profile_image_url) {
+          await supabase
+            .from("influencers")
+            .update({ profile_image_url: profileStatus.resultUrls[0] })
+            .eq("id", influencer_id);
+
+          influencer.profile_image_url = profileStatus.resultUrls[0];
+        }
+
+        if (profileStatus.state !== 'success') {
+          allReady = false;
+        }
+      }
+
+      if (influencer.bodymap_task_id) {
+        const bodymapStatus = await checkKieTaskStatus(influencer.bodymap_task_id, kieApiKey);
+
+        if (bodymapStatus.state === 'fail') {
+          await supabase
+            .from("influencers")
+            .update({ creation_status: 'failed' })
+            .eq("id", influencer_id);
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              status: 'failed',
+              influencer: { ...influencer, creation_status: 'failed' },
+              progress: 0
+            }),
+            {
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        }
+
+        if (bodymapStatus.state === 'success' && bodymapStatus.resultUrls.length > 0 && !influencer.bodymap_url) {
+          await supabase
+            .from("influencers")
+            .update({ bodymap_url: bodymapStatus.resultUrls[0] })
+            .eq("id", influencer_id);
+
+          influencer.bodymap_url = bodymapStatus.resultUrls[0];
+        }
+
+        if (bodymapStatus.state !== 'success') {
+          allReady = false;
+        }
+      }
+
+      if (allReady && influencer.profile_image_url && influencer.bodymap_url) {
         await supabase
           .from("influencers")
-          .update({
-            creation_status: 'ready',
-            profile_image: profilePost.image_url,
-            visual_map: bodymapPost.image_url,
-            creation_metadata: {
-              ...influencer.creation_metadata,
-              completed_at: new Date().toISOString()
-            }
-          })
+          .update({ creation_status: 'ready' })
           .eq("id", influencer_id);
 
-        const { data: updatedInfluencer } = await supabase
-          .from("influencers")
-          .select("*")
-          .eq("id", influencer_id)
-          .single();
+        influencer.creation_status = 'ready';
 
         return new Response(
           JSON.stringify({
             success: true,
             status: 'ready',
-            influencer: updatedInfluencer
+            influencer,
+            progress: 100
           }),
           {
             headers: {
@@ -155,10 +296,8 @@ Deno.serve(async (req: Request) => {
         JSON.stringify({
           success: true,
           status: 'optimizing_identity',
-          progress: {
-            profile_ready: profileReady,
-            bodymap_ready: bodymapReady
-          }
+          influencer,
+          progress: 75
         }),
         {
           headers: {
@@ -172,7 +311,9 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         success: true,
-        status: influencer.creation_status
+        status: currentStatus,
+        influencer,
+        progress: 10
       }),
       {
         headers: {

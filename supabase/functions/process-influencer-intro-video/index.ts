@@ -10,12 +10,14 @@ const corsHeaders = {
 async function createReferenceImageFromVideo(videoUrl: string, influencer: any, kieApiKey: string): Promise<string> {
   console.log("Creating reference image from video prompt");
 
+  const identity = influencer.identity_profile || {};
+
   const prompt = `Professional reference portrait photo.
 
 Character identity:
-${influencer.ethnicity} woman, ${influencer.age} years old.
-Face: ${influencer.facial_traits}
-Hair: ${influencer.hair}
+${identity.ethnicity || 'woman'} woman, ${identity.age || '25'} years old.
+Face: ${identity.facial_traits || 'attractive features'}
+Hair: ${identity.hair || 'long hair'}
 
 This is a reference image that matches the character from a video.
 
@@ -64,15 +66,17 @@ Natural skin texture. Realistic. Clean reference photo quality.`;
 }
 
 function buildProfileImagePrompt(influencer: any, referenceUrl: string): string {
+  const identity = influencer.identity_profile || {};
+
   return `Professional portrait photo.
 
 REFERENCE IMAGE:
 Use the face from the reference image as the FACE AUTHORITY. Match it exactly.
 
 SUBJECT:
-${influencer.ethnicity} woman, ${influencer.age} years old.
-Face: ${influencer.facial_traits}
-Hair: ${influencer.hair}
+${identity.ethnicity || 'woman'} woman, ${identity.age || '25'} years old.
+Face: ${identity.facial_traits || 'attractive features'}
+Hair: ${identity.hair || 'long hair'}
 
 FRAMING:
 Close-up portrait. Head and shoulders only. No body below shoulders visible.
@@ -97,17 +101,19 @@ STRICT RULES:
 }
 
 function buildBodymapPrompt(influencer: any, referenceUrl: string): string {
+  const identity = influencer.identity_profile || {};
+
   return `Full body reference photo for character consistency.
 
 REFERENCE IMAGE:
 Use the face from the reference image as the FACE AUTHORITY. Match it exactly.
 
 SUBJECT:
-${influencer.ethnicity} woman, ${influencer.age} years old.
-Face: ${influencer.facial_traits}
-Hair: ${influencer.hair}
-Body: ${influencer.body}
-Body marks: ${influencer.marks}
+${identity.ethnicity || 'woman'} woman, ${identity.age || '25'} years old.
+Face: ${identity.facial_traits || 'attractive features'}
+Hair: ${identity.hair || 'long hair'}
+Body: ${identity.body || 'fit body'}
+Body marks: ${identity.marks || 'none'}
 
 POSE:
 Standing straight. Arms slightly away from body. Neutral pose. Front-facing.
@@ -179,7 +185,7 @@ Deno.serve(async (req: Request) => {
     console.log("Checking video status for task:", influencer.intro_video_task_id);
 
     const statusResponse = await fetch(
-      `https://api.kie.ai/api/v1/jobs/getTask/${influencer.intro_video_task_id}`,
+      `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${influencer.intro_video_task_id}`,
       {
         headers: {
           "Authorization": `Bearer ${kieApiKey}`,
@@ -216,7 +222,17 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const videoUrl = statusData.data?.resultJson?.resultUrls?.[0];
+    let videoUrl: string | undefined;
+    if (statusData.data?.resultJson) {
+      try {
+        const parsedResult = typeof statusData.data.resultJson === 'string'
+          ? JSON.parse(statusData.data.resultJson)
+          : statusData.data.resultJson;
+        videoUrl = parsedResult.resultUrls?.[0];
+      } catch (error) {
+        console.error("Failed to parse resultJson:", error);
+      }
+    }
 
     if (!videoUrl) {
       throw new Error("No video URL in completed task");
@@ -239,7 +255,7 @@ Deno.serve(async (req: Request) => {
     await new Promise(resolve => setTimeout(resolve, 5000));
 
     const refStatusResponse = await fetch(
-      `https://api.kie.ai/api/v1/jobs/getTask/${referenceTaskId}`,
+      `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${referenceTaskId}`,
       {
         headers: {
           "Authorization": `Bearer ${kieApiKey}`,
@@ -270,7 +286,17 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const referenceFrameUrl = refStatusData.data?.resultJson?.resultUrls?.[0];
+    let referenceFrameUrl: string | undefined;
+    if (refStatusData.data?.resultJson) {
+      try {
+        const parsedResult = typeof refStatusData.data.resultJson === 'string'
+          ? JSON.parse(refStatusData.data.resultJson)
+          : refStatusData.data.resultJson;
+        referenceFrameUrl = parsedResult.resultUrls?.[0];
+      } catch (error) {
+        console.error("Failed to parse reference resultJson:", error);
+      }
+    }
 
     if (!referenceFrameUrl) {
       throw new Error("No reference image URL in response");

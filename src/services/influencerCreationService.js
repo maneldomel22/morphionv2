@@ -102,17 +102,20 @@ export const influencerCreationService = {
     let attempts = 0;
     const maxAttempts = 180;
     const pollInterval = 10000;
+    let consecutiveErrors = 0;
+    const maxConsecutiveErrors = 3;
 
     const checkStatus = async () => {
       try {
         const result = await this.checkCreationStatus(influencerId);
+        consecutiveErrors = 0;
 
         const statusLabel = statusLabels[result.status] || result.status;
         onProgress({
           status: result.status,
           label: statusLabel,
           influencer: result.influencer,
-          progress: result.progress
+          progress: result.progress || 0
         });
 
         if (result.status === 'ready') {
@@ -123,7 +126,7 @@ export const influencerCreationService = {
           throw new Error('Criação falhou');
         }
 
-        if (result.status === 'creating_video') {
+        if (result.status === 'creating_video' && result.kieState === 'success') {
           await this.processIntroVideo(influencerId);
         }
 
@@ -136,7 +139,19 @@ export const influencerCreationService = {
         return checkStatus();
       } catch (error) {
         console.error('Error monitoring creation:', error);
-        throw error;
+        consecutiveErrors++;
+
+        if (consecutiveErrors >= maxConsecutiveErrors) {
+          throw new Error('Muitos erros consecutivos ao verificar status');
+        }
+
+        attempts++;
+        if (attempts >= maxAttempts) {
+          throw error;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+        return checkStatus();
       }
     };
 
