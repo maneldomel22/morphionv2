@@ -11,7 +11,8 @@ export async function createInfluencerImage({
   quality,
   mode,
   userId,
-  onProgress
+  onProgress,
+  includeReferenceImage
 }) {
   try {
     console.log('🎨 Starting influencer image generation...');
@@ -60,6 +61,13 @@ export async function createInfluencerImage({
     // For Seedream, image_urls is required
     const imageUrls = influencer.image_url ? [influencer.image_url] : [];
 
+    // Adicionar imagem de referência se detectadas palavras-chave
+    if (includeReferenceImage && imageUrls.length > 0) {
+      const referenceImageUrl = `${window.location.origin}/exemplobct.png`;
+      imageUrls.push(referenceImageUrl);
+      console.log('🔥 Adicionando imagem de referência:', referenceImageUrl);
+    }
+
     const result = await imageService.generateInfluencerImage(
       prompt,
       aspectRatio,
@@ -103,7 +111,8 @@ export async function createInfluencerVideo({
   resolution,
   mode,
   userId,
-  onProgress
+  onProgress,
+  includeReferenceImage
 }) {
   try {
     console.log('🎬 Starting influencer video generation...');
@@ -154,6 +163,16 @@ export async function createInfluencerVideo({
       ? '/functions/v1/generate-video-wan'
       : '/functions/v1/wan-hot-create-task';
 
+    // Preparar URLs de imagem
+    let imageUrls = [influencer.image_url];
+
+    // Adicionar imagem de referência se detectadas palavras-chave
+    if (includeReferenceImage && mode === 'hot') {
+      const referenceImageUrl = `${window.location.origin}/exemplobct.png`;
+      imageUrls.push(referenceImageUrl);
+      console.log('🔥 Adicionando imagem de referência ao vídeo:', referenceImageUrl);
+    }
+
     // Build payload
     const payload = {
       videoId: video.id,
@@ -162,7 +181,8 @@ export async function createInfluencerVideo({
         callBackUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-callback`,
         input: {
           prompt: prompt,
-          image_url: influencer.image_url,
+          image_url: imageUrls[0],
+          image_urls: imageUrls,
           duration: duration || '5',
           resolution: resolution || '2K',
           enable_prompt_expansion: true

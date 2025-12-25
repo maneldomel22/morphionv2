@@ -216,6 +216,11 @@ export default function HotImageQuiz({ isOpen, onClose, influencer, onGenerate }
 
       const prompt = await buildSeedreamPrompt({ influencer, scene, camera });
 
+      // Detectar palavras-chave
+      const allText = Object.values(formData).join(' ').toLowerCase();
+      const keywordPatterns = ['buceta', 'boceta', 'pussy'];
+      const hasKeyword = keywordPatterns.some(keyword => allText.includes(keyword));
+
       handleClose();
 
       await onGenerate({
@@ -224,7 +229,8 @@ export default function HotImageQuiz({ isOpen, onClose, influencer, onGenerate }
         aspectRatio: formData.aspectRatio,
         resolution: formData.resolution,
         outputFormat: formData.outputFormat,
-        quality: formData.quality
+        quality: formData.quality,
+        includeReferenceImage: hasKeyword
       });
     } catch (error) {
       console.error('Error generating image:', error);

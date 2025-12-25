@@ -99,9 +99,15 @@ export default function HotWanQuiz({ onComplete, onCancel }) {
     if (currentStep < STEPS.DURATION_RESOLUTION) {
       setCurrentStep(currentStep + 1);
     } else {
+      // Detectar palavras-chave
+      const allText = `${answers.actionText} ${answers.environmentText}`.toLowerCase();
+      const keywordPatterns = ['buceta', 'boceta', 'pussy'];
+      const hasKeyword = keywordPatterns.some(keyword => allText.includes(keyword));
+
       onComplete({
         ...answers,
-        translations
+        translations,
+        includeReferenceImage: hasKeyword
       });
     }
   };
