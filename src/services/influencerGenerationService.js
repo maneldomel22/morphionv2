@@ -63,20 +63,8 @@ export async function createInfluencerImage({
 
     // Adicionar todas as 12 imagens de referência BCTS se detectadas palavras-chave
     if (includeReferenceImage && imageUrls.length > 0) {
-      const bctsReferenceUrls = [
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_033842.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_034223.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_034230.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_034351.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_034432.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_034554.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_035819.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_035826.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_035840.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_040020.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_040037.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/exemplobct.png'
-      ];
+      const baseUrl = 'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/';
+      const bctsReferenceUrls = Array.from({ length: 12 }, (_, i) => `${baseUrl}im${i + 1}.png`);
       imageUrls.push(...bctsReferenceUrls);
       console.log(`🔥 Adicionando ${bctsReferenceUrls.length} imagens de referência BCTS`);
     }
@@ -181,20 +169,8 @@ export async function createInfluencerVideo({
 
     // Adicionar todas as 12 imagens de referência BCTS se detectadas palavras-chave
     if (includeReferenceImage && mode === 'hot') {
-      const bctsReferenceUrls = [
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_033842.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_034223.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_034230.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_034351.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_034432.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_034554.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_035819.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_035826.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_035840.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_040020.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/captura_de_tela_2025-12-25_040037.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/exemplobct.png'
-      ];
+      const baseUrl = 'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/';
+      const bctsReferenceUrls = Array.from({ length: 12 }, (_, i) => `${baseUrl}im${i + 1}.png`);
       imageUrls.push(...bctsReferenceUrls);
       console.log(`🔥 Adicionando ${bctsReferenceUrls.length} imagens de referência BCTS ao vídeo`);
     }
