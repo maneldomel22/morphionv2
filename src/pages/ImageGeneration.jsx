@@ -12,7 +12,6 @@ import { prepareImageForUpload } from '../lib/imageUtils';
 import { toolsInfo } from '../data/toolsInfo';
 import { IMAGE_ENGINES, IMAGE_ENGINE_CONFIGS } from '../types/imageEngines';
 import { GeneratingImagePlaceholder } from '../components/ui/GeneratingImagePlaceholder';
-import { improveSafePrompt } from '../services/morphySafeService';
 
 export default function ImageGeneration() {
   const [description, setDescription] = useState('');
@@ -189,25 +188,8 @@ export default function ImageGeneration() {
     setImprovingPrompt(true);
 
     try {
-      let enhancedDescription = description;
-
-      try {
-        console.log('🤖 Melhorando prompt automaticamente com Morphy...');
-        enhancedDescription = await improveSafePrompt(description, {
-          characterImageUrl: characterImage,
-          productImageUrl: productImage,
-          aspectRatio
-        });
-        console.log('✅ Prompt melhorado com sucesso');
-      } catch (morphyError) {
-        console.warn('⚠️ Erro ao melhorar prompt, usando original:', morphyError);
-        enhancedDescription = description;
-      }
-
-      setImprovingPrompt(false);
-
       const imageData = {
-        description: enhancedDescription,
+        description: description,
         productImage,
         characterImage,
         aspectRatio,
@@ -218,6 +200,10 @@ export default function ImageGeneration() {
       };
 
       const result = await imageService.generateImage(imageData);
+
+      setImprovingPrompt(false);
+
+      const enhancedDescription = result.enhancedPrompt || description;
 
       const pendingImage = await generatedImagesService.createPendingImage({
         prompt: enhancedDescription,

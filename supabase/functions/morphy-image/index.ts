@@ -47,12 +47,16 @@ Deno.serve(async (req: Request) => {
 
     console.log("Processing image request for:", requestData.description.substring(0, 100));
 
+    // Get authorization header from request
+    const authHeader = req.headers.get("Authorization");
+
     // Call morphy-safe-suggest to get enhanced prompt
     console.log("Calling morphy-safe-suggest...");
     const morphyResponse = await fetch(`${supabaseUrl}/functions/v1/morphy-safe-suggest`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(authHeader ? { "Authorization": authHeader } : {})
       },
       body: JSON.stringify({
         description: requestData.description,
