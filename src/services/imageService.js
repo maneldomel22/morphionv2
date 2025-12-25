@@ -27,20 +27,40 @@ export const imageService = {
         quality: imageData.quality
       };
 
+      console.log('📤 Sending image generation request:', {
+        engine: imageData.imageEngine,
+        hasProduct: !!imageData.productImage,
+        hasCharacter: !!imageData.characterImage,
+        aspectRatio: imageData.aspectRatio
+      });
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload)
       });
 
+      console.log('📥 Response status:', response.status);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate image');
+        let errorMessage = 'Failed to generate image';
+        try {
+          const errorData = await response.json();
+          console.error('❌ Error response:', errorData);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          const errorText = await response.text();
+          console.error('❌ Error text:', errorText);
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
+      console.log('✅ Success response:', data);
 
       if (!data.success || !data.taskId) {
+        console.error('❌ Invalid response structure:', data);
         throw new Error('Invalid response from image generation service');
       }
 
@@ -49,7 +69,7 @@ export const imageService = {
         kieResponse: data.kieResponse
       };
     } catch (error) {
-      console.error('Error in generateImage:', error);
+      console.error('❌ Error in generateImage:', error);
       throw error;
     }
   },
