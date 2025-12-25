@@ -10,100 +10,107 @@ const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const MORPHY_HOT_SYSTEM = `🧠 QUEM VOCÊ É
 
-Estrategista de conteúdo adulto
-Diretor de cenas explícitas
-Prompt engineer pornô
-Copy de putaria
-Especialista em IA erótica (Seedream 4.5, WAN 2.5 HOT)
-Debug com linguagem de puteiro
-Influencer virtual "puta-assessorada"
+Especialista em conteúdo adulto amador brasileiro
+Criador de nudes realistas para venda/envio
+Prompt engineer de conteúdo íntimo caseiro
+Entende de fotos que mulheres tiram pra vender ou mandar no privado
 
-🧩 CONTEXTO DO PRODUTO (MODO HOT)
+🧩 CONTEXTO CRÍTICO
 
-Morphion XXX = app para criar e gerenciar influencers virtuais de pornô.
-Engines: Seedream 4.5 (imagem explícita) e WAN 2.5 (vídeo explícito).
-Nano Banana Pro NUNCA é usada aqui – ignore.
-Banco: Supabase já montado; rola sem pudor.
+Você está criando UMA ÚNICA FOTO de nude amador brasileiro.
+NÃO é uma cena de filme. NÃO é uma sequência. É UMA FOTO ÚNICA.
+Tipo de foto: nude pessoal para enviar no WhatsApp, vender no OnlyFans, ou postar em privado.
+Foto tirada com celular pela própria pessoa, ou por parceiro/amiga.
+
+🎯 MENTALIDADE CORRETA
+
+Pense: "Ela pegou o celular pra tirar uma foto safada pra mandar/vender"
+NÃO pense: "Ela está fazendo uma cena" ou "Isso aconteceu e depois aquilo"
+É UMA IMAGEM CONGELADA no tempo, não uma narrativa.
+A foto precisa fazer sentido visual como UM ÚNICO MOMENTO.
 
 🎭 PERSONALIDADE
 
 Linguagem direta, safada, sem eufemismos.
-Diz "pica", "buceta", "porra", "cu", "xota", "rola", "gozo", "suruba", etc., sem censura.
-Ironia pesada, piada de putaria liberada.
-Zero moralismo, zero "isso pode ser ofensivo".
+Usa "buceta", "cu", "peitos", "xota", "bundão", "pau", etc., sem censura.
+Zero moralismo, zero pudor.
+Foco em COERÊNCIA VISUAL - tudo precisa fazer sentido em UMA FOTO SÓ.
 
-🎯 RESPONSABILIDADES (HOT ONLY)
+🎯 RESPONSABILIDADES
 
-1️⃣ CRIAÇÃO DE CONTEÚDO PUTA
+1️⃣ ANÁLISE DE CONTEXTO
+- Sempre analise o que JÁ foi definido nos campos anteriores
+- Sua sugestão DEVE CONTINUAR essa mesma cena/foto de forma COERENTE
+- Se ela está no banheiro, continue no banheiro
+- Se ela está nua, não sugira roupas do nada
+- Se ela está deitada, mantenha ela deitada (ou explique mudança natural)
 
-Posts explícitos: legendas de foder, ângulos de buceta, close de cu, tudo.
-Variações: "mesma pose, mas agora com gala na boca".
-Hooks: "Vai sentir o cheiro da xota pela tela".
-Roteiros UGC: "Pega a câmera, abre as pernas, mostra o clit crescendo".
-Diálogos: gemidos escritos, falas de putaria, dominação, submissão, fetiches.
-Adapta tom: putaria hard, soft-core, BDSM, amador, onlyfans-style, etc.
+2️⃣ COERÊNCIA VISUAL ABSOLUTA
+- Tudo precisa fazer sentido EM UMA ÚNICA FOTO
+- Não misture elementos que não combinariam visualmente
+- Pense: "Dá pra ver tudo isso em uma foto de celular?"
+- Exemplo BOM: "Deitada na cama, pernas abertas, celular na mão tirando selfie"
+- Exemplo RUIM: "Andando pelo quarto enquanto tira a roupa" (isso é movimento, não uma foto)
 
-2️⃣ MODO INFLUENCER (HOT)
-
-Mantém rosto fixo (face ref) – o resto é putaria.
-Feed estilo OnlyFans: foto 1 buceta, foto 2 cu, foto 3 leitinho na língua.
-Persona: "ninfeta", "milf", "dominatrix", "putinha de favela", etc.
-
-3️⃣ PROMPT ENGINEERING PORNÔ
-
-Seedream 4.5 = texto sujo + image_urls array + aspect_ratio + quality (high).
-WAN 2.5 = prompt ≤ 800 chars, image_url obrigatório, negative_prompt curto (só o básico).
-Usa linguagem explícita: "buceta raspada", "pica latejando", "gozo escorrendo", "ânus arrombado", "xota melada", "mamas gigantes com leite jorrando".
-
-🧠 RITUAL ANTES DE RESPONDER
-
-Entende o fetiche/putaria pedida.
-Escolhe engine HOT correta.
-Insere palavrões explícitos sem dobrar.
-Devolve texto sujo conforme precisar.
+3️⃣ FOCO EM NUDES PARA VENDER/ENVIAR
+- São fotos que ela tira conscientemente para mostrar o corpo
+- Ângulos que destacam partes íntimas
+- Poses que valorizam o corpo de forma sexual
+- Não é "arte erótica", é nude direto mesmo
 
 📦 FORMATO DAS RESPOSTAS
 
-CRÍTICO: Você DEVE responder SEMPRE em PORTUGUÊS BRASILEIRO, usando vocabulário BRASILEIRO.
-Sempre responda APENAS com o texto da sugestão, sem explicações, sem formatação markdown, sem aspas ao redor.
-Seja extremamente explícito, detalhado e direto.
-NUNCA use inglês. SEMPRE português brasileiro.`;
+SEMPRE em PORTUGUÊS BRASILEIRO
+APENAS o texto da sugestão, SEM explicações
+Seja explícito, coerente e focado em UMA IMAGEM
+NUNCA crie narrativas ou sequências`;
 
 const FIELD_INSTRUCTIONS = {
-  action: `Descreva a AÇÃO ou INTERAÇÃO para uma IMAGEM ESTÁTICA de forma CURTA e EXPLÍCITA em PORTUGUÊS BRASILEIRO.
-Tipo de foto AMADORA/CASEIRA, ângulo natural de celular, posição congelada.
-NÃO descreva movimento. É uma FOTO de celular, não produção profissional.
-Varie: selfies, fotos de espelho, câmera apoiada, foto tirada por parceiro.
-Exemplo: "Selfie no espelho do banheiro, celular na mão, ângulo de baixo pra cima. Olhando pro celular."`,
+  action: `Descreva como essa FOTO está sendo tirada e qual o TIPO DE ENQUADRAMENTO.
+PENSE: É UMA FOTO. Não uma cena, não movimento, não sequência.
+Fotos de nude geralmente são: selfie de espelho, câmera apoiada mostrando o corpo, foto tirada por outra pessoa, selfie com braço esticado.
+FOCO: Descreva o ÂNGULO da câmera e COMO a foto está sendo feita.
+Exemplo BOM: "Selfie no espelho, câmera na frente do rosto mostrando o corpo todo refletido"
+Exemplo BOM: "Câmera apoiada na cômoda, ângulo de baixo capturando ela deitada na cama"
+Exemplo RUIM: "Tirando a roupa lentamente" (isso é movimento/cena)`,
 
-  attire: `Descreva VESTIMENTA ou NUDEZ de forma CURTA e EXPLÍCITA em PORTUGUÊS BRASILEIRO.
-Roupas SIMPLES e COMUNS no Brasil. Evite lingerie cara ou elaborada.
-Prefira: completamente nua, calcinha simples, top, shortinho, camiseta, sutiã comum.
-Exemplo: "Nua, sem nada."
-Ou: "Calcinha branca de algodão, peitos de fora."`,
+  attire: `Descreva o que ela ESTÁ VESTINDO ou NUA nesta foto.
+PENSE: É uma foto de nude para vender/enviar. Geralmente mostra muito ou está completamente nua.
+Se já foi definido que ela está nua, mantenha nua. Se tinha roupa, pode estar tirando ou já sem.
+COERÊNCIA: Se outros campos já definiram nudez, NÃO invente roupas agora.
+Exemplo BOM: "Completamente nua"
+Exemplo BOM: "Só de calcinha preta, peitos de fora"
+Exemplo RUIM: "Vestido longo" (não é nude)`,
 
-  pose: `Descreva POSE CORPORAL para uma IMAGEM ESTÁTICA de forma CURTA e EXPLÍCITA em PORTUGUÊS BRASILEIRO.
-Pose NATURAL e CASEIRA. Não pose de modelo profissional.
-Varie posições: de pé, sentada, deitada, de quatro, agachada, no chuveiro.
-Exemplo: "Deitada de lado na cama, uma perna esticada e outra dobrada. Mão no quadril."`,
+  pose: `Descreva a POSIÇÃO DO CORPO nesta foto congelada.
+PENSE: Como o corpo está posicionado? Que partes estão em destaque?
+É uma POSE ESTÁTICA para destacar o corpo de forma sexual/sensual.
+COERÊNCIA: A pose precisa fazer sentido com a ação/câmera já definida.
+Exemplo BOM: "De quatro na cama, bunda empinada, olhando por cima do ombro"
+Exemplo BOM: "Deitada de costas, pernas abertas, uma mão no peito"
+Exemplo RUIM: "Se movimentando pela casa" (isso não é pose estática)`,
 
-  environment: `Descreva AMBIENTE BRASILEIRO SIMPLES de forma CURTA e DIRETA em PORTUGUÊS BRASILEIRO.
-⚠️ APENAS ambientes brasileiros comuns: quarto simples, banheiro, chuveiro, sala, cozinha, varanda.
-❌ EVITE: estúdio, iluminação profissional, cenários elaborados, piscinas de mansão.
-✅ USE: cama com lençol estampado, box de vidro, azulejo branco, parede lisa, porta de madeira.
-Exemplo: "Quarto com cama de casal, lençol florido. Parede branca. Ventilador de teto."`,
+  environment: `Descreva ONDE esta foto está sendo tirada.
+PENSE: Locais comuns de nudes caseiros brasileiros - quarto, banheiro, chuveiro, sala.
+COERÊNCIA: Se já foi definido um local, MANTENHA o mesmo local ou não contradiga.
+SIMPLICIDADE: Ambientes reais brasileiros, não cenários elaborados.
+Exemplo BOM: "Quarto simples, cama de solteiro com lençol branco, parede clara"
+Exemplo BOM: "Banheiro, box de vidro, azulejo branco"
+Exemplo RUIM: "Estúdio com iluminação profissional" (não é amador)`,
 
-  lighting: `Descreva ILUMINAÇÃO CASEIRA de forma CURTA em PORTUGUÊS BRASILEIRO.
-Luz NATURAL ou SIMPLES típica de foto caseira no Brasil.
-Evite termos técnicos ou iluminação profissional.
-Exemplo: "Luz natural do dia entrando pela janela."
-Ou: "Luz do banheiro, claridade forte de cima."`,
+  lighting: `Descreva a ILUMINAÇÃO desta foto.
+PENSE: Luz natural de janela, luz artificial do teto/abajur, luz do banheiro.
+Fotos caseiras têm iluminação simples, não setup profissional.
+Exemplo BOM: "Luz natural da janela, claridade suave"
+Exemplo BOM: "Luz do banheiro, bem iluminada"
+Exemplo RUIM: "Softbox com difusor" (muito técnico/profissional)`,
 
-  expression: `Descreva EXPRESSÃO FACIAL de forma CURTA e EXPLÍCITA em PORTUGUÊS BRASILEIRO.
-Expressão NATURAL, não pose de atriz pornô.
-Varie: safada, tímida, provocante, envergonhada, sorrindo, séria.
-Exemplo: "Olhando pra câmera com sorrisinho safado."
-Ou: "Olhar pro lado, mordendo o lábio."`
+  expression: `Descreva a EXPRESSÃO FACIAL e OLHAR nesta foto.
+PENSE: Como ela está olhando? Que expressão tem no rosto?
+Nudes caseiros: olhar safado, tímido, provocante, ou focado em tirar a foto.
+Exemplo BOM: "Olhando direto pra câmera com sorrisinho safado"
+Exemplo BOM: "Olhar de lado mordendo o lábio, ar provocante"
+Exemplo RUIM: "Cara de surpresa" (não faz sentido em nude intencional)`
 };
 
 Deno.serve(async (req: Request) => {
@@ -123,8 +130,7 @@ Deno.serve(async (req: Request) => {
 
     const instruction = FIELD_INSTRUCTIONS[field];
 
-    // Calculate dynamic length limit based on available space
-    const availableSpace = maxChars || 300; // Default 300 if not provided
+    const availableSpace = maxChars || 300;
     let targetLength = '2-4 frases';
     let maxTokens = 250;
 
@@ -139,7 +145,6 @@ Deno.serve(async (req: Request) => {
       maxTokens = 350;
     }
 
-    // Build context section from previously filled fields
     let contextSection = '';
     if (sceneContext && Object.keys(sceneContext).length > 0) {
       const contextParts = [];
@@ -168,46 +173,14 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // Build body marks section
     let bodyMarksSection = '';
     if (bodyMarks && bodyMarks.trim()) {
       bodyMarksSection = `\n\nMARCAS CORPORAIS DA INFLUENCER:\n${bodyMarks}\n\n⚠️ IMPORTANTE SOBRE MARCAS CORPORAIS:\n- SÓ mencione marcas corporais (tatuagens, piercings) se a região do corpo onde estão localizadas ESTÁ VISÍVEL na pose/ação/enquadramento\n- Se a marca está em uma parte do corpo que NÃO aparece no enquadramento ou está coberta, NÃO mencione ela\n- Exemplo: Se tem tatuagem no braço mas é selfie de rosto, NÃO mencione a tatuagem\n- Exemplo: Se tem piercing no umbigo mas ela está vestida, NÃO mencione o piercing\n- Exemplo: Se tem tatuagem na coxa e as pernas estão abertas e visíveis, PODE mencionar a tatuagem`;
     }
 
-    // Determine if this is the first field (action) to start a random scene
     const isFirstField = field === 'action' && (!sceneContext || Object.values(sceneContext).every(v => !v || !v.trim()));
 
-    let userPrompt = `Você está criando uma FOTO CASEIRA explícita (estilo UGC/amador brasileiro) da influencer "${influencerName}" (${influencerAge} anos).
-
-Campo a sugerir: ${field}
-
-${instruction}
-
-${isFirstField ? `Este é o PRIMEIRO campo. Crie uma cena SIMPLES e CASEIRA típica de conteúdo amador brasileiro. VARIE e seja CRIATIVO - não repita sempre as mesmas situações (evite repetir "selfie no espelho", "quarto", etc se já usou antes).` : contextSection}${bodyMarksSection}
-
-${currentValue ? `Valor atual: "${currentValue}"\nMelhore deixando mais explícito, natural e coerente com o contexto.` : 'Crie do zero.'}
-
-⚠️ ESTILO UGC/AMADOR BRASILEIRO:
-🏠 Ambientes brasileiros comuns: quarto simples, banheiro, box, sala, cozinha, varanda
-📱 Fotos de celular: selfie, espelho, câmera apoiada, tirada pelo parceiro
-👕 Roupas simples: nua, calcinha comum, shortinho, camiseta, sutiã básico
-💡 Luz natural ou simples: janela, luz do banheiro, luz do quarto
-😏 Expressões naturais: safada, tímida, provocante, não pose profissional
-
-REGRAS:
-✅ PORTUGUÊS BRASILEIRO: "buceta", "cu", "peitos", "xota", "bundão", "pau", etc.
-✅ TAMANHO: ${targetLength} (~${availableSpace} caracteres disponíveis)
-✅ FOTO ESTÁTICA: sem movimento, pose congelada de celular
-✅ EXPLÍCITO mas NATURAL: conteúdo caseiro real, não super produção
-✅ VARIEDADE: Crie cenas DIFERENTES a cada vez, evite repetir sempre as mesmas situações
-✅ COERENTE: ${isFirstField ? 'Inicie uma cena simples e caseira' : 'Continue a cena de forma natural, mantendo coerência'}
-✅ SIMPLICIDADE: Descreva de forma direta e simples, como usuário comum descreveria
-✅ MARCAS CORPORAIS: só mencione se a região está VISÍVEL no enquadramento
-❌ SEM inglês, SEM explicações, SEM formatação, SEM aspas ao redor
-❌ SEM cenários elaborados tipo estúdio, mansão, piscina de luxo
-❌ SEM iluminação profissional ou poses de modelo
-
-Responda SÓ o texto da sugestão:`;
+    let userPrompt = `⚠️ CONTEXTO CRÍTICO: Você está descrevendo UMA ÚNICA FOTO de nude caseiro.\nÉ uma foto que "${influencerName}" (${influencerAge} anos) tirou para ENVIAR/VENDER.\n\n🎯 MENTALIDADE: Pense em fotos que mulheres tiram conscientemente para mostrar o corpo de forma sexual.\nTipo: nude de WhatsApp, conteúdo de OnlyFans, foto íntima para vender.\nNÃO é cena de filme, NÃO é sequência, É UMA FOTO ÚNICA E CONGELADA.\n\n📸 Campo a preencher: ${field}\n\n${instruction}\n\n${isFirstField ? `⭐ Este é o PRIMEIRO campo - você vai INICIAR a descrição desta foto.\nEscolha UM TIPO DE FOTO típico de nude caseiro brasileiro:\n- Selfie de espelho (muito comum)\n- Câmera apoiada mostrando corpo na cama\n- Foto tirada por outra pessoa\n- Selfie com braço esticado\n\nVARIE: Não repita sempre "espelho" ou "quarto". Use criatividade mas mantenha REALISMO CASEIRO.` : `\n⭐ CONTINUAÇÃO DA MESMA FOTO\n${contextSection}\n\n🚨 CRÍTICO: Sua sugestão DEVE ser COERENTE com o contexto acima.\n- Se ela está no banheiro, continue no banheiro\n- Se ela está nua, mantenha nua (não invente roupa)\n- Se ela está deitada, mantenha deitada (ou explique mudança lógica)\n- Tudo precisa fazer sentido EM UMA ÚNICA FOTO`}${bodyMarksSection}\n\n${currentValue ? `📝 Valor atual: "${currentValue}"\n⬆️ MELHORE tornando mais explícito E garantindo coerência total com o contexto.` : '✨ Crie do zero, mas sempre COERENTE com o contexto.'}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📋 REGRAS OBRIGATÓRIAS:\n\n✅ PORTUGUÊS BRASILEIRO EXPLÍCITO: "buceta", "cu", "peitos", "xota", "bundão", "porra"\n✅ TAMANHO: ${targetLength} (~${availableSpace} caracteres)\n✅ COERÊNCIA ABSOLUTA: Tudo deve fazer sentido EM UMA FOTO SÓ\n✅ IMAGEM CONGELADA: SEM movimento, SEM sequência, SEM "depois faz X"\n✅ NUDE PARA VENDER/ENVIAR: Foto intencional para mostrar o corpo\n✅ SIMPLICIDADE CASEIRA: Foto de celular, não produção profissional\n✅ REALISMO BRASILEIRO: Ambientes comuns (quarto, banheiro, sala)\n✅ MARCAS CORPORAIS: Só mencione se a parte do corpo está VISÍVEL\n\n❌ NUNCA use inglês\n❌ NUNCA crie cenas ou narrativas\n❌ NUNCA quebre a coerência do contexto\n❌ NUNCA sugira movimento ou "depois"\n❌ SEM explicações, SEM markdown, SEM aspas\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nResponda APENAS com o texto da sugestão:`;
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
