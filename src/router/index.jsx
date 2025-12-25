@@ -2,6 +2,8 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import Login from '../pages/Login';
 import Signup from '../pages/Signup';
+import ForgotPassword from '../pages/ForgotPassword';
+import ResetPassword from '../pages/ResetPassword';
 import Dashboard from '../pages/Dashboard';
 import Metrics from '../pages/Metrics';
 import SoraManual from '../pages/SoraManual';
@@ -35,6 +37,14 @@ export const router = createBrowserRouter([
   {
     path: '/createaccount',
     element: <Signup />
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPassword />
+  },
+  {
+    path: '/reset-password',
+    element: <ResetPassword />
   },
   {
     path: '/',

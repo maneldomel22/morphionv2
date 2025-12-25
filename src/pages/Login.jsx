@@ -150,6 +150,7 @@ export default function Login() {
           <div className="mt-6 text-center">
             <button
               type="button"
+              onClick={() => navigate('/forgot-password')}
               className="text-sm text-[rgb(var(--text-tertiary))] hover:text-[rgb(var(--text-secondary))] transition-colors"
             >
               Esqueci minha senha
