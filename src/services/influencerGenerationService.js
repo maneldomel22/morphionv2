@@ -63,7 +63,7 @@ export async function createInfluencerImage({
 
     // Adicionar imagem de referência se detectadas palavras-chave
     if (includeReferenceImage && imageUrls.length > 0) {
-      const referenceImageUrl = `${window.location.origin}/exemplobct.png`;
+      const referenceImageUrl = 'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/exemplobct.png';
       imageUrls.push(referenceImageUrl);
       console.log('🔥 Adicionando imagem de referência:', referenceImageUrl);
     }
@@ -168,7 +168,7 @@ export async function createInfluencerVideo({
 
     // Adicionar imagem de referência se detectadas palavras-chave
     if (includeReferenceImage && mode === 'hot') {
-      const referenceImageUrl = `${window.location.origin}/exemplobct.png`;
+      const referenceImageUrl = 'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/exemplobct.png';
       imageUrls.push(referenceImageUrl);
       console.log('🔥 Adicionando imagem de referência ao vídeo:', referenceImageUrl);
     }
