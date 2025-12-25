@@ -126,12 +126,35 @@ Deno.serve(async (req: Request) => {
 
     const kieData = await kieResponse.json();
 
-    console.log("KIE response:", JSON.stringify(kieData).substring(0, 200));
+    console.log("KIE full response:", JSON.stringify(kieData));
+    console.log("KIE response structure check:", {
+      hasData: !!kieData.data,
+      hasTaskId: !!kieData.data?.taskId,
+      code: kieData.code,
+      dataKeys: kieData.data ? Object.keys(kieData.data) : null
+    });
+
+    // Validate KIE response
+    if (kieData.code !== 200) {
+      const errorMessage = kieData.msg || kieData.message || 'Unknown KIE API error';
+      console.error('KIE API error response:', kieData);
+      throw new Error(`KIE API Error (${kieData.code}): ${errorMessage}`);
+    }
+
+    // Extract taskId
+    const taskId = kieData.data?.taskId;
+
+    if (!taskId) {
+      console.error('KIE response without taskId:', kieData);
+      throw new Error('KIE API did not return a taskId');
+    }
+
+    console.log("Successfully extracted taskId:", taskId);
 
     return new Response(
       JSON.stringify({
         success: true,
-        taskId: kieData.data?.taskId,
+        taskId: taskId,
         kieResponse: kieData,
       }),
       {
