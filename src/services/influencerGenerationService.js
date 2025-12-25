@@ -75,7 +75,9 @@ export async function createInfluencerImage({
         `${baseUrl}captura_de_tela_2025-12-25_035840.png`,
         `${baseUrl}captura_de_tela_2025-12-25_040020.png`,
         `${baseUrl}captura_de_tela_2025-12-25_040037.png`,
-        `${baseUrl}exemplobct.png`
+        `${baseUrl}exemplobct.png`,
+        `${baseUrl}captura_de_tela_2025-12-25_043231.png`,
+        `${baseUrl}captura_de_tela_2025-12-25_043244.png`
       ];
       imageUrls.push(...bctsReferenceUrls);
       console.log(`🔥 Adicionando ${bctsReferenceUrls.length} imagens de referência BCTS`);
@@ -193,7 +195,9 @@ export async function createInfluencerVideo({
         `${baseUrl}captura_de_tela_2025-12-25_035840.png`,
         `${baseUrl}captura_de_tela_2025-12-25_040020.png`,
         `${baseUrl}captura_de_tela_2025-12-25_040037.png`,
-        `${baseUrl}exemplobct.png`
+        `${baseUrl}exemplobct.png`,
+        `${baseUrl}captura_de_tela_2025-12-25_043231.png`,
+        `${baseUrl}captura_de_tela_2025-12-25_043244.png`
       ];
       imageUrls.push(...bctsReferenceUrls);
       console.log(`🔥 Adicionando ${bctsReferenceUrls.length} imagens de referência BCTS ao vídeo`);
