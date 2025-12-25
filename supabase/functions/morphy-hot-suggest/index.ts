@@ -10,7 +10,7 @@ const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const MORPHY_HOT_SYSTEM = `🧠 QUEM VOCÊ É
 
-Estrateg ista de conteúdo adulto
+Estrategista de conteúdo adulto
 Diretor de cenas explícitas
 Prompt engineer pornô
 Copy de putaria
@@ -71,30 +71,39 @@ NUNCA use inglês. SEMPRE português brasileiro.`;
 
 const FIELD_INSTRUCTIONS = {
   action: `Descreva a AÇÃO ou INTERAÇÃO para uma IMAGEM ESTÁTICA de forma CURTA e EXPLÍCITA em PORTUGUÊS BRASILEIRO.
-Tipo de foto, ângulo da câmera, posição congelada no momento.
-NÃO descreva movimento. É uma FOTO, não vídeo.
-Exemplo: "Selfie no espelho—câmera na altura do rosto, ângulo frontal. Mão livre descansando na coxa. Olhando direto pra câmera."`,
+Tipo de foto AMADORA/CASEIRA, ângulo natural de celular, posição congelada.
+NÃO descreva movimento. É uma FOTO de celular, não produção profissional.
+Varie: selfies, fotos de espelho, câmera apoiada, foto tirada por parceiro.
+Exemplo: "Selfie no espelho do banheiro, celular na mão, ângulo de baixo pra cima. Olhando pro celular."`,
 
   attire: `Descreva VESTIMENTA ou NUDEZ de forma CURTA e EXPLÍCITA em PORTUGUÊS BRASILEIRO.
-O que veste (ou não veste). Cores, tecidos, como fica no corpo.
-Exemplo: "Completamente nua, corpo inteiro à mostra."
-Ou: "Lingerie preta de renda, calcinha puxada de lado mostrando buceta."`,
+Roupas SIMPLES e COMUNS no Brasil. Evite lingerie cara ou elaborada.
+Prefira: completamente nua, calcinha simples, top, shortinho, camiseta, sutiã comum.
+Exemplo: "Nua, sem nada."
+Ou: "Calcinha branca de algodão, peitos de fora."`,
 
   pose: `Descreva POSE CORPORAL para uma IMAGEM ESTÁTICA de forma CURTA e EXPLÍCITA em PORTUGUÊS BRASILEIRO.
-Posição do corpo congelada. Pernas, braços, torso.
-Exemplo: "Sentada na cama, pernas abertas, um joelho levantado. Mãos apoiadas atrás segurando o corpo. Peitos empinados."`,
+Pose NATURAL e CASEIRA. Não pose de modelo profissional.
+Varie posições: de pé, sentada, deitada, de quatro, agachada, no chuveiro.
+Exemplo: "Deitada de lado na cama, uma perna esticada e outra dobrada. Mão no quadril."`,
 
-  environment: `Descreva AMBIENTE de forma CURTA e DIRETA em PORTUGUÊS BRASILEIRO.
-Local, objetos principais, atmosfera.
-Exemplo: "Quarto com cama desfeita, lençóis brancos amassados. Luz natural da janela. Parede bege."`,
+  environment: `Descreva AMBIENTE BRASILEIRO SIMPLES de forma CURTA e DIRETA em PORTUGUÊS BRASILEIRO.
+⚠️ APENAS ambientes brasileiros comuns: quarto simples, banheiro, chuveiro, sala, cozinha, varanda.
+❌ EVITE: estúdio, iluminação profissional, cenários elaborados, piscinas de mansão.
+✅ USE: cama com lençol estampado, box de vidro, azulejo branco, parede lisa, porta de madeira.
+Exemplo: "Quarto com cama de casal, lençol florido. Parede branca. Ventilador de teto."`,
 
-  lighting: `Descreva ILUMINAÇÃO de forma CURTA e TÉCNICA em PORTUGUÊS BRASILEIRO.
-Fonte de luz, direção, como afeta a pele.
-Exemplo: "Luz natural da janela pela lateral direita. Sombras suaves no corpo. Pele iluminada e quente."`,
+  lighting: `Descreva ILUMINAÇÃO CASEIRA de forma CURTA em PORTUGUÊS BRASILEIRO.
+Luz NATURAL ou SIMPLES típica de foto caseira no Brasil.
+Evite termos técnicos ou iluminação profissional.
+Exemplo: "Luz natural do dia entrando pela janela."
+Ou: "Luz do banheiro, claridade forte de cima."`,
 
   expression: `Descreva EXPRESSÃO FACIAL de forma CURTA e EXPLÍCITA em PORTUGUÊS BRASILEIRO.
-Olhar, boca, energia transmitida.
-Exemplo: "Olhar direto na câmera, intenso. Boca entreaberta, lábio mordido. Expressão de desejo."`
+Expressão NATURAL, não pose de atriz pornô.
+Varie: safada, tímida, provocante, envergonhada, sorrindo, séria.
+Exemplo: "Olhando pra câmera com sorrisinho safado."
+Ou: "Olhar pro lado, mordendo o lábio."`
 };
 
 Deno.serve(async (req: Request) => {
@@ -168,24 +177,35 @@ Deno.serve(async (req: Request) => {
     // Determine if this is the first field (action) to start a random scene
     const isFirstField = field === 'action' && (!sceneContext || Object.values(sceneContext).every(v => !v || !v.trim()));
 
-    let userPrompt = `Você está criando uma IMAGEM ESTÁTICA explícita (NÃO VÍDEO) da influencer "${influencerName}" (${influencerAge} anos).
+    let userPrompt = `Você está criando uma FOTO CASEIRA explícita (estilo UGC/amador brasileiro) da influencer "${influencerName}" (${influencerAge} anos).
 
 Campo a sugerir: ${field}
 
 ${instruction}
 
-${isFirstField ? `Este é o PRIMEIRO campo. Pense aleatoriamente em uma cena explícita interessante e comece a construir ela.` : contextSection}${bodyMarksSection}
+${isFirstField ? `Este é o PRIMEIRO campo. Crie uma cena SIMPLES e CASEIRA típica de conteúdo amador brasileiro. VARIE e seja CRIATIVO - não repita sempre as mesmas situações (evite repetir "selfie no espelho", "quarto", etc se já usou antes).` : contextSection}${bodyMarksSection}
 
-${currentValue ? `Valor atual: "${currentValue}"\nMelhore deixando mais explícito e coerente com o contexto.` : 'Crie do zero.'}
+${currentValue ? `Valor atual: "${currentValue}"\nMelhore deixando mais explícito, natural e coerente com o contexto.` : 'Crie do zero.'}
+
+⚠️ ESTILO UGC/AMADOR BRASILEIRO:
+🏠 Ambientes brasileiros comuns: quarto simples, banheiro, box, sala, cozinha, varanda
+📱 Fotos de celular: selfie, espelho, câmera apoiada, tirada pelo parceiro
+👕 Roupas simples: nua, calcinha comum, shortinho, camiseta, sutiã básico
+💡 Luz natural ou simples: janela, luz do banheiro, luz do quarto
+😏 Expressões naturais: safada, tímida, provocante, não pose profissional
 
 REGRAS:
 ✅ PORTUGUÊS BRASILEIRO: "buceta", "cu", "peitos", "xota", "bundão", "pau", etc.
-✅ TAMANHO: ${targetLength} (~${availableSpace} caracteres disponíveis no prompt final)
-✅ IMAGEM ESTÁTICA: sem movimento, pose congelada
-✅ EXPLÍCITO: vai direto na putaria
-✅ COERENTE: ${isFirstField ? 'Crie o início de uma cena' : 'Continue a cena já iniciada, não contradiga o contexto'}
-✅ MARCAS CORPORAIS: só mencione se a região do corpo está VISÍVEL no enquadramento/pose
+✅ TAMANHO: ${targetLength} (~${availableSpace} caracteres disponíveis)
+✅ FOTO ESTÁTICA: sem movimento, pose congelada de celular
+✅ EXPLÍCITO mas NATURAL: conteúdo caseiro real, não super produção
+✅ VARIEDADE: Crie cenas DIFERENTES a cada vez, evite repetir sempre as mesmas situações
+✅ COERENTE: ${isFirstField ? 'Inicie uma cena simples e caseira' : 'Continue a cena de forma natural, mantendo coerência'}
+✅ SIMPLICIDADE: Descreva de forma direta e simples, como usuário comum descreveria
+✅ MARCAS CORPORAIS: só mencione se a região está VISÍVEL no enquadramento
 ❌ SEM inglês, SEM explicações, SEM formatação, SEM aspas ao redor
+❌ SEM cenários elaborados tipo estúdio, mansão, piscina de luxo
+❌ SEM iluminação profissional ou poses de modelo
 
 Responda SÓ o texto da sugestão:`;
 
@@ -207,7 +227,7 @@ Responda SÓ o texto da sugestão:`;
             content: userPrompt
           }
         ],
-        temperature: 0.9,
+        temperature: 1.1,
         max_tokens: maxTokens
       }),
     });
