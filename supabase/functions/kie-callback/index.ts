@@ -52,7 +52,76 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
 
     if (!video) {
-      console.log('Video not found, searching for influencer post with taskId:', taskId);
+      console.log('Video not found, searching for generated image with taskId:', taskId);
+
+      const { data: image, error: findImageError } = await supabase
+        .from('generated_images')
+        .select('*')
+        .eq('task_id', taskId)
+        .maybeSingle();
+
+      if (image) {
+        console.log('Found generated image for taskId:', taskId);
+
+        if (state === 'success' && resultUrls && resultUrls.length > 0) {
+          console.log('Processing success callback for generated image:', image.id);
+
+          const imageUrl = resultUrls[0];
+
+          const { error: updateError } = await supabase
+            .from('generated_images')
+            .update({
+              status: 'completed',
+              image_url: imageUrl,
+            })
+            .eq('id', image.id);
+
+          if (updateError) {
+            console.error('Failed to update image:', updateError);
+            throw updateError;
+          }
+
+          console.log('Generated image marked as completed:', image.id);
+
+          return new Response(
+            JSON.stringify({ success: true, message: 'Image completed' }),
+            {
+              headers: {
+                ...corsHeaders,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+        } else if (state === 'fail') {
+          console.error('Processing failure callback for generated image:', image.id);
+
+          const { error: updateError } = await supabase
+            .from('generated_images')
+            .update({
+              status: 'failed',
+              error_message: failMsg || 'Image generation failed',
+            })
+            .eq('id', image.id);
+
+          if (updateError) {
+            throw updateError;
+          }
+
+          console.log('Generated image marked as failed:', image.id);
+
+          return new Response(
+            JSON.stringify({ success: true, message: 'Image marked as failed' }),
+            {
+              headers: {
+                ...corsHeaders,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+        }
+      }
+
+      console.log('Generated image not found, searching for influencer post');
 
       let post = null;
 
@@ -61,30 +130,14 @@ Deno.serve(async (req: Request) => {
         .select('*')
         .eq('status', 'generating');
 
-      if (findPostsError) {
-        console.error('Error searching for posts:', findPostsError);
-      } else {
-        console.log(`Found ${posts?.length || 0} generating posts, searching for taskId match...`);
-
-        post = posts?.find(p => {
-          const metadata = p.metadata;
-          if (!metadata) {
-            console.log(`Post ${p.id}: no metadata`);
-            return false;
-          }
-
-          const hasMatch = metadata.taskId === taskId;
-          console.log(`Post ${p.id}: metadata.taskId="${metadata.taskId}" ${hasMatch ? '✅ MATCH' : '❌ no match'}`);
-          return hasMatch;
-        });
+      if (!findPostsError && posts) {
+        post = posts.find(p => p.metadata?.taskId === taskId);
       }
 
       if (post) {
         console.log('Found influencer post for taskId:', taskId);
 
         if (state === 'success' && resultUrls && resultUrls.length > 0) {
-          console.log('Processing success callback for influencer post:', post.id);
-
           const imageUrl = resultUrls[0];
 
           const { error: updateError } = await supabase
@@ -95,25 +148,13 @@ Deno.serve(async (req: Request) => {
             })
             .eq('id', post.id);
 
-          if (updateError) {
-            console.error('Failed to update post:', updateError);
-            throw updateError;
-          }
-
-          console.log('Influencer post marked as completed:', post.id);
+          if (updateError) throw updateError;
 
           return new Response(
             JSON.stringify({ success: true, message: 'Post image completed' }),
-            {
-              headers: {
-                ...corsHeaders,
-                'Content-Type': 'application/json',
-              },
-            }
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         } else if (state === 'fail') {
-          console.error('Processing failure callback for influencer post:', post.id);
-
           const { error: updateError } = await supabase
             .from('influencer_posts')
             .update({
@@ -122,47 +163,26 @@ Deno.serve(async (req: Request) => {
             })
             .eq('id', post.id);
 
-          if (updateError) {
-            throw updateError;
-          }
-
-          console.log('Influencer post marked as failed:', post.id);
+          if (updateError) throw updateError;
 
           return new Response(
             JSON.stringify({ success: true, message: 'Post marked as failed' }),
-            {
-              headers: {
-                ...corsHeaders,
-                'Content-Type': 'application/json',
-              },
-            }
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
       }
 
-      console.error('No video or post found for taskId:', taskId);
+      console.error('No video, image or post found for taskId:', taskId);
       return new Response(
         JSON.stringify({ success: false, error: 'Task not found' }),
-        {
-          status: 404,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     if (video.status === 'ready') {
-      console.log('Video already marked as ready, ignoring duplicate callback');
       return new Response(
         JSON.stringify({ success: true, message: 'Already processed' }),
-        {
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -170,18 +190,10 @@ Deno.serve(async (req: Request) => {
       video_id: video.id,
       kie_task_id: taskId,
       event_type: 'callback_received',
-      event_data: {
-        state,
-        code: payload.code,
-      },
+      event_data: { state, code: payload.code },
     };
 
     if (state === 'success' && resultUrls && resultUrls.length > 0) {
-      console.log('Processing success callback:', {
-        video_id: video.id,
-        result_urls_count: resultUrls.length,
-      });
-
       const videoUrl = resultUrls[0];
 
       const { error: updateError } = await supabase
@@ -193,25 +205,13 @@ Deno.serve(async (req: Request) => {
         })
         .eq('id', video.id);
 
-      if (updateError) {
-        console.error('Failed to update video to ready:', updateError);
-        throw updateError;
-      }
+      if (updateError) throw updateError;
 
       if (video.source_mode === 'influencer') {
-        const { error: postUpdateError } = await supabase
+        await supabase
           .from('influencer_posts')
-          .update({
-            video_url: videoUrl,
-            status: 'completed'
-          })
+          .update({ video_url: videoUrl, status: 'completed' })
           .contains('metadata', { videoId: video.id });
-
-        if (postUpdateError) {
-          console.error('Failed to update influencer post:', postUpdateError);
-        } else {
-          console.log('Influencer post updated with video URL');
-        }
       }
 
       logData.event_data.video_url = videoUrl;
@@ -220,88 +220,54 @@ Deno.serve(async (req: Request) => {
 
       await supabase.from('video_generation_logs').insert(logData);
 
-      console.log('Video marked as ready:', video.id);
-
       try {
-        console.log('Attempting to generate thumbnail for video:', video.id);
-
         const response = await fetch(videoUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch video: ${response.statusText}`);
-        }
+        if (response.ok) {
+          const videoBlob = await response.blob();
+          const arrayBuffer = await videoBlob.arrayBuffer();
+          const uint8Array = new Uint8Array(arrayBuffer);
+          const tempVideoPath = `/tmp/video_${video.id}.mp4`;
+          await Deno.writeFile(tempVideoPath, uint8Array);
 
-        const videoBlob = await response.blob();
-        const arrayBuffer = await videoBlob.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
+          const ffmpegCmd = new Deno.Command("ffmpeg", {
+            args: ["-i", tempVideoPath, "-ss", "00:00:00.100", "-vframes", "1", "-f", "image2pipe", "-vcodec", "mjpeg", "-q:v", "2", "pipe:1"],
+            stdout: "piped",
+            stderr: "piped",
+          });
 
-        const tempVideoPath = `/tmp/video_${video.id}.mp4`;
-        await Deno.writeFile(tempVideoPath, uint8Array);
+          const { code, stdout } = await ffmpegCmd.output();
 
-        const ffmpegCmd = new Deno.Command("ffmpeg", {
-          args: [
-            "-i", tempVideoPath,
-            "-ss", "00:00:00.100",
-            "-vframes", "1",
-            "-f", "image2pipe",
-            "-vcodec", "mjpeg",
-            "-q:v", "2",
-            "pipe:1"
-          ],
-          stdout: "piped",
-          stderr: "piped",
-        });
+          if (code === 0 && stdout.length > 0) {
+            const thumbnailFileName = `${video.id}-thumbnail-${Date.now()}.jpg`;
+            const thumbnailPath = `${video.user_id}/${thumbnailFileName}`;
 
-        const { code, stdout, stderr } = await ffmpegCmd.output();
-
-        if (code === 0 && stdout.length > 0) {
-          const thumbnailFileName = `${video.id}-thumbnail-${Date.now()}.jpg`;
-          const thumbnailPath = `${video.user_id}/${thumbnailFileName}`;
-
-          const { error: uploadError } = await supabase.storage
-            .from('video-thumbnails')
-            .upload(thumbnailPath, stdout, {
-              contentType: 'image/jpeg',
-              upsert: true
-            });
-
-          if (!uploadError) {
-            const { data: { publicUrl } } = supabase.storage
+            const { error: uploadError } = await supabase.storage
               .from('video-thumbnails')
-              .getPublicUrl(thumbnailPath);
+              .upload(thumbnailPath, stdout, { contentType: 'image/jpeg', upsert: true });
 
-            await supabase
-              .from('videos')
-              .update({ thumbnail_url: publicUrl })
-              .eq('id', video.id);
+            if (!uploadError) {
+              const { data: { publicUrl } } = supabase.storage
+                .from('video-thumbnails')
+                .getPublicUrl(thumbnailPath);
 
-            console.log('Thumbnail generated and uploaded successfully:', publicUrl);
-          } else {
-            console.error('Failed to upload thumbnail:', uploadError);
+              await supabase
+                .from('videos')
+                .update({ thumbnail_url: publicUrl })
+                .eq('id', video.id);
+            }
           }
-        } else {
-          console.error('FFmpeg failed to generate thumbnail:', new TextDecoder().decode(stderr));
-        }
 
-        await Deno.remove(tempVideoPath).catch(() => {});
+          await Deno.remove(tempVideoPath).catch(() => {});
+        }
       } catch (thumbnailError) {
         console.error('Thumbnail generation failed (non-fatal):', thumbnailError);
       }
 
       return new Response(
         JSON.stringify({ success: true, message: 'Video marked as ready' }),
-        {
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else if (state === 'fail') {
-      console.error('Processing failure callback:', {
-        video_id: video.id,
-        fail_code: failCode,
-        fail_msg: failMsg,
-      });
       const { error: updateError } = await supabase
         .from('videos')
         .update({
@@ -312,24 +278,13 @@ Deno.serve(async (req: Request) => {
         })
         .eq('id', video.id);
 
-      if (updateError) {
-        throw updateError;
-      }
+      if (updateError) throw updateError;
 
       if (video.source_mode === 'influencer') {
-        const { error: postUpdateError } = await supabase
+        await supabase
           .from('influencer_posts')
-          .update({
-            status: 'failed',
-            error_message: failMsg || 'Video generation failed'
-          })
+          .update({ status: 'failed', error_message: failMsg || 'Video generation failed' })
           .contains('metadata', { videoId: video.id });
-
-        if (postUpdateError) {
-          console.error('Failed to update influencer post:', postUpdateError);
-        } else {
-          console.log('Influencer post marked as failed');
-        }
       }
 
       logData.event_type = 'error_occurred';
@@ -338,85 +293,39 @@ Deno.serve(async (req: Request) => {
 
       await supabase.from('video_generation_logs').insert(logData);
 
-      console.log('Video marked as failed:', video.id);
-
       return new Response(
         JSON.stringify({ success: true, message: 'Video marked as failed' }),
-        {
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else if (state === 'processing') {
-      console.log('Processing status update callback:', {
-        video_id: video.id,
-        state: 'processing',
-      });
-
       const { error: updateError } = await supabase
         .from('videos')
-        .update({
-          status: 'processing',
-        })
+        .update({ status: 'processing' })
         .eq('id', video.id);
 
-      if (updateError) {
-        console.error('Failed to update video to processing:', updateError);
-        throw updateError;
-      }
+      if (updateError) throw updateError;
 
       logData.event_type = 'status_updated';
       logData.event_data.new_status = 'processing';
 
       await supabase.from('video_generation_logs').insert(logData);
 
-      console.log('Video marked as processing:', video.id);
-
       return new Response(
         JSON.stringify({ success: true, message: 'Video marked as processing' }),
-        {
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.warn('Callback received but no action taken:', {
-      state,
-      has_result_urls: !!(resultUrls && resultUrls.length > 0),
-    });
-
     return new Response(
       JSON.stringify({ success: true, message: 'Callback received' }),
-      {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error in kie-callback:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-    });
+    console.error('Error in kie-callback:', error);
 
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      }
+      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
