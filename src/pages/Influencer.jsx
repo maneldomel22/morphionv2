@@ -11,9 +11,31 @@ import ContentTypeSelector from '../components/influencer/ContentTypeSelector';
 import SafeImageQuiz from '../components/influencer/SafeImageQuiz';
 import HotImageQuiz from '../components/influencer/HotImageQuiz';
 import VideoQuiz from '../components/influencer/VideoQuiz';
+import InfluencerGenerationLoading from '../components/influencer/InfluencerGenerationLoading';
 import { influencerService } from '../services/influencerService';
 import { createInfluencerImage, createInfluencerVideo } from '../services/influencerGenerationService';
 import { supabase } from '../lib/supabase';
+
+const SAFE_IMAGE_LOADING_MESSAGES = [
+  'Analisando identidade do influencer...',
+  'Construindo prompt criativo...',
+  'Gerando imagem segura...',
+  'Finalizando post...'
+];
+
+const HOT_IMAGE_LOADING_MESSAGES = [
+  'Analisando identidade do influencer...',
+  'Construindo prompt criativo...',
+  'Gerando imagem adulta...',
+  'Finalizando post...'
+];
+
+const VIDEO_LOADING_MESSAGES = [
+  'Analisando identidade do influencer...',
+  'Construindo prompt de vídeo...',
+  'Gerando vídeo...',
+  'Finalizando post...'
+];
 
 export default function Influencer() {
   const [view, setView] = useState('grid');
@@ -32,6 +54,9 @@ export default function Influencer() {
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showGenerationLoading, setShowGenerationLoading] = useState(false);
+  const [generationLoadingMessages, setGenerationLoadingMessages] = useState([]);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
 
   useEffect(() => {
     loadInfluencers();
@@ -120,6 +145,24 @@ export default function Influencer() {
       return;
     }
 
+    setShowSafeImageQuiz(false);
+    setShowHotImageQuiz(false);
+
+    const messages = contentMode === 'safe' ? SAFE_IMAGE_LOADING_MESSAGES : HOT_IMAGE_LOADING_MESSAGES;
+    setGenerationLoadingMessages(messages);
+    setLoadingMessageIndex(0);
+    setShowGenerationLoading(true);
+
+    let messageIdx = 0;
+    const interval = setInterval(() => {
+      messageIdx++;
+      setLoadingMessageIndex(messageIdx);
+
+      if (messageIdx >= messages.length - 1) {
+        clearInterval(interval);
+      }
+    }, 600);
+
     setGenerating(true);
     setProgress({ status: 'starting', attempts: 0 });
 
@@ -140,14 +183,18 @@ export default function Influencer() {
         onProgress: setProgress
       });
 
-      // Close quizzes and return to profile to show generating post
-      setShowSafeImageQuiz(false);
-      setShowHotImageQuiz(false);
+      clearInterval(interval);
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      setShowGenerationLoading(false);
       setView('profile');
       loadInfluencers();
       setRefreshKey(prev => prev + 1);
     } catch (error) {
       console.error('Error generating image:', error);
+      clearInterval(interval);
+      setShowGenerationLoading(false);
       alert('Erro ao gerar imagem: ' + error.message);
     } finally {
       setGenerating(false);
@@ -160,6 +207,22 @@ export default function Influencer() {
       console.error('No influencer selected');
       return;
     }
+
+    setShowVideoQuiz(false);
+
+    setGenerationLoadingMessages(VIDEO_LOADING_MESSAGES);
+    setLoadingMessageIndex(0);
+    setShowGenerationLoading(true);
+
+    let messageIdx = 0;
+    const interval = setInterval(() => {
+      messageIdx++;
+      setLoadingMessageIndex(messageIdx);
+
+      if (messageIdx >= VIDEO_LOADING_MESSAGES.length - 1) {
+        clearInterval(interval);
+      }
+    }, 600);
 
     setGenerating(true);
     setProgress({ status: 'starting', attempts: 0 });
@@ -178,10 +241,18 @@ export default function Influencer() {
         onProgress: setProgress
       });
 
+      clearInterval(interval);
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      setShowGenerationLoading(false);
+      setView('profile');
       loadInfluencers();
       setRefreshKey(prev => prev + 1);
     } catch (error) {
       console.error('Error generating video:', error);
+      clearInterval(interval);
+      setShowGenerationLoading(false);
       alert('Erro ao gerar vídeo: ' + error.message);
     } finally {
       setGenerating(false);
@@ -353,6 +424,12 @@ export default function Influencer() {
           />
         </>
       )}
+
+      <InfluencerGenerationLoading
+        isOpen={showGenerationLoading}
+        messages={generationLoadingMessages}
+        currentMessageIndex={loadingMessageIndex}
+      />
     </div>
   );
 }
