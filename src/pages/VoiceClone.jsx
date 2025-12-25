@@ -197,19 +197,6 @@ export default function VoiceClone() {
     }
   };
 
-  const handlePlayAudio = (url) => {
-    if (playingAudio === url) {
-      audioRef.current?.pause();
-      setPlayingAudio(null);
-    } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = url;
-        audioRef.current.play();
-        setPlayingAudio(url);
-      }
-    }
-  };
 
   const handleDownloadAudio = (url, filename = 'audio.mp3') => {
     const a = document.createElement('a');
@@ -278,8 +265,6 @@ export default function VoiceClone() {
       </div>
       <p className="text-textSecondary mb-6 sm:mb-8 md:mb-10 text-sm sm:text-base md:text-lg lg:text-xl">Crie vozes naturais para anúncios, reviews e vídeos curtos.</p>
 
-      <audio ref={audioRef} onEnded={() => setPlayingAudio(null)} className="hidden" />
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Card>
@@ -331,20 +316,16 @@ export default function VoiceClone() {
                       </button>
                     </div>
                     {voice.demo_audio_url && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePlayAudio(voice.demo_audio_url);
+                      <audio
+                        controls
+                        className="w-full h-8 mt-2"
+                        style={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                          borderRadius: '8px',
                         }}
-                        className="text-xs text-textSecondary hover:text-brandPrimary flex items-center gap-1"
                       >
-                        {playingAudio === voice.demo_audio_url ? (
-                          <Pause size={12} />
-                        ) : (
-                          <Play size={12} />
-                        )}
-                        Ouvir preview
-                      </button>
+                        <source src={voice.demo_audio_url} type="audio/mpeg" />
+                      </audio>
                     )}
                   </div>
                 ))}
@@ -428,21 +409,17 @@ export default function VoiceClone() {
                       <Download size={18} className="text-textSecondary" />
                     </button>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handlePlayAudio(currentTask.audio_url)}
-                      className="p-3 bg-brandPrimary hover:bg-brandPrimary/80 rounded-xl transition-colors"
-                    >
-                      {playingAudio === currentTask.audio_url ? (
-                        <Pause size={20} className="text-white" />
-                      ) : (
-                        <Play size={20} className="text-white" />
-                      )}
-                    </button>
-                    <div className="flex-1 text-textSecondary text-sm">
-                      Clique para reproduzir
-                    </div>
-                  </div>
+                  <audio
+                    controls
+                    className="w-full h-10"
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    <source src={currentTask.audio_url} type="audio/mpeg" />
+                    Seu navegador não suporta o elemento de áudio.
+                  </audio>
                 </div>
               ) : currentTask.task_status === 'processing' ? (
                 <div className="flex flex-col items-center justify-center py-8">
