@@ -31,7 +31,7 @@ export const IMAGE_ENGINE_CONFIGS = {
       high: '4K'
     },
     maxPromptLength: 3000,
-    tooltip: 'Edita uma imagem existente mantendo estrutura e pose. Requer imagem de entrada.'
+    tooltip: 'Edita uma imagem existente ou criar imagens com referência. Requer imagem de entrada.'
   }
 };
 
