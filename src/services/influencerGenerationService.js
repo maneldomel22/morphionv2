@@ -62,7 +62,7 @@ export async function createInfluencerImage({
     const imageUrls = influencer.image_url ? [influencer.image_url] : [];
 
     // Adicionar todas as 12 imagens de referência BCTS se detectadas palavras-chave
-    if (includeReferenceImage && imageUrls.length > 0) {
+    if (includeReferenceImage) {
       const baseUrl = 'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/';
       const bctsReferenceUrls = Array.from({ length: 12 }, (_, i) => `${baseUrl}im${i + 1}.png`);
       imageUrls.push(...bctsReferenceUrls);
