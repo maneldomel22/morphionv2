@@ -6,7 +6,7 @@ export async function translateText(text) {
   }
 
   try {
-    const { data, error } = await supabase.functions.invoke('morphy-hot-translate', {
+    const { data, error } = await supabase.functions.invoke('morphy-translate-identity', {
       body: { text: text.trim() }
     });
 
