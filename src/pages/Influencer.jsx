@@ -180,7 +180,6 @@ export default function Influencer() {
         quality: config.quality,
         mode: contentMode,
         userId,
-        includeReferenceImage: config.includeReferenceImage,
         onProgress: setProgress
       });
 
@@ -239,8 +238,7 @@ export default function Influencer() {
         resolution: config.resolution,
         mode: config.mode,
         userId,
-        onProgress: setProgress,
-        includeReferenceImage: config.includeReferenceImage
+        onProgress: setProgress
       });
 
       clearInterval(interval);

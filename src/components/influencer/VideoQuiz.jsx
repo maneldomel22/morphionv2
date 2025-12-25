@@ -91,21 +91,12 @@ ${formData.dialogue}. ${formData.environment}. Movement: ${movementLabel}. Camer
         promptText = promptText.substring(0, 1200);
       }
 
-      // Detectar palavras-chave no modo HOT
-      let includeReferenceImage = false;
-      if (mode === 'hot') {
-        const allText = `${formData.dialogue} ${formData.environment}`.toLowerCase();
-        const keywordPatterns = ['buceta', 'boceta', 'pussy'];
-        includeReferenceImage = keywordPatterns.some(keyword => allText.includes(keyword));
-      }
-
       await onGenerate({
         model: 'wan/2-5-image-to-video',
         prompt: promptText,
         duration: formData.duration,
         resolution: formData.resolution,
-        mode,
-        includeReferenceImage
+        mode
       });
 
       handleClose();

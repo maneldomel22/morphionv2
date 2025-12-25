@@ -11,8 +11,7 @@ export async function createInfluencerImage({
   quality,
   mode,
   userId,
-  onProgress,
-  includeReferenceImage
+  onProgress
 }) {
   try {
     console.log('🎨 Starting influencer image generation...');
@@ -61,8 +60,8 @@ export async function createInfluencerImage({
     // For Seedream, image_urls is required
     const imageUrls = influencer.image_url ? [influencer.image_url] : [];
 
-    // Adicionar todas as imagens de referência BCTS se detectadas palavras-chave
-    if (includeReferenceImage) {
+    // Adicionar todas as imagens de referência BCTS sempre no modo hot
+    if (mode === 'hot') {
       const baseUrl = 'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/';
       const bctsReferenceUrls = [
         `${baseUrl}captura_de_tela_2025-12-25_033842.png`,
@@ -125,8 +124,7 @@ export async function createInfluencerVideo({
   resolution,
   mode,
   userId,
-  onProgress,
-  includeReferenceImage
+  onProgress
 }) {
   try {
     console.log('🎬 Starting influencer video generation...');
@@ -180,8 +178,8 @@ export async function createInfluencerVideo({
     // Preparar URLs de imagem
     let imageUrls = [influencer.image_url];
 
-    // Adicionar todas as imagens de referência BCTS se detectadas palavras-chave
-    if (includeReferenceImage && mode === 'hot') {
+    // Adicionar todas as imagens de referência BCTS sempre no modo hot
+    if (mode === 'hot') {
       const baseUrl = 'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/';
       const bctsReferenceUrls = [
         `${baseUrl}captura_de_tela_2025-12-25_033842.png`,
