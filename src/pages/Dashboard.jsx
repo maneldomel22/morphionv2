@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [recentCreatives, setRecentCreatives] = useState([]);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [selectedVideoForPreview, setSelectedVideoForPreview] = useState(null);
+  const [isEntering, setIsEntering] = useState(true);
   const [usageStats, setUsageStats] = useState({
     videosGenerated: 0,
     imagesGenerated: 0,
@@ -30,7 +31,14 @@ export default function Dashboard() {
       checkProcessingVideos();
     }, 10000);
 
-    return () => clearInterval(pollInterval);
+    const enterTimeout = setTimeout(() => {
+      setIsEntering(false);
+    }, 500);
+
+    return () => {
+      clearInterval(pollInterval);
+      clearTimeout(enterTimeout);
+    };
   }, []);
 
   async function fetchRecentVideos() {
@@ -212,7 +220,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div>
+    <div className={isEntering ? 'page-enter' : ''}>
       <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-textPrimary mb-2 sm:mb-3 tracking-tight">Estúdio de Criação UGC</h1>
       <p className="text-textSecondary mb-6 sm:mb-8 md:mb-12 text-sm sm:text-base md:text-lg lg:text-xl">Crie, teste e escale criativos com inteligência artificial.</p>
 

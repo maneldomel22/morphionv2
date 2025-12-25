@@ -12,6 +12,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
     async function checkSession() {
@@ -45,7 +46,10 @@ export default function Login() {
         return;
       }
 
-      navigate('/dashboard');
+      setIsExiting(true);
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 400);
     } catch (err) {
       if (err.code === 'email_not_confirmed') {
         setNeedsConfirmation(true);
@@ -63,7 +67,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[rgb(var(--surface))]">
+    <div className={`min-h-screen flex bg-[rgb(var(--surface))] ${isExiting ? 'page-exit' : ''}`}>
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <AnimatedBackground enableGlow={true}>
           <div className="flex flex-col justify-center px-16 max-w-2xl animate-fadeIn h-full">
@@ -121,7 +125,7 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
                 required
-                className="w-full px-4 py-3.5 bg-[rgba(var(--surface-muted),0.4)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-[rgb(var(--text-primary))] placeholder:text-[rgb(var(--text-tertiary))] focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.15)] input-focus-glow transition-all"
+                className={`w-full px-4 py-3.5 bg-[rgba(var(--surface-muted),0.4)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl placeholder:text-[rgb(var(--text-tertiary))] focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.15)] input-focus-glow transition-all ${email ? 'text-gradient-input' : 'text-[rgb(var(--text-primary))]'}`}
               />
             </div>
 
