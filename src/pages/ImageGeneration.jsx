@@ -12,6 +12,7 @@ import { prepareImageForUpload } from '../lib/imageUtils';
 import { toolsInfo } from '../data/toolsInfo';
 import { IMAGE_ENGINES, IMAGE_ENGINE_CONFIGS } from '../types/imageEngines';
 import { GeneratingImagePlaceholder } from '../components/ui/GeneratingImagePlaceholder';
+import { containsHotContent, getBlockedMessage } from '../lib/contentFilter';
 
 export default function ImageGeneration() {
   const [description, setDescription] = useState('');
@@ -227,6 +228,11 @@ export default function ImageGeneration() {
   const handleGenerate = async () => {
     if (!description.trim()) {
       alert('Por favor, descreva a imagem que deseja criar.');
+      return;
+    }
+
+    if (containsHotContent(description)) {
+      alert(getBlockedMessage());
       return;
     }
 
