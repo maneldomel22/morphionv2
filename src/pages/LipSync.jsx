@@ -244,6 +244,32 @@ export default function LipSync() {
     }
   };
 
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle2 size={16} className="text-green-500" />;
+      case 'failed':
+        return <XCircle size={16} className="text-red-500" />;
+      case 'processing':
+        return <Loader2 size={16} className="text-blue-500 animate-spin" />;
+      default:
+        return <Clock size={16} className="text-yellow-500" />;
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'completed':
+        return 'Concluído';
+      case 'failed':
+        return 'Falhou';
+      case 'processing':
+        return 'Processando';
+      default:
+        return 'Pendente';
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
