@@ -1,5 +1,7 @@
 import { supabase } from '../lib/supabase';
 
+const MAX_FIELD_LENGTH = 300;
+
 export async function improveSafePrompt(description, options = {}) {
   if (!description || description.trim() === '') {
     throw new Error('Descrição é obrigatória');
@@ -17,7 +19,8 @@ export async function improveSafePrompt(description, options = {}) {
     description,
     characterImageUrl: options.characterImageUrl || null,
     productImageUrl: options.productImageUrl || null,
-    aspectRatio: options.aspectRatio || '4:5'
+    aspectRatio: options.aspectRatio || '4:5',
+    maxChars: MAX_FIELD_LENGTH
   };
 
   console.log('📝 Calling morphy-safe-suggest with:', {

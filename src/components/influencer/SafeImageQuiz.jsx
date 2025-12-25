@@ -121,7 +121,8 @@ export default function SafeImageQuiz({ isOpen, onClose, influencer, onGenerate 
   };
 
   const handleTextChange = (value) => {
-    setFormData({ ...formData, [currentStep.field]: value });
+    const limitedValue = value.slice(0, 300);
+    setFormData({ ...formData, [currentStep.field]: limitedValue });
   };
 
   const handleNext = () => {
@@ -295,10 +296,11 @@ export default function SafeImageQuiz({ isOpen, onClose, influencer, onGenerate 
                 value={formData[currentStep.field]}
                 onChange={(e) => handleTextChange(e.target.value)}
                 placeholder={`Ex: ${currentStep.field === 'outfit' ? 'jeans e camiseta branca' : 'sorrindo naturalmente'}`}
+                maxLength={300}
                 className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                A identidade física é preservada automaticamente.
+                {formData[currentStep.field]?.length || 0}/300 caracteres - A identidade física é preservada automaticamente.
               </p>
             </div>
           )}
@@ -323,11 +325,12 @@ export default function SafeImageQuiz({ isOpen, onClose, influencer, onGenerate 
                 onChange={(e) => handleTextChange(e.target.value)}
                 placeholder="Ex: Em um café aconchegante, tomando cappuccino, ambiente descontraído..."
                 rows={6}
+                maxLength={300}
                 className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white resize-none"
                 disabled={loadingSuggestion}
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                Descreva apenas o contexto e a cena. A identidade física é preservada automaticamente.
+                {formData[currentStep.field]?.length || 0}/300 caracteres - Descreva apenas o contexto e a cena. A identidade física é preservada automaticamente.
               </p>
             </div>
           )}

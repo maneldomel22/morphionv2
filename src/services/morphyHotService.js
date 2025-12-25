@@ -17,28 +17,10 @@ const FIELD_OVERHEAD = {
   additional_notes: 20  // "NOTES: "
 };
 
+const MAX_FIELD_LENGTH = 300;
+
 function calculateAvailableSpace(field, sceneContext = {}) {
-  // Start with max available for user content
-  let available = MAX_SEEDREAM_PROMPT - BASE_TEMPLATE_SIZE;
-
-  // Subtract space already used by filled fields
-  for (const [key, value] of Object.entries(sceneContext)) {
-    if (value && value.trim() && key !== field) {
-      available -= (value.length + (FIELD_OVERHEAD[key] || 20));
-    }
-  }
-
-  // Subtract space for the current field's overhead
-  available -= (FIELD_OVERHEAD[field] || 20);
-
-  // Reserve space for remaining empty fields (estimate 150 chars each)
-  const totalFields = 6; // scene_context, environment, wardrobe, action_pose, expression_attitude, additional_notes
-  const filledFields = Object.values(sceneContext).filter(v => v && v.trim()).length;
-  const remainingFields = Math.max(0, totalFields - filledFields - 1); // -1 for current field
-  available -= (remainingFields * 150);
-
-  // Ensure minimum and maximum
-  return Math.max(100, Math.min(available, 600));
+  return MAX_FIELD_LENGTH;
 }
 
 export async function getMorphyHotSuggestion(field, influencerName, influencerAge, currentValue = '', sceneContext = {}, bodyMarks = null) {

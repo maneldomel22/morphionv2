@@ -118,20 +118,21 @@ export default function HotImageQuiz({ isOpen, onClose, influencer, onGenerate }
   };
 
   const handleTextChange = async (value) => {
-    setFormData({ ...formData, [currentStep.field]: value });
+    const limitedValue = value.slice(0, 300);
+    setFormData({ ...formData, [currentStep.field]: limitedValue });
 
     if (translationTimeout.current) {
       clearTimeout(translationTimeout.current);
     }
 
-    if (value.trim() === '') {
+    if (limitedValue.trim() === '') {
       setTranslations({ ...translations, [currentStep.field]: '' });
       return;
     }
 
     translationTimeout.current = setTimeout(async () => {
       try {
-        const translated = await translateToEnglish(value);
+        const translated = await translateToEnglish(limitedValue);
         setTranslations(prev => ({ ...prev, [currentStep.field]: translated }));
       } catch (error) {
         console.error('Translation error:', error);
@@ -316,9 +317,13 @@ export default function HotImageQuiz({ isOpen, onClose, influencer, onGenerate }
                 onChange={(e) => handleTextChange(e.target.value)}
                 placeholder={currentStep.placeholder}
                 rows={currentStep.rows || 8}
+                maxLength={300}
                 className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 text-gray-900 dark:text-white resize-none"
                 disabled={loadingSuggestion}
               />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {formData[currentStep.field]?.length || 0}/300 caracteres
+              </p>
             </div>
           )}
 
