@@ -66,7 +66,7 @@ export default function Login() {
     <div className="min-h-screen flex bg-[rgb(var(--background))]">
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <AnimatedBackground enableGlow={true}>
-          <div className="flex flex-col justify-center px-16 max-w-2xl animate-fadeIn">
+          <div className="flex flex-col justify-center px-16 max-w-2xl animate-fadeIn h-full">
           <div className="mb-16">
             <div className="flex items-center gap-2.5 mb-20">
               <img src="/icon.png" alt="Morphion" className="w-9 h-9" />
