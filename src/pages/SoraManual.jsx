@@ -580,8 +580,8 @@ export default function SoraManual() {
   const loadVideos = async () => {
     try {
       setLoadingVideos(true);
-      const data = await videoService.getVideos();
-      setVideos(data);
+      const response = await videoService.getVideos({ limit: 1000 });
+      setVideos(response.videos);
     } catch (error) {
       console.error('Error loading videos:', error);
     } finally {

@@ -20,8 +20,8 @@ export default function EditorSidebar() {
   const loadVideos = async () => {
     setLoading(true);
     try {
-      const data = await videoService.getVideos();
-      setVideos(data.filter(v => v.status === 'ready' && v.video_url));
+      const response = await videoService.getVideos({ limit: 1000 });
+      setVideos(response.videos.filter(v => v.status === 'ready' && v.video_url));
     } catch (error) {
       console.error('Error loading videos:', error);
     } finally {

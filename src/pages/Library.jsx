@@ -494,6 +494,10 @@ export default function Library() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('recent');
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalVideos, setTotalVideos] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const handleDrop = useCallback(async (result) => {
     console.log('Drop result:', result);
@@ -545,9 +549,12 @@ export default function Library() {
   }, [videos]);
 
 
-  const loadData = async (isInitial = false) => {
+  const loadData = async (isInitial = false, loadMore = false) => {
     if (isInitial) {
       setIsInitialLoading(true);
+      setPage(0);
+    } else if (loadMore) {
+      setIsLoadingMore(true);
     } else {
       setIsPolling(true);
     }
@@ -557,7 +564,7 @@ export default function Library() {
         v.status === 'queued' || v.status === 'processing'
       );
 
-      if (hasPendingVideos) {
+      if (hasPendingVideos && !loadMore) {
         try {
           await kieApiService.checkAllPendingVideos();
         } catch (error) {
@@ -565,11 +572,24 @@ export default function Library() {
         }
       }
 
-      const [videosData, foldersData] = await Promise.all([
-        videoService.getVideos(),
+      const currentPage = loadMore ? page + 1 : 0;
+      const offset = currentPage * 30;
+
+      const [videosResponse, foldersData] = await Promise.all([
+        videoService.getVideos({ limit: 30, offset }),
         folderService.getFolders()
       ]);
-      setVideos(videosData || []);
+
+      if (loadMore) {
+        setVideos([...videos, ...(videosResponse.videos || [])]);
+        setPage(currentPage);
+      } else {
+        setVideos(videosResponse.videos || []);
+        setPage(0);
+      }
+
+      setHasMore(videosResponse.hasMore || false);
+      setTotalVideos(videosResponse.total || 0);
       setFolders(foldersData || []);
       setLastUpdate(new Date());
     } catch (error) {
@@ -578,8 +598,15 @@ export default function Library() {
       if (isInitial) {
         setIsInitialLoading(false);
       }
+      if (loadMore) {
+        setIsLoadingMore(false);
+      }
       setIsPolling(false);
     }
+  };
+
+  const handleLoadMore = () => {
+    loadData(false, true);
   };
 
   const handleCreateFolder = async (name, color) => {
@@ -808,7 +835,7 @@ export default function Library() {
                   </div>
                   <div className="flex-1">
                     <p className="text-textPrimary font-medium text-sm">Todos os vídeos</p>
-                    <p className="text-textSecondary text-xs">{videos.length} vídeo{videos.length !== 1 ? 's' : ''}</p>
+                    <p className="text-textSecondary text-xs">{totalVideos} vídeo{totalVideos !== 1 ? 's' : ''}</p>
                   </div>
                 </div>
               </button>
@@ -958,35 +985,81 @@ export default function Library() {
                 )}
               </div>
             ) : view === 'grid' ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                {filteredAndSortedVideos.map((video) => (
-                  <VideoCard
-                    key={video.id}
-                    video={video}
-                    view="grid"
-                    openVideoDetails={openVideoDetails}
-                    onDelete={handleDelete}
-                    onGenerateVariations={handleOpenVariationsModal}
-                    onPointerDown={handlePointerDown}
-                    isDragging={isDragging && draggedItem?.id === video.id}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                  {filteredAndSortedVideos.map((video) => (
+                    <VideoCard
+                      key={video.id}
+                      video={video}
+                      view="grid"
+                      openVideoDetails={openVideoDetails}
+                      onDelete={handleDelete}
+                      onGenerateVariations={handleOpenVariationsModal}
+                      onPointerDown={handlePointerDown}
+                      isDragging={isDragging && draggedItem?.id === video.id}
+                    />
+                  ))}
+                </div>
+                {hasMore && !searchQuery && statusFilter === 'all' && (
+                  <div className="flex justify-center mt-8">
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={isLoadingMore}
+                      className="px-6 py-3 bg-surfaceMuted/30 hover:bg-surfaceMuted/50 rounded-xl transition-colors flex items-center gap-2 text-textPrimary font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoadingMore ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          Carregando...
+                        </>
+                      ) : (
+                        <>
+                          Carregar mais vídeos
+                          <span className="text-textSecondary text-sm">({videos.length} de {totalVideos})</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="space-y-2">
-                {filteredAndSortedVideos.map((video) => (
-                  <VideoCard
-                    key={video.id}
-                    video={video}
-                    view="list"
-                    openVideoDetails={openVideoDetails}
-                    onDelete={handleDelete}
-                    onGenerateVariations={handleOpenVariationsModal}
-                    onPointerDown={handlePointerDown}
-                    isDragging={isDragging && draggedItem?.id === video.id}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="space-y-2">
+                  {filteredAndSortedVideos.map((video) => (
+                    <VideoCard
+                      key={video.id}
+                      video={video}
+                      view="list"
+                      openVideoDetails={openVideoDetails}
+                      onDelete={handleDelete}
+                      onGenerateVariations={handleOpenVariationsModal}
+                      onPointerDown={handlePointerDown}
+                      isDragging={isDragging && draggedItem?.id === video.id}
+                    />
+                  ))}
+                </div>
+                {hasMore && !searchQuery && statusFilter === 'all' && (
+                  <div className="flex justify-center mt-8">
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={isLoadingMore}
+                      className="px-6 py-3 bg-surfaceMuted/30 hover:bg-surfaceMuted/50 rounded-xl transition-colors flex items-center gap-2 text-textPrimary font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoadingMore ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          Carregando...
+                        </>
+                      ) : (
+                        <>
+                          Carregar mais vídeos
+                          <span className="text-textSecondary text-sm">({videos.length} de {totalVideos})</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </Card>
         </div>

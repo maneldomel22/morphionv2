@@ -21,8 +21,8 @@ export default function Metrics() {
 
   const loadVideos = async () => {
     try {
-      const data = await videoService.getVideos();
-      const readyVideos = (data || []).filter(v => v.status === 'ready');
+      const response = await videoService.getVideos({ limit: 1000 });
+      const readyVideos = (response.videos || []).filter(v => v.status === 'ready');
       setVideos(readyVideos);
     } catch (error) {
       console.error('Error loading videos:', error);

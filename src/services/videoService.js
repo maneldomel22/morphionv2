@@ -41,20 +41,28 @@ export const videoService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
+    const limit = filters.limit || 30;
+    const offset = filters.offset || 0;
+
     let query = supabase
       .from('videos')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (filters.status) {
       query = query.eq('status', filters.status);
     }
 
-    const { data, error } = await query;
+    const { data, error, count } = await query;
 
     if (error) throw error;
-    return normalizeLegacyVideos(data);
+    return {
+      videos: normalizeLegacyVideos(data),
+      total: count,
+      hasMore: count > offset + limit
+    };
   },
 
   async getVideoById(id) {
