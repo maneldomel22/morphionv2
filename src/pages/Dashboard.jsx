@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
-import { Video, TrendingUp, BarChart3, Play, Calendar, X, Download, Loader2 } from 'lucide-react';
+import { Video, TrendingUp, BarChart3, Play, Calendar, X, Download, Loader2, FolderOpen } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [recentCreatives, setRecentCreatives] = useState([]);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [selectedVideoForPreview, setSelectedVideoForPreview] = useState(null);
@@ -230,49 +232,58 @@ export default function Dashboard() {
                     Nenhum criativo ainda. Comece criando seu primeiro vídeo!
                   </div>
                 ) : (
-                  recentCreatives.map((creative) => (
-                    <div
-                      key={creative.id}
-                      onClick={() => openPreviewModal(creative)}
-                      className="flex items-center gap-2 sm:gap-3 md:gap-4 p-2 sm:p-3 md:p-4 bg-surfaceMuted/30 rounded-xl hover:bg-surfaceMuted/50 transition-colors cursor-pointer overflow-hidden"
+                  <>
+                    {recentCreatives.map((creative) => (
+                      <div
+                        key={creative.id}
+                        onClick={() => openPreviewModal(creative)}
+                        className="flex items-center gap-2 sm:gap-3 md:gap-4 p-2 sm:p-3 md:p-4 bg-surfaceMuted/30 rounded-xl hover:bg-surfaceMuted/50 transition-colors cursor-pointer overflow-hidden"
+                      >
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-surfaceMuted/50 rounded-lg overflow-hidden flex-shrink-0">
+                          {creative.video_url ? (
+                            <video
+                              src={creative.video_url}
+                              className="w-full h-full object-cover"
+                              muted
+                              playsInline
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surfaceMuted to-surface">
+                              <Video size={20} sm:size={24} md:size={28} className="text-textSecondary" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <h4 className="text-textPrimary font-medium truncate mb-0.5 sm:mb-1 text-xs sm:text-sm md:text-base">
+                            {creative.avatar_name || 'Avatar'} • {creative.creative_style || 'UGC'}
+                          </h4>
+                          <p className="text-textSecondary text-xs sm:text-sm line-clamp-2 overflow-hidden">
+                            {creative.dialogue || 'Vídeo gerado'}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 sm:gap-2 flex-shrink-0">
+                          <span className="text-textSecondary text-[10px] sm:text-xs whitespace-nowrap">{formatDate(creative.created_at)}</span>
+                          <Badge className={`${
+                            creative.status === 'ready'
+                              ? 'bg-green-500/20 text-green-600 border-green-500/30'
+                              : creative.status === 'processing'
+                              ? 'bg-blue-500/20 text-blue-600 border-blue-500/30'
+                              : 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30'
+                          }`}>
+                            {creative.status === 'ready' ? 'Pronto' :
+                             creative.status === 'processing' ? 'Processando' : 'Na fila'}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => navigate('/library')}
+                      className="w-full mt-4 p-3 rounded-xl bg-surfaceMuted/30 hover:bg-surfaceMuted/50 transition-all flex items-center justify-center gap-2 text-textSecondary hover:text-textPrimary group"
                     >
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-surfaceMuted/50 rounded-lg overflow-hidden flex-shrink-0">
-                        {creative.video_url ? (
-                          <video
-                            src={creative.video_url}
-                            className="w-full h-full object-cover"
-                            muted
-                            playsInline
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surfaceMuted to-surface">
-                            <Video size={20} sm:size={24} md:size={28} className="text-textSecondary" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0 overflow-hidden">
-                        <h4 className="text-textPrimary font-medium truncate mb-0.5 sm:mb-1 text-xs sm:text-sm md:text-base">
-                          {creative.avatar_name || 'Avatar'} • {creative.creative_style || 'UGC'}
-                        </h4>
-                        <p className="text-textSecondary text-xs sm:text-sm line-clamp-2 overflow-hidden">
-                          {creative.dialogue || 'Vídeo gerado'}
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-end gap-1 sm:gap-2 flex-shrink-0">
-                        <span className="text-textSecondary text-[10px] sm:text-xs whitespace-nowrap">{formatDate(creative.created_at)}</span>
-                        <Badge className={`${
-                          creative.status === 'ready'
-                            ? 'bg-green-500/20 text-green-600 border-green-500/30'
-                            : creative.status === 'processing'
-                            ? 'bg-blue-500/20 text-blue-600 border-blue-500/30'
-                            : 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30'
-                        }`}>
-                          {creative.status === 'ready' ? 'Pronto' :
-                           creative.status === 'processing' ? 'Processando' : 'Na fila'}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))
+                      <FolderOpen size={18} className="group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium">Ver todos na biblioteca</span>
+                    </button>
+                  </>
                 )}
               </div>
             </div>
