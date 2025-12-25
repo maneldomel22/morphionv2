@@ -179,7 +179,7 @@ Deno.serve(async (req: Request) => {
     console.log("Checking video status for task:", influencer.intro_video_task_id);
 
     const statusResponse = await fetch(
-      `https://api.kie.one/api/v2/video/${influencer.intro_video_task_id}`,
+      `https://api.kie.ai/api/v1/jobs/getTask/${influencer.intro_video_task_id}`,
       {
         headers: {
           "Authorization": `Bearer ${kieApiKey}`,
@@ -192,13 +192,19 @@ Deno.serve(async (req: Request) => {
     }
 
     const statusData = await statusResponse.json();
-    console.log("Video status:", statusData.status);
 
-    if (statusData.status !== "completed") {
+    if (statusData.code !== 200) {
+      throw new Error(`KIE API error: ${statusData.msg || 'Unknown error'}`);
+    }
+
+    const taskState = statusData.data?.state;
+    console.log("Video status:", taskState);
+
+    if (taskState !== "success") {
       return new Response(
         JSON.stringify({
           success: true,
-          status: statusData.status,
+          status: taskState,
           message: "Video still processing"
         }),
         {
@@ -210,7 +216,11 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const videoUrl = statusData.video_url;
+    const videoUrl = statusData.data?.resultJson?.resultUrls?.[0];
+
+    if (!videoUrl) {
+      throw new Error("No video URL in completed task");
+    }
     console.log("Video completed, URL:", videoUrl);
 
     await supabase

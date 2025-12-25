@@ -94,28 +94,33 @@ Deno.serve(async (req: Request) => {
     console.log("Creating influencer with intro video...");
     console.log("Prompt:", videoPrompt);
 
-    const kieResponse = await fetch("https://api.kie.one/api/v2/video", {
+    const kieResponse = await fetch("https://api.kie.ai/api/v1/jobs/createTask", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${kieApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        prompt: videoPrompt,
-        model: "wan-2.5",
-        duration: 10,
-        aspect_ratio: "9:16"
+        model: "sora-2-text-to-video",
+        input: {
+          prompt: videoPrompt,
+          aspect_ratio: "portrait",
+          n_frames: "10",
+          size: "standard",
+          remove_watermark: true
+        }
       }),
     });
 
-    if (!kieResponse.ok) {
-      const errorText = await kieResponse.text();
+    const kieData = await kieResponse.json();
+
+    if (kieData.code !== 200 || !kieData.data?.taskId) {
+      const errorText = kieData.msg || kieData.message || "Unknown error";
       console.error("KIE API error:", errorText);
-      throw new Error(`Failed to create intro video: ${kieResponse.status}`);
+      throw new Error(`Failed to create intro video: ${errorText}`);
     }
 
-    const kieData = await kieResponse.json();
-    const taskId = kieData.task_id;
+    const taskId = kieData.data.taskId;
 
     console.log("Video task created:", taskId);
 
