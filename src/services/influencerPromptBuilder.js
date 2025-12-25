@@ -152,7 +152,7 @@ function truncateSmartly(text, maxLength) {
   return text.substring(0, maxLength - 3) + '...';
 }
 
-export async function buildSeedreamPrompt({ influencer, scene, camera }) {
+export async function buildSeedreamPrompt({ influencer, scene, camera, isExplicit = false }) {
   const profile = influencer.identity_profile;
 
   const face = profile?.face || {};
@@ -185,7 +185,51 @@ export async function buildSeedreamPrompt({ influencer, scene, camera }) {
     ).join(', ');
   }
 
-  // Build base template (optimized)
+  // Build UGC-style prompt for explicit content
+  if (isExplicit) {
+    const ugcTemplate = `=== IMAGE REFERENCE INSTRUCTION ===
+SOURCE IMAGE IS FOR CHARACTER IDENTITY ONLY (Face/Body/Marks).
+OUTPUT MUST BE A SINGLE PHOTO. NO GRIDS, NO SPLIT SCREENS, NO COLLAGES.
+
+=== MEDIUM & AESTHETIC (CRITICAL FOR UGC) ===
+TYPE: Raw smartphone flash photography, Snapchat story screenshot, low-light amateur selfie.
+CAM: Front-facing phone camera, wide angle lens distortion (slightly bulbous perspective).
+QUALITY: High ISO noise, digital grain, slightly blurry motion on moving hands, unpolished, harsh contrast.
+LIGHTING: Direct hard flash (on-camera flash), deep hard shadows behind the subject, vignette edges, "red-eye" aesthetic, highlights blowing out on sweaty skin.
+
+=== IDENTITY LOCK (FROM REFERENCE) ===
+FACE: ${face.ethnicity || 'Brazilian mixed'}, ${face.skin_tone || 'olive tan skin'}, ${face.eyes?.color || 'brown'} ${face.eyes?.shape || 'almond'} eyes, ${face.face_shape || 'oval'} face, ${face.lips || 'full lips'}.
+HAIR: ${hair.color || 'Dark brown'}, ${hair.length || 'long'} ${hair.texture || 'wavy'}, ${hair.style || 'messy/tousled'} texture.
+BODY: ${body.type || 'Athletic curvy'}, ${body.height || '168cm'}, ${body.waist || 'defined waist'}, ${body.hips || 'full rounded hips'}, ${body.breast_size || 'natural medium breasts'}.
+MARKS: ${tattoosDesc || 'Small butterfly tattoo right hip'}, ${molesDesc ? `moles on ${molesDesc}` : 'moles on left shoulder/lower back'}.
+SKIN: Real skin texture (pores, peach fuzz, slight acne scarring, goosebumps, oily sheen from humidity).
+
+=== SCENE & ENVIRONMENT ===
+LOC: ${scene.environment}
+ATMOSPHERE: Intimate, private, humid, messy.
+
+=== ACTION & POSE ===
+POV: High-angle handheld selfie (arm visible extending to camera), creating foreshortening.
+ACTION: ${scene.action_pose}
+DETAILS: Flush skin (redness) on chest/neck from heat, sweat droplets, natural body tension.
+
+=== EXPRESSION ===
+LOOK: Direct eye contact with lens (breaking 4th wall), pupils dilated.
+VIBE: ${scene.expression_attitude}
+
+--no grid, collage, split screen, render, 3d, cartoon, airbrushed, studio lighting, bokeh, smooth skin`;
+
+    // Truncate if needed
+    if (ugcTemplate.length > MAX_SEEDREAM_PROMPT_LENGTH) {
+      console.warn(`⚠️ UGC prompt exceeds limit: ${ugcTemplate.length}/${MAX_SEEDREAM_PROMPT_LENGTH}`);
+      return truncateSmartly(ugcTemplate, MAX_SEEDREAM_PROMPT_LENGTH);
+    }
+
+    console.log(`✅ UGC prompt: ${ugcTemplate.length}/${MAX_SEEDREAM_PROMPT_LENGTH} chars`);
+    return ugcTemplate;
+  }
+
+  // Original template for safe content
   const baseTemplate = `REF IMAGE = IDENTITY ONLY (not layout/composition)
 SINGLE PHOTO ONLY - No grids/panels/collages
 
@@ -282,6 +326,6 @@ export async function buildInfluencerPrompt({ influencer, mode, scene, camera })
   if (mode === 'safe') {
     return await buildNanoBananaPrompt({ influencer, scene, camera });
   } else {
-    return await buildSeedreamPrompt({ influencer, scene, camera });
+    return await buildSeedreamPrompt({ influencer, scene, camera, isExplicit: true });
   }
 }

@@ -216,7 +216,7 @@ export default function HotImageQuiz({ isOpen, onClose, influencer, onGenerate }
         processing: 'natural'
       };
 
-      const prompt = await buildSeedreamPrompt({ influencer, scene, camera });
+      const prompt = await buildSeedreamPrompt({ influencer, scene, camera, isExplicit: true });
 
       handleClose();
 
