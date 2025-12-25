@@ -43,12 +43,27 @@ export const voiceCloneService = {
         needVolumeNormalization = false,
       } = options;
 
+      const { data: existingVoices, error: countError } = await supabase
+        .from('cloned_voices')
+        .select('slot')
+        .eq('user_id', user.id);
+
+      if (countError) throw countError;
+
+      if (existingVoices && existingVoices.length >= 3) {
+        throw new Error('Você já atingiu o limite de 3 vozes clonadas. Delete uma voz existente para clonar uma nova.');
+      }
+
+      const usedSlots = existingVoices ? existingVoices.map(v => v.slot) : [];
+      const availableSlot = [1, 2, 3].find(slot => !usedSlots.includes(slot)) || 1;
+
       const { data: voice, error: insertError } = await supabase
         .from('cloned_voices')
         .insert({
           user_id: user.id,
           voice_id: voiceId,
           name: voiceName,
+          slot: availableSlot,
           audio_file_id: fileId,
           voice_status: 'processing',
           metadata: {
