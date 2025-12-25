@@ -90,6 +90,10 @@ const HIPS = ['Estreitos', 'Médios', 'Largos', 'Muito Largos'];
 const LEGS = ['Finas', 'Médias', 'Torneadas', 'Musculosas'];
 const POSTURES = ['Ereta', 'Relaxada', 'Levemente Inclinada', 'Confiante'];
 
+// Características físicas adultas
+const BREAST_SIZES = ['Pequenos', 'Médios', 'Grandes', 'Muito Grandes'];
+const VULVA_TYPES = ['Pequena', 'Média', 'Carnuda', 'Muito Carnuda'];
+
 // ETAPA 5 - Marcas Corporais
 const TATTOO_SIZES = ['Pequena', 'Média', 'Grande'];
 const SCAR_VISIBILITIES = ['Discreta', 'Visível'];
@@ -130,6 +134,8 @@ export default function CreateInfluencerQuiz({ onComplete, onCancel }) {
     hips: '',
     legs: '',
     posture: '',
+    breast_size: '',
+    vulva_type: '',
 
     // Etapa 5 - Body Marks
     has_marks: false,
@@ -233,7 +239,8 @@ export default function CreateInfluencerQuiz({ onComplete, onCancel }) {
     formData.eye_shape && formData.face_shape && formData.nose && formData.lips && formData.base_expression;
   const canProceedStep3 = formData.hair_color && formData.hair_style && formData.hair_length && formData.hair_texture;
   const canProceedStep4 = formData.body_type && formData.height && formData.proportions &&
-    formData.shoulders && formData.waist && formData.hips && formData.legs && formData.posture;
+    formData.shoulders && formData.waist && formData.hips && formData.legs && formData.posture &&
+    formData.breast_size && formData.vulva_type;
   const canProceedStep5 = !formData.has_marks ||
     ((!formData.has_tattoos || formData.tattoos.every(t => t.location && t.style)) &&
      (!formData.has_moles || formData.moles.every(m => m.location)) &&
@@ -549,6 +556,20 @@ export default function CreateInfluencerQuiz({ onComplete, onCancel }) {
               Postura
             </label>
             {renderSelectGrid(POSTURES, 'posture', 2)}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tamanho dos Seios
+            </label>
+            {renderSelectGrid(BREAST_SIZES, 'breast_size', 2)}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tipo de Vulva
+            </label>
+            {renderSelectGrid(VULVA_TYPES, 'vulva_type', 2)}
           </div>
         </div>
       )}

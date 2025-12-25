@@ -42,7 +42,9 @@ export default function CreateInfluencerModal({ isOpen, onClose, onSuccess }) {
           waist: quizData.waist,
           hips: quizData.hips,
           legs: quizData.legs,
-          posture: quizData.posture
+          posture: quizData.posture,
+          breast_size: quizData.breast_size,
+          vulva_type: quizData.vulva_type
         },
         body_marks: {
           tattoos: quizData.has_tattoos ? quizData.tattoos : [],

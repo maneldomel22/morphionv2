@@ -64,6 +64,8 @@ export function buildIdentityPromptSection(identityProfile) {
     if (body.waist) bodyDetails.push(`Waist: ${body.waist}`);
     if (body.hips) bodyDetails.push(`Hips: ${body.hips}`);
     if (body.legs) bodyDetails.push(`Legs: ${body.legs}`);
+    if (body.breast_size) bodyDetails.push(`Breast: ${body.breast_size}`);
+    if (body.vulva_type) bodyDetails.push(`Vulva: ${body.vulva_type}`);
 
     if (bodyDetails.length > 0) {
       prompt += `${bodyDetails.join(', ')}\n`;
@@ -184,6 +186,8 @@ Body proportions:
 - Legs: ${body?.legs || 'Médias'}
 - Posture: ${body?.posture || 'Ereta'}
 - Overall proportions: ${body?.proportions || 'Equilibradas'}
+- Breast size: ${body?.breast_size || 'Médios'}
+- Vulva type: ${body?.vulva_type || 'Média'}
 
 Hair:
 - Color: ${hair?.color || 'Castanho'}

@@ -196,7 +196,7 @@ FACE: ${face.ethnicity || 'N/A'} | ${face.skin_tone || 'N/A'} | ${face.eyes?.col
 
 HAIR: ${hair.color || 'N/A'} | ${hair.length || 'N/A'} | ${hair.texture || 'N/A'} | ${hair.style || 'N/A'}
 
-BODY: ${body.type || 'N/A'} | ${body.height || 'N/A'} | ${body.proportions || 'N/A'} | Shoulders:${body.shoulders || 'N/A'} | Waist:${body.waist || 'N/A'} | Hips:${body.hips || 'N/A'} | Legs:${body.legs || 'N/A'} | ${body.posture || 'N/A'}
+BODY: ${body.type || 'N/A'} | ${body.height || 'N/A'} | ${body.proportions || 'N/A'} | Shoulders:${body.shoulders || 'N/A'} | Waist:${body.waist || 'N/A'} | Hips:${body.hips || 'N/A'} | Legs:${body.legs || 'N/A'} | ${body.posture || 'N/A'} | Breast:${body.breast_size || 'N/A'} | Vulva:${body.vulva_type || 'N/A'}
 
 MARKS: ${tattoosDesc || 'No tattoos'} | Moles: ${molesDesc || 'none'} | Scars: ${scarsDesc || 'none'}
 

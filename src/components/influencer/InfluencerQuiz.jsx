@@ -134,6 +134,28 @@ const QUIZ_STEPS = [
         type: 'text',
         placeholder: 'Ex: Tatuagens, piercings, óculos, barba...',
         optional: true
+      },
+      {
+        key: 'breast_size',
+        label: 'Tamanho dos Seios',
+        type: 'select',
+        options: [
+          { value: 'small', label: 'Pequenos' },
+          { value: 'medium', label: 'Médios' },
+          { value: 'large', label: 'Grandes' },
+          { value: 'very_large', label: 'Muito Grandes' }
+        ]
+      },
+      {
+        key: 'vulva_type',
+        label: 'Tipo de Vulva',
+        type: 'select',
+        options: [
+          { value: 'small', label: 'Pequena' },
+          { value: 'medium', label: 'Média' },
+          { value: 'plump', label: 'Carnuda' },
+          { value: 'very_plump', label: 'Muito Carnuda' }
+        ]
       }
     ]
   },
