@@ -242,5 +242,28 @@ export const imageService = {
     }
 
     throw new Error('Image generation timeout');
+  },
+
+  startBackgroundGeneration(taskId, imageRecordId, onSuccess, onError) {
+    const pollInBackground = async () => {
+      try {
+        const result = await this.pollImageStatus(taskId);
+
+        if (result?.images?.[0]) {
+          if (onSuccess) {
+            onSuccess(result.images[0], imageRecordId);
+          }
+        } else {
+          throw new Error('No image URL in result');
+        }
+      } catch (error) {
+        console.error('Background generation error:', error);
+        if (onError) {
+          onError(error, imageRecordId);
+        }
+      }
+    };
+
+    pollInBackground();
   }
 };

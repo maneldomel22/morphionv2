@@ -11,6 +11,7 @@ import { supabase } from '../lib/supabase';
 import { prepareImageForUpload } from '../lib/imageUtils';
 import { toolsInfo } from '../data/toolsInfo';
 import { IMAGE_ENGINES, IMAGE_ENGINE_CONFIGS } from '../types/imageEngines';
+import { GeneratingImagePlaceholder } from '../components/ui/GeneratingImagePlaceholder';
 
 export default function ImageGeneration() {
   const [description, setDescription] = useState('');
@@ -27,14 +28,23 @@ export default function ImageGeneration() {
   const [history, setHistory] = useState([]);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [viewingImage, setViewingImage] = useState(null);
+  const [activeGenerations, setActiveGenerations] = useState(0);
 
   const engineConfig = IMAGE_ENGINE_CONFIGS[imageEngine];
 
   const productImageInputRef = useRef(null);
   const characterImageInputRef = useRef(null);
+  const realtimeChannelRef = useRef(null);
 
   useEffect(() => {
     loadGeneratedImages();
+    setupRealtimeSubscription();
+
+    return () => {
+      if (realtimeChannelRef.current) {
+        supabase.removeChannel(realtimeChannelRef.current);
+      }
+    };
   }, []);
 
   const loadGeneratedImages = async () => {
@@ -47,11 +57,73 @@ export default function ImageGeneration() {
         aspectRatio: img.aspect_ratio,
         timestamp: img.created_at,
         imageModel: img.image_model,
-        generationMode: img.generation_mode
+        generationMode: img.generation_mode,
+        status: img.status,
+        errorMessage: img.error_message
       }));
       setGeneratedImages(formattedImages);
+
+      const generating = formattedImages.filter(img => img.status === 'generating').length;
+      setActiveGenerations(generating);
     } catch (error) {
       console.error('Error loading images:', error);
+    }
+  };
+
+  const setupRealtimeSubscription = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      realtimeChannelRef.current = generatedImagesService.subscribeToImageUpdates(
+        user.id,
+        (payload) => {
+          if (payload.eventType === 'UPDATE') {
+            setGeneratedImages(prev => {
+              const updated = prev.map(img =>
+                img.id === payload.new.id
+                  ? {
+                      ...img,
+                      url: payload.new.image_url,
+                      status: payload.new.status,
+                      errorMessage: payload.new.error_message
+                    }
+                  : img
+              );
+
+              const generating = updated.filter(img => img.status === 'generating').length;
+              setActiveGenerations(generating);
+
+              return updated;
+            });
+          } else if (payload.eventType === 'INSERT') {
+            const newImage = {
+              id: payload.new.id,
+              url: payload.new.image_url,
+              prompt: payload.new.prompt,
+              aspectRatio: payload.new.aspect_ratio,
+              timestamp: payload.new.created_at,
+              imageModel: payload.new.image_model,
+              generationMode: payload.new.generation_mode,
+              status: payload.new.status,
+              errorMessage: payload.new.error_message
+            };
+
+            setGeneratedImages(prev => {
+              const exists = prev.some(img => img.id === newImage.id);
+              if (exists) return prev;
+
+              const updated = [newImage, ...prev];
+              const generating = updated.filter(img => img.status === 'generating').length;
+              setActiveGenerations(generating);
+
+              return updated;
+            });
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Error setting up realtime:', error);
     }
   };
 
@@ -112,16 +184,6 @@ export default function ImageGeneration() {
     }
 
     setGenerating(true);
-    const LOADING_MESSAGES = getLoadingMessages(imageEngine);
-    let messageIndex = 0;
-    setLoadingMessage(LOADING_MESSAGES[0]);
-
-    const messageInterval = setInterval(() => {
-      messageIndex++;
-      if (messageIndex < LOADING_MESSAGES.length) {
-        setLoadingMessage(LOADING_MESSAGES[messageIndex]);
-      }
-    }, 3000);
 
     try {
       const imageData = {
@@ -137,57 +199,71 @@ export default function ImageGeneration() {
 
       const result = await imageService.generateImage(imageData);
 
-      const finalResult = await imageService.pollImageStatus(result.taskId);
+      const pendingImage = await generatedImagesService.createPendingImage({
+        prompt: description,
+        aspectRatio,
+        productImageUrl: productImage,
+        characterImageUrl: characterImage,
+        taskId: result.taskId,
+        visualPrompt: result.visualPrompt,
+        imageModel: imageEngine,
+        kieModel: engineConfig.kieModel,
+        generationMode: (productImage || characterImage) ? 'image-to-image' : 'text-to-image',
+        sourceImageUrl: productImage || characterImage || null
+      });
 
-      clearInterval(messageInterval);
+      const newImage = {
+        id: pendingImage.id,
+        url: null,
+        prompt: pendingImage.prompt,
+        aspectRatio: pendingImage.aspect_ratio,
+        timestamp: pendingImage.created_at,
+        imageModel: pendingImage.image_model,
+        generationMode: pendingImage.generation_mode,
+        status: 'generating'
+      };
 
-      if (finalResult.images && finalResult.images.length > 0) {
-        const savedImages = [];
+      setGeneratedImages(prev => [newImage, ...prev]);
+      setActiveGenerations(prev => prev + 1);
 
-        for (const imageUrl of finalResult.images) {
-          const savedImage = await generatedImagesService.saveGeneratedImage({
-            imageUrl,
-            prompt: description,
-            aspectRatio,
-            productImageUrl: productImage,
-            characterImageUrl: characterImage,
-            taskId: result.taskId,
-            visualPrompt: result.visualPrompt,
-            imageModel: imageEngine,
-            kieModel: engineConfig.kieModel,
-            generationMode: (productImage || characterImage) ? 'image-to-image' : 'text-to-image',
-            sourceImageUrl: productImage || characterImage || null
-          });
+      setHistory(prev => [{
+        id: Date.now(),
+        prompt: description.substring(0, 50) + (description.length > 50 ? '...' : ''),
+        timestamp: new Date().toISOString()
+      }, ...prev].slice(0, 10));
 
-          savedImages.push({
-            id: savedImage.id,
-            url: savedImage.image_url,
-            prompt: savedImage.prompt,
-            aspectRatio: savedImage.aspect_ratio,
-            timestamp: savedImage.created_at,
-            imageModel: savedImage.image_model,
-            generationMode: savedImage.generation_mode
-          });
+      setDescription('');
+      setProductImage(null);
+      setCharacterImage(null);
+
+      imageService.startBackgroundGeneration(
+        result.taskId,
+        pendingImage.id,
+        async (imageUrl, imageRecordId) => {
+          try {
+            await generatedImagesService.updateImageStatus(imageRecordId, 'completed', imageUrl);
+          } catch (error) {
+            console.error('Error updating image status:', error);
+          }
+        },
+        async (error, imageRecordId) => {
+          try {
+            await generatedImagesService.updateImageStatus(
+              imageRecordId,
+              'failed',
+              null,
+              error.message || 'Erro ao gerar imagem'
+            );
+          } catch (updateError) {
+            console.error('Error updating failed status:', updateError);
+          }
         }
-
-        setGeneratedImages(prev => [...savedImages, ...prev]);
-        setHistory(prev => [{
-          id: Date.now(),
-          prompt: description.substring(0, 50) + (description.length > 50 ? '...' : ''),
-          timestamp: new Date().toISOString()
-        }, ...prev].slice(0, 10));
-
-        setDescription('');
-        setProductImage(null);
-        setCharacterImage(null);
-      }
+      );
     } catch (error) {
-      console.error('Error generating image:', error);
-      clearInterval(messageInterval);
-      alert('Erro ao gerar imagem. Tente novamente.');
+      console.error('Error starting image generation:', error);
+      alert('Erro ao iniciar geração. Tente novamente.');
     } finally {
       setGenerating(false);
-      setLoadingMessage('');
     }
   };
 
@@ -501,7 +577,15 @@ export default function ImageGeneration() {
           </Card>
 
           <Card>
-            <h3 className="text-lg font-semibold text-textPrimary mb-6">Imagens Geradas</h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-textPrimary">Imagens Geradas</h3>
+              {activeGenerations > 0 && (
+                <Badge variant="warning" className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse" />
+                  {activeGenerations} {activeGenerations === 1 ? 'gerando' : 'gerando'}
+                </Badge>
+              )}
+            </div>
             {generatedImages.length === 0 ? (
               <div className="text-center py-12">
                 <ImageIcon size={48} className="text-textTertiary mx-auto mb-4" strokeWidth={1.5} />
@@ -510,6 +594,31 @@ export default function ImageGeneration() {
             ) : (
               <div className="grid grid-cols-2 gap-4">
                 {generatedImages.map((img) => {
+                  if (img.status === 'generating') {
+                    return (
+                      <GeneratingImagePlaceholder
+                        key={img.id}
+                        prompt={img.prompt}
+                        imageModel={img.imageModel}
+                      />
+                    );
+                  }
+
+                  if (img.status === 'failed') {
+                    return (
+                      <div
+                        key={img.id}
+                        className="relative aspect-square bg-surfaceMuted/30 rounded-xl overflow-hidden border border-red-500/30 flex flex-col items-center justify-center p-4"
+                      >
+                        <X size={48} className="text-red-400 mb-2" />
+                        <p className="text-red-300 text-sm text-center">Erro ao gerar</p>
+                        <p className="text-textTertiary text-xs text-center mt-1 line-clamp-2">
+                          {img.errorMessage || 'Tente novamente'}
+                        </p>
+                      </div>
+                    );
+                  }
+
                   const isEdited = img.generationMode === 'image-to-image';
                   const engineBadge = isEdited ? 'Editada' : 'Criada';
                   const badgeColor = isEdited ? 'bg-purple-500/20 text-purple-300' : 'bg-green-500/20 text-green-300';
