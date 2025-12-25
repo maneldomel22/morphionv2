@@ -574,3 +574,99 @@ body::before {
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
+
+@keyframes gradientMove {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes radialPulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+.bg-animated-gradient {
+  background: radial-gradient(
+    circle at var(--mouse-x) var(--mouse-y),
+    rgba(124, 110, 255, 0.15) 0%,
+    rgba(77, 163, 255, 0.08) 25%,
+    rgba(19, 19, 23, 1) 50%,
+    rgba(11, 11, 14, 1) 75%,
+    rgba(0, 0, 0, 1) 100%
+  ),
+  linear-gradient(
+    135deg,
+    rgba(19, 19, 23, 1) 0%,
+    rgba(11, 11, 14, 1) 50%,
+    rgba(0, 0, 0, 1) 100%
+  );
+  background-size: 200% 200%, 100% 100%;
+  animation: gradientMove 35s ease infinite;
+  will-change: background-position;
+}
+
+.noise-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+}
+
+.radial-glow {
+  background: radial-gradient(
+    circle 800px at var(--mouse-x) var(--mouse-y),
+    rgba(124, 110, 255, 0.06),
+    transparent 50%
+  );
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  will-change: background;
+}
+
+.interaction-glow {
+  background: radial-gradient(
+    circle 600px at var(--mouse-x) var(--mouse-y),
+    rgba(124, 110, 255, 0.08),
+    transparent 40%
+  );
+  animation: radialPulse 8s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+
+@keyframes textGlow {
+  0%, 100% {
+    text-shadow: 0 0 20px rgba(124, 110, 255, 0.4),
+                 0 0 40px rgba(124, 110, 255, 0.2);
+  }
+  50% {
+    text-shadow: 0 0 30px rgba(124, 110, 255, 0.6),
+                 0 0 60px rgba(124, 110, 255, 0.3);
+  }
+}
+
+.text-glow-animated {
+  animation: textGlow 4s ease-in-out infinite;
+}
+
+.input-focus-glow:focus {
+  box-shadow: 0 0 0 3px rgba(124, 110, 255, 0.15),
+              0 0 20px rgba(124, 110, 255, 0.1),
+              0 0 40px rgba(124, 110, 255, 0.05);
+}
+
+.button-hover-glow:hover {
+  box-shadow: 0 0 30px rgba(124, 110, 255, 0.4),
+              0 0 60px rgba(124, 110, 255, 0.2),
+              0 8px 30px rgba(124, 110, 255, 0.25);
+}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getErrorMessage } from '../services/authService';
 import { Loader2, Zap, Users, Target } from 'lucide-react';
+import AnimatedBackground from '../components/ui/AnimatedBackground';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -64,11 +65,8 @@ export default function Login() {
   return (
     <div className="min-h-screen flex bg-[rgb(var(--background))]">
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[rgb(var(--gradient-start))] via-[rgb(var(--gradient-mid))] to-[rgb(var(--gradient-end))]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(var(--brand-primary),0.08),transparent_50%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_70%,rgba(var(--brand-secondary),0.06),transparent_50%)]"></div>
-
-        <div className="relative z-10 flex flex-col justify-center px-16 max-w-2xl animate-fadeIn">
+        <AnimatedBackground enableGlow={true}>
+          <div className="flex flex-col justify-center px-16 max-w-2xl animate-fadeIn">
           <div className="mb-16">
             <div className="flex items-center gap-2.5 mb-20">
               <img src="/icon.png" alt="Morphion" className="w-9 h-9" />
@@ -77,7 +75,7 @@ export default function Login() {
 
             <h1 className="text-5xl font-bold mb-4 leading-[1.15] tracking-tight">
               Crie vídeos e imagens que parecem{' '}
-              <span className="text-[rgb(var(--brand-primary))]">reais</span> em segundos
+              <span className="text-[rgb(var(--brand-primary))] text-glow-animated">reais</span> em segundos
             </h1>
 
             <p className="text-lg text-[rgb(var(--text-secondary))] mb-10 leading-relaxed">
@@ -100,7 +98,8 @@ export default function Login() {
               ))}
             </div>
           </div>
-        </div>
+          </div>
+        </AnimatedBackground>
       </div>
 
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
@@ -122,7 +121,7 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
                 required
-                className="w-full px-4 py-3.5 bg-[rgba(var(--surface-muted),0.4)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-[rgb(var(--text-primary))] placeholder:text-[rgb(var(--text-tertiary))] focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.15)] transition-all"
+                className="w-full px-4 py-3.5 bg-[rgba(var(--surface-muted),0.4)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-[rgb(var(--text-primary))] placeholder:text-[rgb(var(--text-tertiary))] focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.15)] input-focus-glow transition-all"
               />
             </div>
 
@@ -133,7 +132,7 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Senha"
                 required
-                className="w-full px-4 py-3.5 bg-[rgba(var(--surface-muted),0.4)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-[rgb(var(--text-primary))] placeholder:text-[rgb(var(--text-tertiary))] focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.15)] transition-all"
+                className="w-full px-4 py-3.5 bg-[rgba(var(--surface-muted),0.4)] border border-[rgba(var(--border-default),var(--border-default-opacity))] rounded-xl text-[rgb(var(--text-primary))] placeholder:text-[rgb(var(--text-tertiary))] focus:outline-none focus:border-[rgb(var(--brand-primary))] focus:ring-2 focus:ring-[rgba(var(--brand-primary),0.15)] input-focus-glow transition-all"
               />
             </div>
 
@@ -155,7 +154,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 gradient-primary text-white font-semibold rounded-xl shadow-lg hover:shadow-[0_8px_30px_rgba(var(--brand-primary),0.25)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
+              className="w-full py-3.5 gradient-primary text-white font-semibold rounded-xl shadow-lg button-hover-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
             >
               {loading ? (
                 <>
