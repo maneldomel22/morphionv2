@@ -55,6 +55,7 @@ export default function ImageGeneration() {
         id: img.id,
         url: img.image_url,
         prompt: img.prompt,
+        originalPrompt: img.original_prompt,
         aspectRatio: img.aspect_ratio,
         timestamp: img.created_at,
         imageModel: img.image_model,
@@ -87,7 +88,8 @@ export default function ImageGeneration() {
                       ...img,
                       url: payload.new.image_url,
                       status: payload.new.status,
-                      errorMessage: payload.new.error_message
+                      errorMessage: payload.new.error_message,
+                      originalPrompt: payload.new.original_prompt
                     }
                   : img
               );
@@ -102,6 +104,7 @@ export default function ImageGeneration() {
               id: payload.new.id,
               url: payload.new.image_url,
               prompt: payload.new.prompt,
+              originalPrompt: payload.new.original_prompt,
               aspectRatio: payload.new.aspect_ratio,
               timestamp: payload.new.created_at,
               imageModel: payload.new.image_model,
@@ -207,6 +210,7 @@ export default function ImageGeneration() {
 
       const pendingImage = await generatedImagesService.createPendingImage({
         prompt: enhancedDescription,
+        originalPrompt: description,
         aspectRatio,
         productImageUrl: productImage,
         characterImageUrl: characterImage,
@@ -222,6 +226,7 @@ export default function ImageGeneration() {
         id: pendingImage.id,
         url: null,
         prompt: pendingImage.prompt,
+        originalPrompt: pendingImage.original_prompt,
         aspectRatio: pendingImage.aspect_ratio,
         timestamp: pendingImage.created_at,
         imageModel: pendingImage.image_model,
@@ -616,7 +621,7 @@ export default function ImageGeneration() {
                     return (
                       <GeneratingImagePlaceholder
                         key={img.id}
-                        prompt={img.prompt}
+                        prompt={img.originalPrompt || img.prompt}
                         imageModel={img.imageModel}
                       />
                     );

@@ -52,6 +52,7 @@ export const generatedImagesService = {
           user_id: user.id,
           image_url: null,
           prompt: imageData.prompt,
+          original_prompt: imageData.originalPrompt || null,
           aspect_ratio: imageData.aspectRatio,
           product_image_url: imageData.productImageUrl,
           character_image_url: imageData.characterImageUrl,
