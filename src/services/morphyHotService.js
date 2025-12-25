@@ -1,27 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { getBodyMarksAsText } from './identityTranslationService';
 
-// SeeDream limit is 3000 chars
-const MAX_SEEDREAM_PROMPT = 3000;
-
-// Estimate base template size (identity + structure)
-const BASE_TEMPLATE_SIZE = 800; // Conservative estimate
-
-// Estimate field overhead (labels, formatting)
-const FIELD_OVERHEAD = {
-  scene_context: 20,  // "SCENE: "
-  environment: 20,    // "ENV: "
-  wardrobe: 20,       // "WARDROBE: "
-  action_pose: 20,    // "ACTION: "
-  expression_attitude: 20, // "EXPRESSION: "
-  additional_notes: 20  // "NOTES: "
-};
-
 const MAX_FIELD_LENGTH = 300;
-
-function calculateAvailableSpace(field, sceneContext = {}) {
-  return MAX_FIELD_LENGTH;
-}
 
 export async function getMorphyHotSuggestion(field, influencerName, influencerAge, currentValue = '', sceneContext = {}, bodyMarks = null) {
   const { data: { session } } = await supabase.auth.getSession();
@@ -33,11 +13,6 @@ export async function getMorphyHotSuggestion(field, influencerName, influencerAg
   const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/morphy-hot-suggest`;
 
   const bodyMarksText = bodyMarks ? getBodyMarksAsText(bodyMarks) : '';
-
-  // Calculate available space for this field
-  const maxChars = calculateAvailableSpace(field, sceneContext);
-
-  console.log(`📏 Available space for ${field}: ${maxChars} chars`);
 
   const response = await fetch(apiUrl, {
     method: 'POST',
@@ -52,7 +27,7 @@ export async function getMorphyHotSuggestion(field, influencerName, influencerAg
       currentValue,
       sceneContext,
       bodyMarks: bodyMarksText,
-      maxChars
+      maxChars: MAX_FIELD_LENGTH
     })
   });
 
