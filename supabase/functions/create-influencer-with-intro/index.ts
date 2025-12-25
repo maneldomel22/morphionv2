@@ -32,22 +32,20 @@ Age: ${data.age}
 Ethnicity: ${data.ethnicity}
 Face: ${data.facialTraits}
 Hair: ${data.hair}
-Body: ${data.body}
-Marks: ${data.marks}
 
 WARDROBE:
-Casual Brazilian home outfit. Thin strap tank top, denim shorts. No branding.
+Casual top. Simple and comfortable.
 
 SCENE:
-Brazilian apartment. Natural daylight. Real domestic vibe.
+Indoor home setting. Natural daylight. Relaxed vibe.
 
 CAMERA:
 Vertical smartphone selfie (9:16). Front camera. Arm-length distance.
 
 ACTION (10 seconds):
 0-4s: She smiles at camera and says: "${greetingText}"
-4-7s: She steps back slightly, turns around casually showing her body, relaxed natural movement.
-7-10s: Comes back close to camera, holds direct eye contact, silent, minimal movement, clear face.
+4-7s: She maintains the smile, slight natural head movements, relaxed and friendly.
+7-10s: Holds direct eye contact, silent, minimal movement, clear face visibility.
 
 FINAL 3 SECONDS CRITICAL:
 - Complete silence
