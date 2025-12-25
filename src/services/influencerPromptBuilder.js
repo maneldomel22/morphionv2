@@ -1,8 +1,7 @@
 import { buildIdentityPromptSection } from './influencerIdentityBuilder';
-import { translateIdentityProfile } from './identityTranslationService';
 
 export async function buildNanoBananaPrompt({ influencer, scene, camera }) {
-  const profile = await translateIdentityProfile(influencer.identity_profile);
+  const profile = influencer.identity_profile;
 
   const face = profile?.face || {};
   const hair = profile?.hair || {};
@@ -154,7 +153,7 @@ function truncateSmartly(text, maxLength) {
 }
 
 export async function buildSeedreamPrompt({ influencer, scene, camera }) {
-  const profile = await translateIdentityProfile(influencer.identity_profile);
+  const profile = influencer.identity_profile;
 
   const face = profile?.face || {};
   const hair = profile?.hair || {};

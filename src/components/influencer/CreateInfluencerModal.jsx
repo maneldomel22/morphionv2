@@ -4,6 +4,7 @@ import CreateInfluencerQuiz from './CreateInfluencerQuiz';
 import { influencerService } from '../../services/influencerService';
 import { buildInitialInfluencerPrompt } from '../../services/influencerIdentityBuilder';
 import { imageService } from '../../services/imageService';
+import { translateIdentityProfile } from '../../services/identityTranslationService';
 
 export default function CreateInfluencerModal({ isOpen, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -13,7 +14,7 @@ export default function CreateInfluencerModal({ isOpen, onClose, onSuccess }) {
     try {
       setLoading(true);
 
-      const identityProfile = {
+      const identityProfilePT = {
         face: {
           ethnicity: quizData.ethnicity,
           skin_tone: quizData.skin_tone,
@@ -49,6 +50,8 @@ export default function CreateInfluencerModal({ isOpen, onClose, onSuccess }) {
           scars: quizData.has_scars ? quizData.scars : []
         }
       };
+
+      const identityProfile = await translateIdentityProfile(identityProfilePT);
 
       const influencer = await influencerService.createInfluencer({
         name: quizData.name,
