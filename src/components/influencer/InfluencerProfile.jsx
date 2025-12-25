@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Plus, Grid3x3, Trash2, Loader2, Download, RefreshCw, Flame, Play, Edit2, X, AlertTriangle, ChevronRight } from 'lucide-react';
 import { getInfluencerPosts, deleteInfluencerPost, checkPostStatus } from '../../services/influencerPostService';
 import { influencerService } from '../../services/influencerService';
@@ -22,6 +22,10 @@ export default function InfluencerProfile({ influencer: initialInfluencer, onBac
   const { safeViewEnabled } = useSafeView();
   const [showFullscreenPhoto, setShowFullscreenPhoto] = useState(false);
   const [showCharacteristics, setShowCharacteristics] = useState(false);
+  const [isPollingActive, setIsPollingActive] = useState(false);
+  const [lastCheckTime, setLastCheckTime] = useState(null);
+  const checkAttemptsRef = useRef({});
+  const activeChecksRef = useRef(new Set());
 
   useEffect(() => {
     setInfluencer(initialInfluencer);
@@ -32,12 +36,33 @@ export default function InfluencerProfile({ influencer: initialInfluencer, onBac
   }, [influencer.id, refreshKey]);
 
   useEffect(() => {
-    const hasGenerating = posts.some(p => p.status === 'generating');
-    if (!hasGenerating) return;
+    const generatingPosts = posts.filter(p => p.status === 'generating');
+    if (generatingPosts.length === 0) {
+      setIsPollingActive(false);
+      return;
+    }
 
-    const interval = setInterval(() => {
-      loadPosts();
-    }, 5000);
+    setIsPollingActive(true);
+
+    const checkGeneratingPosts = async () => {
+      if (!document.hidden) {
+        const postsToCheck = generatingPosts
+          .filter(post => {
+            const attempts = checkAttemptsRef.current[post.id] || 0;
+            const isChecking = activeChecksRef.current.has(post.id);
+            return !isChecking && attempts < 180;
+          })
+          .slice(0, 3);
+
+        if (postsToCheck.length > 0) {
+          await Promise.all(postsToCheck.map(post => checkPostStatusSilently(post.id)));
+          setLastCheckTime(new Date());
+        }
+      }
+    };
+
+    const interval = setInterval(checkGeneratingPosts, 10000);
+    checkGeneratingPosts();
 
     return () => clearInterval(interval);
   }, [posts]);
@@ -55,6 +80,30 @@ export default function InfluencerProfile({ influencer: initialInfluencer, onBac
       if (isInitialLoad || posts.length === 0) {
         setLoading(false);
       }
+    }
+  };
+
+  const checkPostStatusSilently = async (postId) => {
+    if (activeChecksRef.current.has(postId)) {
+      return;
+    }
+
+    activeChecksRef.current.add(postId);
+    checkAttemptsRef.current[postId] = (checkAttemptsRef.current[postId] || 0) + 1;
+
+    try {
+      const result = await checkPostStatus(postId);
+
+      if (result.status === 'completed' || result.status === 'failed') {
+        await loadPosts();
+        delete checkAttemptsRef.current[postId];
+      }
+    } catch (error) {
+      if (checkAttemptsRef.current[postId] >= 180) {
+        console.error('Max polling attempts reached for post:', postId);
+      }
+    } finally {
+      activeChecksRef.current.delete(postId);
     }
   };
 
@@ -312,11 +361,24 @@ export default function InfluencerProfile({ influencer: initialInfluencer, onBac
 
       <div className="space-y-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Grid3x3 className="w-5 h-5 text-gray-400" />
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Posts
             </h3>
+            {isPollingActive && (
+              <div className="flex items-center gap-2 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <Loader2 className="w-3 h-3 animate-spin text-blue-500" />
+                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                  Verificando status automaticamente
+                </span>
+                {lastCheckTime && (
+                  <span className="text-xs text-gray-500 dark:text-gray-500">
+                    • Última verificação: {lastCheckTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {posts.some(p => p.status === 'generating') && (
