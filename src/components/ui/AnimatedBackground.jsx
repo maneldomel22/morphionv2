@@ -5,6 +5,7 @@ export default function AnimatedBackground({ children, enableGlow = false }) {
   const [mousePosition, setMousePosition] = useState({ x: 0.5, y: 0.5 });
   const currentPosition = useRef({ x: 0.5, y: 0.5 });
   const animationFrameRef = useRef(null);
+  const [particles, setParticles] = useState([]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -31,6 +32,29 @@ export default function AnimatedBackground({ children, enableGlow = false }) {
   }, []);
 
   useEffect(() => {
+    const generateParticles = () => {
+      const particleCount = 30;
+      const newParticles = [];
+
+      for (let i = 0; i < particleCount; i++) {
+        newParticles.push({
+          id: i,
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          size: Math.random() * 3 + 1,
+          speedX: (Math.random() - 0.5) * 0.3,
+          speedY: (Math.random() - 0.5) * 0.3,
+          opacity: Math.random() * 0.4 + 0.1,
+        });
+      }
+
+      setParticles(newParticles);
+    };
+
+    generateParticles();
+  }, []);
+
+  useEffect(() => {
     const lerp = (start, end, factor) => start + (end - start) * factor;
 
     const animate = () => {
@@ -52,6 +76,25 @@ export default function AnimatedBackground({ children, enableGlow = false }) {
         container.style.setProperty('--mouse-x', `${xPercent}%`);
         container.style.setProperty('--mouse-y', `${yPercent}%`);
       }
+
+      setParticles(prevParticles =>
+        prevParticles.map(particle => {
+          let newX = particle.x + particle.speedX;
+          let newY = particle.y + particle.speedY;
+
+          if (newX < -5 || newX > 105) particle.speedX *= -1;
+          if (newY < -5 || newY > 105) particle.speedY *= -1;
+
+          newX = Math.max(-5, Math.min(105, newX));
+          newY = Math.max(-5, Math.min(105, newY));
+
+          return {
+            ...particle,
+            x: newX,
+            y: newY,
+          };
+        })
+      );
 
       animationFrameRef.current = requestAnimationFrame(animate);
     };
@@ -79,6 +122,24 @@ export default function AnimatedBackground({ children, enableGlow = false }) {
       </div>
 
       <div className="absolute inset-0 radial-glow"></div>
+
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {particles.map(particle => (
+          <div
+            key={particle.id}
+            className="absolute rounded-full bg-white/30 backdrop-blur-sm"
+            style={{
+              left: `${particle.x}%`,
+              top: `${particle.y}%`,
+              width: `${particle.size}px`,
+              height: `${particle.size}px`,
+              opacity: particle.opacity,
+              transform: 'translate(-50%, -50%)',
+              transition: 'left 0.1s linear, top 0.1s linear',
+            }}
+          />
+        ))}
+      </div>
 
       {enableGlow && (
         <div className="absolute inset-0 interaction-glow pointer-events-none"></div>
