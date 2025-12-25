@@ -41,6 +41,7 @@ export default function VoiceClone() {
   useEffect(() => {
     loadClonedVoices();
     loadTTSTasks();
+    updateOldTasks();
 
     return () => {
       if (pollCleanupRef.current) {
@@ -51,6 +52,17 @@ export default function VoiceClone() {
       }
     };
   }, []);
+
+  const updateOldTasks = async () => {
+    try {
+      await voiceCloneService.updateCompletedTasks();
+      setTimeout(() => {
+        loadTTSTasks();
+      }, 1000);
+    } catch (error) {
+      console.error('Erro ao atualizar tarefas antigas:', error);
+    }
+  };
 
   const loadClonedVoices = async () => {
     try {
@@ -510,6 +522,16 @@ export default function VoiceClone() {
                             Baixar
                           </button>
                         </div>
+                      )}
+
+                      {task.task_status === 'completed' && !task.audio_url && task.file_id && (
+                        <button
+                          onClick={updateOldTasks}
+                          className="w-full text-xs py-2 px-3 bg-brandPrimary/10 hover:bg-brandPrimary/20 text-brandPrimary rounded-lg transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Loader2 size={12} />
+                          Buscando áudio...
+                        </button>
                       )}
                     </div>
                   );

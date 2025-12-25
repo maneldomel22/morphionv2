@@ -363,6 +363,20 @@ export const voiceCloneService = {
     }
   },
 
+  async updateCompletedTasks() {
+    try {
+      const { data, error } = await supabase.functions.invoke('update-completed-tts-tasks', {
+        body: {},
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Erro ao atualizar tarefas concluídas:', error);
+      throw error;
+    }
+  },
+
   pollTTSStatus(taskId, onUpdate, interval = 3000, maxAttempts = 200) {
     let attempts = 0;
     let pollInterval;
