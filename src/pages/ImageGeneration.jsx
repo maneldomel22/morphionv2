@@ -12,6 +12,7 @@ import { prepareImageForUpload } from '../lib/imageUtils';
 import { toolsInfo } from '../data/toolsInfo';
 import { IMAGE_ENGINES, IMAGE_ENGINE_CONFIGS } from '../types/imageEngines';
 import { GeneratingImagePlaceholder } from '../components/ui/GeneratingImagePlaceholder';
+import { improveSafePrompt } from '../services/morphySafeService';
 
 export default function ImageGeneration() {
   const [description, setDescription] = useState('');
@@ -29,6 +30,7 @@ export default function ImageGeneration() {
   const [loadingMessage, setLoadingMessage] = useState('');
   const [viewingImage, setViewingImage] = useState(null);
   const [activeGenerations, setActiveGenerations] = useState(0);
+  const [improvingPrompt, setImprovingPrompt] = useState(false);
 
   const engineConfig = IMAGE_ENGINE_CONFIGS[imageEngine];
 
@@ -184,10 +186,28 @@ export default function ImageGeneration() {
     }
 
     setGenerating(true);
+    setImprovingPrompt(true);
 
     try {
+      let enhancedDescription = description;
+
+      try {
+        console.log('🤖 Melhorando prompt automaticamente com Morphy...');
+        enhancedDescription = await improveSafePrompt(description, {
+          characterImageUrl: characterImage,
+          productImageUrl: productImage,
+          aspectRatio
+        });
+        console.log('✅ Prompt melhorado com sucesso');
+      } catch (morphyError) {
+        console.warn('⚠️ Erro ao melhorar prompt, usando original:', morphyError);
+        enhancedDescription = description;
+      }
+
+      setImprovingPrompt(false);
+
       const imageData = {
-        description,
+        description: enhancedDescription,
         productImage,
         characterImage,
         aspectRatio,
@@ -200,7 +220,7 @@ export default function ImageGeneration() {
       const result = await imageService.generateImage(imageData);
 
       const pendingImage = await generatedImagesService.createPendingImage({
-        prompt: description,
+        prompt: enhancedDescription,
         aspectRatio,
         productImageUrl: productImage,
         characterImageUrl: characterImage,
@@ -228,7 +248,7 @@ export default function ImageGeneration() {
 
       setHistory(prev => [{
         id: Date.now(),
-        prompt: description.substring(0, 50) + (description.length > 50 ? '...' : ''),
+        prompt: enhancedDescription.substring(0, 50) + (enhancedDescription.length > 50 ? '...' : ''),
         timestamp: new Date().toISOString()
       }, ...prev].slice(0, 10));
 
@@ -264,6 +284,7 @@ export default function ImageGeneration() {
       alert('Erro ao iniciar geração. Tente novamente.');
     } finally {
       setGenerating(false);
+      setImprovingPrompt(false);
     }
   };
 
@@ -557,6 +578,17 @@ export default function ImageGeneration() {
               </div>
             )}
 
+            {improvingPrompt && (
+              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-blue-500 animate-pulse" />
+                  <p className="text-sm text-blue-900 dark:text-blue-100 font-medium">
+                    Morphy está melhorando seu prompt automaticamente...
+                  </p>
+                </div>
+              </div>
+            )}
+
             <Button
               onClick={handleGenerate}
               disabled={generating || !description.trim()}
@@ -565,7 +597,7 @@ export default function ImageGeneration() {
               {generating ? (
                 <>
                   <Loader2 size={18} className="mr-2 animate-spin" />
-                  {loadingMessage}
+                  {improvingPrompt ? 'Melhorando prompt...' : loadingMessage || 'Gerando...'}
                 </>
               ) : (
                 <>
