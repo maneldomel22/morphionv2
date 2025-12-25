@@ -119,6 +119,88 @@ LANGUAGE & OUTPUT
 
 Return ONLY the populated JSON.`;
 
+function convertJsonToNaturalPrompt(visualPrompt: any): string {
+  const parts: string[] = [];
+
+  const subject = visualPrompt.subject_manifest;
+  if (subject?.demographics) {
+    parts.push(subject.demographics);
+  }
+
+  if (subject?.hair?.style && subject?.hair?.color) {
+    parts.push(`${subject.hair.style} ${subject.hair.color} hair`);
+  }
+
+  if (subject?.wardrobe?.top) {
+    let wardrobeDesc = `wearing ${subject.wardrobe.top}`;
+    if (subject?.wardrobe?.bottom) {
+      wardrobeDesc += ` and ${subject.wardrobe.bottom}`;
+    }
+    if (subject?.wardrobe?.accessories && subject.wardrobe.accessories.length > 0) {
+      wardrobeDesc += `, ${subject.wardrobe.accessories.join(', ')}`;
+    }
+    parts.push(wardrobeDesc);
+  }
+
+  if (subject?.pose_and_action?.body_language) {
+    parts.push(subject.pose_and_action.body_language);
+  }
+
+  if (subject?.pose_and_action?.expression) {
+    parts.push(subject.pose_and_action.expression);
+  }
+
+  if (subject?.pose_and_action?.makeup) {
+    parts.push(subject.pose_and_action.makeup);
+  }
+
+  const env = visualPrompt.scene_topology?.environment;
+  if (env?.location) {
+    parts.push(`In ${env.location}`);
+  }
+
+  if (env?.background_details && env.background_details.length > 0) {
+    parts.push(`Background: ${env.background_details.join(', ')}`);
+  }
+
+  const lighting = visualPrompt.scene_topology?.lighting_physics;
+  if (lighting?.primary_source) {
+    parts.push(`Lighting: ${lighting.primary_source}`);
+  }
+
+  if (lighting?.ambient_fill) {
+    parts.push(lighting.ambient_fill);
+  }
+
+  const camera = visualPrompt.camera_specs;
+  if (camera?.type) {
+    parts.push(camera.type);
+  }
+
+  if (camera?.focal_length) {
+    parts.push(camera.focal_length);
+  }
+
+  if (camera?.imperfections?.lens_flare) {
+    parts.push(`lens flare: ${camera.imperfections.lens_flare}`);
+  }
+
+  if (camera?.imperfections?.iso_grain) {
+    parts.push(`grain: ${camera.imperfections.iso_grain}`);
+  }
+
+  const style = visualPrompt.global_style;
+  if (style?.aesthetic) {
+    parts.push(style.aesthetic);
+  }
+
+  if (style?.visual_fidelity) {
+    parts.push(style.visual_fidelity);
+  }
+
+  return parts.filter(p => p && p.trim()).join('. ') + '.';
+}
+
 function buildImagePrompt(request: ImageRequest): any[] {
   const content: any[] = [];
 
@@ -260,9 +342,10 @@ Deno.serve(async (req: Request) => {
       visualPrompt.project_meta.aspect_ratio = requestData.aspectRatio;
     }
 
-    const promptString = JSON.stringify(visualPrompt);
+    const naturalPrompt = convertJsonToNaturalPrompt(visualPrompt);
 
-    console.log("Sending to KIE API with prompt length:", promptString.length);
+    console.log("Natural prompt generated:", naturalPrompt);
+    console.log("Prompt length:", naturalPrompt.length, "chars (was", JSON.stringify(visualPrompt).length, "chars as JSON)");
 
     const imageInputUrls: string[] = [];
     if (requestData.characterImageUrl) {
@@ -283,7 +366,7 @@ Deno.serve(async (req: Request) => {
       kiePayload = {
         model: "seedream/4.5-text-to-image",
         input: {
-          prompt: promptString,
+          prompt: naturalPrompt,
           aspect_ratio: requestData.aspectRatio || "1:1",
           quality: requestData.quality || "basic"
         }
@@ -292,7 +375,7 @@ Deno.serve(async (req: Request) => {
       kiePayload = {
         model: "seedream/4.5-edit",
         input: {
-          prompt: promptString,
+          prompt: naturalPrompt,
           image_urls: imageInputUrls,
           aspect_ratio: requestData.aspectRatio || "1:1",
           quality: requestData.quality || "basic"
@@ -302,7 +385,7 @@ Deno.serve(async (req: Request) => {
       kiePayload = {
         model: "nano-banana-pro",
         input: {
-          prompt: promptString,
+          prompt: naturalPrompt,
           image_input: imageInputUrls,
           aspect_ratio: requestData.aspectRatio || "4:5",
           resolution: requestData.resolution || "2K",
