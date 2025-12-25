@@ -107,7 +107,7 @@ function buildStoryboardShots(data: ProjectData): Array<any> {
     const shotParts: string[] = [];
 
     shotParts.push(`TECHNICAL HEADER:`);
-    shotParts.push(`A casual, selfie-style IPHONE 15 PRO front-camera vertical video, recorded handheld at arm's length, with subtle micro-jitters, natural exposure shifts, and realistic smartphone stabilization artifacts.`);
+    shotParts.push(`A casual, selfie-style front-camera vertical video, recorded handheld at arm's length, with subtle micro-jitters, natural exposure shifts, and realistic stabilization artifacts.`);
     shotParts.push(``);
 
     shotParts.push(`ENVIRONMENT:`);
@@ -242,7 +242,7 @@ function buildPrompt(data: ProjectData): string {
   const promptParts: string[] = [];
 
   promptParts.push(`TECHNICAL HEADER:`);
-  promptParts.push(`A casual, selfie-style IPHONE 15 PRO front-camera vertical video, recorded handheld at arm's length, with subtle micro-jitters, natural exposure shifts, and realistic smartphone stabilization artifacts.`);
+  promptParts.push(`A casual, selfie-style front-camera vertical video, recorded handheld at arm's length, with subtle micro-jitters, natural exposure shifts, and realistic stabilization artifacts.`);
   promptParts.push(``);
 
   promptParts.push(`ENVIRONMENT (LOCKED — MUST FOLLOW EXACTLY):`);
@@ -299,7 +299,7 @@ function buildPrompt(data: ProjectData): string {
     } else {
       promptParts.push(`Camera angle: Eye-level`);
     }
-    promptParts.push(`iPhone front camera (~24mm equivalent).`);
+    promptParts.push(`Front camera (~24mm equivalent).`);
     if (data.movement?.trim()) {
       promptParts.push(`Camera movement: ${data.movement}`);
     } else {
@@ -312,7 +312,7 @@ function buildPrompt(data: ProjectData): string {
   } else {
     promptParts.push(`Medium close-up framing (head and shoulders).`);
     promptParts.push(`Eye-level angle.`);
-    promptParts.push(`iPhone front camera (~24mm equivalent).`);
+    promptParts.push(`Front camera (~24mm equivalent).`);
     promptParts.push(`Slight handheld sway only.`);
     promptParts.push(`No tripod.`);
   }
@@ -322,7 +322,7 @@ function buildPrompt(data: ProjectData): string {
   promptParts.push(`Creative style: ${data.creativeStyle?.name || 'Natural conversation'}`);
   promptParts.push(`The character speaks directly to the camera as if recording a personal message for social media.`);
   promptParts.push(`Natural micro-movements: slight head tilts, subtle gestures, realistic blinks.`);
-  promptParts.push(`Authentic smartphone filming aesthetic.`);
+  promptParts.push(`Authentic casual filming aesthetic.`);
   promptParts.push(``);
 
   promptParts.push(`LANGUAGE RULE (CRITICAL):`);
@@ -353,15 +353,15 @@ function buildPrompt(data: ProjectData): string {
 
   promptParts.push(`AUDIO:`);
   promptParts.push(`Clear, natural speaking voice.`);
-  promptParts.push(`Slight smartphone audio compression.`);
+  promptParts.push(`Slight audio compression.`);
   promptParts.push(`Minimal background noise.`);
   promptParts.push(`Realistic room acoustics.`);
   promptParts.push(``);
 
   promptParts.push(`QUALITY & AUTHENTICITY MODIFIERS:`);
   promptParts.push(`High detail on facial features and skin texture.`);
-  promptParts.push(`Realistic smartphone video quality with authentic iPhone compression artifacts.`);
-  promptParts.push(`Natural color grading with iPhone's characteristic color science.`);
+  promptParts.push(`Realistic video quality with authentic compression artifacts.`);
+  promptParts.push(`Natural color grading with characteristic color processing.`);
   promptParts.push(`Aspect ratio: ${aspectRatioFormatted} (vertical format).`);
   promptParts.push(`Authentic social media aesthetic.`);
   promptParts.push(`Maintain realism throughout — avoid overly polished or cinematic look.`);

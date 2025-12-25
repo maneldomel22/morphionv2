@@ -73,7 +73,7 @@ const FIELD_INSTRUCTIONS = {
   action: `Descreva a AÇÃO ou INTERAÇÃO para uma IMAGEM ESTÁTICA de forma CURTA e EXPLÍCITA em PORTUGUÊS BRASILEIRO.
 Tipo de foto, ângulo da câmera, posição congelada no momento.
 NÃO descreva movimento. É uma FOTO, não vídeo.
-Exemplo: "Selfie no espelho—iPhone na altura do rosto, ângulo frontal. Mão livre descansando na coxa. Olhando direto pra câmera."`,
+Exemplo: "Selfie no espelho—câmera na altura do rosto, ângulo frontal. Mão livre descansando na coxa. Olhando direto pra câmera."`,
 
   attire: `Descreva VESTIMENTA ou NUDEZ de forma CURTA e EXPLÍCITA em PORTUGUÊS BRASILEIRO.
 O que veste (ou não veste). Cores, tecidos, como fica no corpo.

@@ -378,7 +378,7 @@ export default function InfluencerQuiz({ onComplete, onCancel }) {
     expression_body_language: 'natural_smile',
     environment: 'bedroom',
     lighting: 'soft_natural',
-    device_type: 'iphone',
+    device_type: 'high_quality',
     aesthetic_style: 'ugc',
     resolution: '2K',
     output_format: 'png'
