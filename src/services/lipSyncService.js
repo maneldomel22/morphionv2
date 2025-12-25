@@ -167,6 +167,22 @@ export const lipSyncService = {
     }
   },
 
+  async deleteTask(taskId) {
+    try {
+      const { error } = await supabase
+        .from('lipsync_tasks')
+        .delete()
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      return { success: true };
+    } catch (error) {
+      console.error('Erro ao deletar tarefa:', error);
+      throw error;
+    }
+  },
+
   pollStatus(taskId, onUpdate, interval = 5000, maxAttempts = 180) {
     let attempts = 0;
     let pollInterval;

@@ -1,7 +1,8 @@
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
 import ToolInfo from '../components/ui/ToolInfo';
-import { Upload, Play, Download, Video, Loader2, CheckCircle2, XCircle, Clock, RefreshCw } from 'lucide-react';
+import { Upload, Play, Download, Video, Loader2, CheckCircle2, XCircle, Clock, RefreshCw, Trash2, Eye } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { toolsInfo } from '../data/toolsInfo';
 import { lipSyncService } from '../services/lipSyncService';
@@ -168,6 +169,24 @@ export default function LipSync() {
     }
   };
 
+  const handleDelete = async (taskId) => {
+    if (!confirm('Tem certeza que deseja excluir este vídeo?')) {
+      return;
+    }
+
+    try {
+      await lipSyncService.deleteTask(taskId);
+      await loadTasks();
+
+      if (currentTask && currentTask.id === taskId) {
+        setCurrentTask(null);
+      }
+    } catch (error) {
+      console.error('Erro ao deletar tarefa:', error);
+      alert('Erro ao deletar vídeo: ' + error.message);
+    }
+  };
+
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -192,29 +211,36 @@ export default function LipSync() {
     }
   };
 
-  const getStatusIcon = (status) => {
+  const getStatusBadge = (status) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle2 className="text-green-500" size={20} />;
+        return { label: 'Concluído', className: 'bg-green-500/10 text-green-600' };
       case 'failed':
-        return <XCircle className="text-red-500" size={20} />;
+        return { label: 'Falhou', className: 'bg-red-500/10 text-red-600' };
       case 'processing':
-        return <Loader2 className="text-blue-500 animate-spin" size={20} />;
+        return { label: 'Processando', className: 'bg-blue-500/10 text-blue-600' };
       default:
-        return <Clock className="text-yellow-500" size={20} />;
+        return { label: 'Pendente', className: 'bg-yellow-500/10 text-yellow-600' };
     }
   };
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'completed':
-        return 'Concluído';
-      case 'failed':
-        return 'Falhou';
-      case 'processing':
-        return 'Processando';
-      default:
-        return 'Pendente';
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) {
+      return `Há ${diffMins} min${diffMins !== 1 ? 's' : ''}`;
+    } else if (diffHours < 24) {
+      return `Há ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
+    } else if (diffDays < 7) {
+      return `Há ${diffDays} dia${diffDays !== 1 ? 's' : ''}`;
+    } else {
+      return date.toLocaleDateString('pt-BR');
     }
   };
 
@@ -478,6 +504,7 @@ export default function LipSync() {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-textPrimary">Histórico</h3>
             <Button variant="secondary" className="text-sm" onClick={loadTasks}>
+              <RefreshCw size={14} className="mr-2" />
               Atualizar
             </Button>
           </div>
@@ -489,77 +516,129 @@ export default function LipSync() {
           ) : tasks.length === 0 ? (
             <p className="text-textSecondary text-center py-8">Nenhuma tarefa encontrada</p>
           ) : (
-            <div className="space-y-3">
-              {tasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="bg-surfaceMuted/30 rounded-xl p-4 border hover:border-white/[0.15] transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(task.status)}
-                      <span className="text-textPrimary font-medium">{getStatusText(task.status)}</span>
-                    </div>
-                    <span className="text-textSecondary text-sm">
-                      {new Date(task.created_at).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                  </div>
-                  {task.status === 'completed' && task.result_video_url && (
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => {
-                          setCurrentTask(task);
-                          setTimeout(() => {
-                            resultVideoRef.current?.scrollIntoView({ behavior: 'smooth' });
-                          }, 100);
-                        }}
-                        variant="secondary"
-                        className="text-sm flex-1"
-                      >
-                        <Play size={14} className="mr-2" />
-                        Visualizar
-                      </Button>
-                      <Button
-                        onClick={() => handleDownload(task.result_video_url)}
-                        variant="secondary"
-                        className="text-sm flex-1"
-                      >
-                        <Download size={14} className="mr-2" />
-                        Baixar
-                      </Button>
-                    </div>
-                  )}
-                  {task.status === 'processing' && (
-                    <Button
-                      onClick={() => handleCheckStatus(task.id)}
-                      variant="secondary"
-                      disabled={checkingStatus}
-                      className="text-sm w-full"
-                    >
-                      {checkingStatus ? (
-                        <>
-                          <Loader2 size={14} className="mr-2 animate-spin" />
-                          Verificando...
-                        </>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {tasks.map((task) => {
+                const statusBadge = getStatusBadge(task.status);
+                return (
+                  <Card key={task.id} className="group overflow-hidden">
+                    <div className="relative bg-black">
+                      {task.status === 'completed' && task.result_video_url ? (
+                        <video
+                          src={task.result_video_url}
+                          className="w-full h-auto"
+                          controls
+                          preload="metadata"
+                          playsInline
+                        />
+                      ) : task.status === 'processing' ? (
+                        <div className="aspect-video w-full bg-surfaceMuted/30 flex flex-col items-center justify-center gap-3">
+                          <Loader2 size={32} className="text-blue-500 animate-spin" />
+                          <div className="text-sm text-textSecondary">Processando...</div>
+                        </div>
+                      ) : task.status === 'failed' ? (
+                        <div className="aspect-video w-full bg-surfaceMuted/30 flex flex-col items-center justify-center gap-3 p-4">
+                          <div className="text-5xl">⚠️</div>
+                          <div className="text-sm text-red-400 text-center font-medium">Falha no processamento</div>
+                          {task.error_message && (
+                            <div className="text-xs text-textSecondary text-center line-clamp-2">
+                              {task.error_message}
+                            </div>
+                          )}
+                        </div>
                       ) : (
-                        <>
-                          <RefreshCw size={14} className="mr-2" />
-                          Verificar Status
-                        </>
+                        <div className="aspect-video w-full bg-surfaceMuted/30 flex items-center justify-center">
+                          <Clock size={32} className="text-textSecondary" />
+                        </div>
                       )}
-                    </Button>
-                  )}
-                  {task.status === 'failed' && task.error_message && (
-                    <p className="text-red-500 text-sm">{task.error_message}</p>
-                  )}
-                </div>
-              ))}
+                      <div className="absolute top-3 left-3 z-10 pointer-events-none">
+                        <Badge className={`${statusBadge.className} border`}>
+                          {statusBadge.label}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-center justify-between text-xs text-textSecondary">
+                        <span>{formatDate(task.created_at)}</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {task.status === 'completed' && task.result_video_url ? (
+                          <>
+                            <div className="grid grid-cols-3 gap-2">
+                              <button
+                                onClick={() => {
+                                  setCurrentTask(task);
+                                  setTimeout(() => {
+                                    resultVideoRef.current?.scrollIntoView({ behavior: 'smooth' });
+                                  }, 100);
+                                }}
+                                className="p-2 text-xs text-textSecondary hover:text-brandPrimary hover:bg-brandPrimary/5 rounded-lg transition-smooth flex items-center justify-center gap-1"
+                              >
+                                <Eye size={14} />
+                                Ver
+                              </button>
+                              <a
+                                href={task.result_video_url}
+                                download
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 text-xs text-textSecondary hover:text-brandPrimary hover:bg-brandPrimary/5 rounded-lg transition-smooth flex items-center justify-center gap-1"
+                              >
+                                <Download size={14} />
+                                Baixar
+                              </a>
+                              <button
+                                onClick={() => handleDelete(task.id)}
+                                className="p-2 text-xs text-textSecondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-smooth flex items-center justify-center gap-1"
+                              >
+                                <Trash2 size={14} />
+                                Apagar
+                              </button>
+                            </div>
+                          </>
+                        ) : task.status === 'processing' ? (
+                          <>
+                            <Button
+                              onClick={() => handleCheckStatus(task.id)}
+                              variant="secondary"
+                              disabled={checkingStatus}
+                              className="text-xs w-full"
+                            >
+                              {checkingStatus ? (
+                                <>
+                                  <Loader2 size={14} className="mr-2 animate-spin" />
+                                  Verificando...
+                                </>
+                              ) : (
+                                <>
+                                  <RefreshCw size={14} className="mr-2" />
+                                  Verificar Status
+                                </>
+                              )}
+                            </Button>
+                            <button
+                              onClick={() => handleDelete(task.id)}
+                              className="w-full p-2 text-xs text-textSecondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-smooth flex items-center justify-center gap-1"
+                            >
+                              <Trash2 size={14} />
+                              Apagar
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => handleDelete(task.id)}
+                            className="w-full p-2 text-xs text-textSecondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-smooth flex items-center justify-center gap-1"
+                          >
+                            <Trash2 size={14} />
+                            Apagar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </Card>
