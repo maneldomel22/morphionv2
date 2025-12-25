@@ -211,6 +211,17 @@ export default function PostDetailModal({ post, influencer, isOpen, onClose, onC
                       <span className="text-gray-900 dark:text-white">{post.resolution}</span>
                     </div>
                   )}
+                  {post.engine_used && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Engine</span>
+                      <span className="text-gray-900 dark:text-white text-xs font-mono">
+                        {post.engine_used === 'nano-banana-pro' ? 'Nano Banana Pro' :
+                         post.engine_used === 'seedream/4.5-edit' ? 'Seedream Edit' :
+                         post.engine_used === 'seedream/4.5-text-to-image' ? 'Seedream T2I' :
+                         post.engine_used}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </details>
             </div>

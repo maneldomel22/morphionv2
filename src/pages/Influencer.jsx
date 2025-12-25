@@ -135,7 +135,7 @@ export default function Influencer() {
         resolution: config.resolution,
         outputFormat: config.outputFormat,
         quality: config.quality,
-        mode: config.model === 'nano-banana-pro' ? 'safe' : 'hot',
+        mode: contentMode,
         userId,
         onProgress: setProgress
       });

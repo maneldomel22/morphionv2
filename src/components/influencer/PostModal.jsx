@@ -235,6 +235,18 @@ export default function PostModal({ post, onClose, onDelete, influencer }) {
                       {post.aspect_ratio}
                     </span>
                   </div>
+                  {post.engine_used && (
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={14} className="text-textSecondary" />
+                      <span className="text-textSecondary text-xs">Engine</span>
+                      <span className="text-textPrimary font-medium text-xs ml-auto font-mono">
+                        {post.engine_used === 'nano-banana-pro' ? 'Nano Banana Pro' :
+                         post.engine_used === 'seedream/4.5-edit' ? 'Seedream Edit' :
+                         post.engine_used === 'seedream/4.5-text-to-image' ? 'Seedream T2I' :
+                         post.engine_used}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </Card>
             </div>
