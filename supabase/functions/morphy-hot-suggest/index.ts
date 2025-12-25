@@ -22,8 +22,14 @@ REGRAS CRÍTICAS:
 
 const FIELD_INSTRUCTIONS = {
   action: {
-    description: `APENAS como a foto está sendo tirada (selfie, câmera apoiada, timer, etc). Máximo 2-3 frases curtas.`,
-    restrictions: `NÃO mencione: pose do corpo, roupas, ambiente, iluminação, expressão facial. FOCO TOTAL em como a câmera está sendo usada.`
+    description: `APENAS como a foto está sendo tirada. Varie entre opções realistas:
+- Selfie de espelho segurando celular
+- Celular apoiado em móvel/prateleira
+- Usando tripé improvisado
+- Foto tirada por outra pessoa
+- Selfie com celular na mão (braço esticado ou não)
+Seja específico e direto. Máximo 2 frases curtas.`,
+    restrictions: `NÃO mencione: pose do corpo, roupas, ambiente, iluminação, expressão facial. FOCO TOTAL em como a câmera está sendo usada. VARIE as opções, não use sempre a mesma.`
   },
   attire: {
     description: `APENAS o que ela está vestindo ou se está nua. Descreva roupas/lingerie/nudez de forma direta.`,
