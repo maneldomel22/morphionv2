@@ -37,12 +37,12 @@ export default function AnimatedBackground({ children, enableGlow = false }) {
       currentPosition.current.x = lerp(
         currentPosition.current.x,
         mousePosition.x,
-        0.05
+        0.02
       );
       currentPosition.current.y = lerp(
         currentPosition.current.y,
         mousePosition.y,
-        0.05
+        0.02
       );
 
       const container = containerRef.current;
