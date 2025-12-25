@@ -129,15 +129,19 @@ Deno.serve(async (req: Request) => {
       .insert({
         user_id: user.id,
         name: requestData.name,
+        username: requestData.name.toLowerCase().replace(/\s+/g, ''),
+        image_url: '',
         age: requestData.age,
-        ethnicity: requestData.ethnicity,
-        facial_traits: requestData.facialTraits,
-        hair: requestData.hair,
-        body: requestData.body,
-        marks: requestData.marks,
         mode: requestData.mode || 'safe',
         creation_status: 'creating_video',
         intro_video_task_id: taskId,
+        identity_profile: {
+          ethnicity: requestData.ethnicity,
+          facial_traits: requestData.facialTraits,
+          hair: requestData.hair,
+          body: requestData.body,
+          marks: requestData.marks
+        },
         creation_metadata: {
           language: requestData.language,
           video_prompt: videoPrompt,
