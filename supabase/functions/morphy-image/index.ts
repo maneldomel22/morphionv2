@@ -275,11 +275,11 @@ Deno.serve(async (req: Request) => {
     console.log("Including image_input URLs:", imageInputUrls.length);
 
     const imageEngine = requestData.imageEngine || 'nano_banana_pro';
-    const isSeedreamTextToImage = imageEngine === 'seedream_text_to_image';
-    const isSeedreamEdit = imageEngine === 'seedream_4_5';
+    const isSeedream = imageEngine === 'seedream_4_5';
+    const hasImages = imageInputUrls.length > 0;
 
     let kiePayload: any;
-    if (isSeedreamTextToImage) {
+    if (isSeedream && !hasImages) {
       kiePayload = {
         model: "seedream/4.5-text-to-image",
         input: {
@@ -288,7 +288,7 @@ Deno.serve(async (req: Request) => {
           quality: requestData.quality || "basic"
         }
       };
-    } else if (isSeedreamEdit) {
+    } else if (isSeedream && hasImages) {
       kiePayload = {
         model: "seedream/4.5-edit",
         input: {
