@@ -14,6 +14,12 @@ export const IMAGE_ENGINE_CONFIGS = {
     defaultResolution: '2K',
     resolutions: ['1K', '2K', '4K'],
     outputFormats: ['png', 'jpg'],
+    aspectRatios: [
+      { value: '1:1', label: 'Quadrado' },
+      { value: '4:5', label: 'Vertical' },
+      { value: '16:9', label: 'Horizontal' },
+      { value: '9:16', label: 'Stories' }
+    ],
     maxPromptLength: 5000,
     tooltip: 'Ideal para criar imagens do zero ou com referências opcionais'
   },
@@ -30,6 +36,16 @@ export const IMAGE_ENGINE_CONFIGS = {
       basic: '2K',
       high: '4K'
     },
+    aspectRatios: [
+      { value: '1:1', label: 'Quadrado' },
+      { value: '3:4', label: 'Vertical' },
+      { value: '9:16', label: 'Stories' },
+      { value: '16:9', label: 'Horizontal' },
+      { value: '4:3', label: 'Clássico' },
+      { value: '2:3', label: 'Retrato' },
+      { value: '3:2', label: 'Paisagem' },
+      { value: '21:9', label: 'Cinema' }
+    ],
     maxPromptLength: 3000,
     tooltip: 'Escolhe automaticamente: text-to-image (sem foto) ou edit (com foto)'
   }

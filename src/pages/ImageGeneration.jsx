@@ -15,7 +15,7 @@ import { GeneratingImagePlaceholder } from '../components/ui/GeneratingImagePlac
 
 export default function ImageGeneration() {
   const [description, setDescription] = useState('');
-  const [aspectRatio, setAspectRatio] = useState('4:5');
+  const [aspectRatio, setAspectRatio] = useState('1:1');
   const [imageEngine, setImageEngine] = useState(IMAGE_ENGINES.NANO_BANANA);
   const [quality, setQuality] = useState('basic');
   const [resolution, setResolution] = useState('2K');
@@ -30,6 +30,13 @@ export default function ImageGeneration() {
   const [submitting, setSubmitting] = useState(false);
 
   const engineConfig = IMAGE_ENGINE_CONFIGS[imageEngine];
+
+  useEffect(() => {
+    const validRatios = engineConfig.aspectRatios.map(r => r.value);
+    if (!validRatios.includes(aspectRatio)) {
+      setAspectRatio(validRatios[0]);
+    }
+  }, [imageEngine]);
 
   const productImageInputRef = useRef(null);
   const characterImageInputRef = useRef(null);
@@ -535,12 +542,8 @@ export default function ImageGeneration() {
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-textSecondary mb-3">Proporção</label>
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { value: '1:1', label: 'Quadrado' },
-                  { value: '4:5', label: 'Vertical' },
-                  { value: '16:9', label: 'Horizontal' }
-                ].map((ratio) => (
+              <div className={`grid gap-3 ${engineConfig.aspectRatios.length > 4 ? 'grid-cols-4' : 'grid-cols-3'}`}>
+                {engineConfig.aspectRatios.map((ratio) => (
                   <button
                     key={ratio.value}
                     onClick={() => setAspectRatio(ratio.value)}
