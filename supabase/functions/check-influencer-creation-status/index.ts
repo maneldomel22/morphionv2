@@ -218,10 +218,14 @@ Deno.serve(async (req: Request) => {
         if (profileStatus.state === 'success' && profileStatus.resultUrls.length > 0 && !influencer.profile_image_url) {
           await supabase
             .from("influencers")
-            .update({ profile_image_url: profileStatus.resultUrls[0] })
+            .update({
+              profile_image_url: profileStatus.resultUrls[0],
+              image_url: profileStatus.resultUrls[0]
+            })
             .eq("id", influencer_id);
 
           influencer.profile_image_url = profileStatus.resultUrls[0];
+          influencer.image_url = profileStatus.resultUrls[0];
         }
 
         if (profileStatus.state !== 'success') {
