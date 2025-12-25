@@ -35,9 +35,9 @@ export default function Login() {
       });
 
       if (signInError) {
-        if (signInError.message === 'Email not confirmed') {
+        if (signInError.message === 'Email not confirmed' || signInError.code === 'email_not_confirmed') {
           setNeedsConfirmation(true);
-          setError(getErrorMessage(signInError));
+          setError('Por favor, confirme seu email antes de fazer login.');
         } else {
           throw signInError;
         }
@@ -46,7 +46,12 @@ export default function Login() {
 
       navigate('/dashboard');
     } catch (err) {
-      setError(getErrorMessage(err));
+      if (err.code === 'email_not_confirmed') {
+        setNeedsConfirmation(true);
+        setError('Por favor, confirme seu email antes de fazer login.');
+      } else {
+        setError(getErrorMessage(err));
+      }
     } finally {
       setLoading(false);
     }

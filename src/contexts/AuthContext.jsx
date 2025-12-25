@@ -17,9 +17,15 @@ export function AuthProvider({ children }) {
         const { data: { session } } = await supabase.auth.getSession();
 
         if (session?.user && mounted) {
-          setUser(session.user);
-          const profileData = await authService.getProfile(session.user.id);
-          setProfile(profileData);
+          if (!session.user.email_confirmed_at && !session.user.confirmed_at) {
+            await supabase.auth.signOut();
+            setUser(null);
+            setProfile(null);
+          } else {
+            setUser(session.user);
+            const profileData = await authService.getProfile(session.user.id);
+            setProfile(profileData);
+          }
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -37,6 +43,13 @@ export function AuthProvider({ children }) {
         if (!mounted) return;
 
         if (event === 'SIGNED_IN' && session?.user) {
+          if (!session.user.email_confirmed_at && !session.user.confirmed_at) {
+            await supabase.auth.signOut();
+            setUser(null);
+            setProfile(null);
+            return;
+          }
+
           setUser(session.user);
           try {
             const profileData = await authService.getProfile(session.user.id);
@@ -48,6 +61,12 @@ export function AuthProvider({ children }) {
           setUser(null);
           setProfile(null);
         } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+          if (!session.user.email_confirmed_at && !session.user.confirmed_at) {
+            await supabase.auth.signOut();
+            setUser(null);
+            setProfile(null);
+            return;
+          }
           setUser(session.user);
         }
       }
@@ -68,6 +87,13 @@ export function AuthProvider({ children }) {
     if (error) throw error;
 
     if (data.user) {
+      if (!data.user.email_confirmed_at && !data.user.confirmed_at) {
+        await supabase.auth.signOut();
+        const notConfirmedError = new Error('Email not confirmed');
+        notConfirmedError.code = 'email_not_confirmed';
+        throw notConfirmedError;
+      }
+
       const profileData = await authService.getProfile(data.user.id);
       setUser(data.user);
       setProfile(profileData);
