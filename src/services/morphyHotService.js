@@ -1,9 +1,9 @@
 import { supabase } from '../lib/supabase';
-import { getBodyMarksAsText } from './identityTranslationService';
+import { getPhysicalProfileAsText } from './identityTranslationService';
 
 const MAX_FIELD_LENGTH = 300;
 
-export async function getMorphyHotSuggestion(field, influencerName, influencerAge, currentValue = '', sceneContext = {}, bodyMarks = null) {
+export async function getMorphyHotSuggestion(field, influencerName, influencerAge, currentValue = '', sceneContext = {}, identityProfile = null) {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session) {
@@ -12,7 +12,7 @@ export async function getMorphyHotSuggestion(field, influencerName, influencerAg
 
   const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/morphy-hot-suggest`;
 
-  const bodyMarksText = bodyMarks ? getBodyMarksAsText(bodyMarks) : '';
+  const physicalProfile = identityProfile ? getPhysicalProfileAsText(identityProfile) : '';
 
   const response = await fetch(apiUrl, {
     method: 'POST',
@@ -26,7 +26,7 @@ export async function getMorphyHotSuggestion(field, influencerName, influencerAg
       influencerAge,
       currentValue,
       sceneContext,
-      bodyMarks: bodyMarksText,
+      physicalProfile,
       maxChars: MAX_FIELD_LENGTH
     })
   });

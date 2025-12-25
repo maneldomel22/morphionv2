@@ -121,3 +121,34 @@ export function getBodyMarksAsText(bodyMarks) {
 
   return parts.join(' | ');
 }
+
+export function getPhysicalProfileAsText(identityProfile) {
+  if (!identityProfile || typeof identityProfile !== 'object') return '';
+
+  const parts = [];
+
+  if (identityProfile.body) {
+    const body = identityProfile.body;
+    const bodyParts = [];
+
+    if (body.body_type) bodyParts.push(`Tipo de corpo: ${body.body_type}`);
+    if (body.breast_size) bodyParts.push(`Tamanho dos peitos: ${body.breast_size}`);
+    if (body.breast_shape) bodyParts.push(`Formato dos peitos: ${body.breast_shape}`);
+    if (body.butt_size) bodyParts.push(`Tamanho da bunda: ${body.butt_size}`);
+    if (body.butt_shape) bodyParts.push(`Formato da bunda: ${body.butt_shape}`);
+    if (body.waist) bodyParts.push(`Cintura: ${body.waist}`);
+    if (body.hips) bodyParts.push(`Quadril: ${body.hips}`);
+    if (body.muscle_tone) bodyParts.push(`Tônus muscular: ${body.muscle_tone}`);
+
+    if (bodyParts.length > 0) {
+      parts.push(bodyParts.join(', '));
+    }
+  }
+
+  if (identityProfile.body_marks) {
+    const marks = getBodyMarksAsText(identityProfile.body_marks);
+    if (marks) parts.push(marks);
+  }
+
+  return parts.join(' | ');
+}
