@@ -4,6 +4,7 @@ import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import { buildNanoBananaPrompt } from '../../services/influencerPromptBuilder';
 import { IMAGE_ENGINES } from '../../types/imageEngines';
+import { improveSafePrompt } from '../../services/morphySafeService';
 
 const PHOTO_TYPES = [
   { id: 'selfie', label: 'Selfie', description: 'Foto tirada pela própria pessoa' },
@@ -70,6 +71,7 @@ const QUALITY = [
 export default function SafeImageQuiz({ isOpen, onClose, influencer, onGenerate }) {
   const [step, setStep] = useState(0);
   const [generating, setGenerating] = useState(false);
+  const [loadingSuggestion, setLoadingSuggestion] = useState(false);
   const [formData, setFormData] = useState({
     model: IMAGE_ENGINES.NANO_BANANA,
     photoType: null,
@@ -133,6 +135,46 @@ export default function SafeImageQuiz({ isOpen, onClose, influencer, onGenerate 
   const handleBack = () => {
     if (step > 0) {
       setStep(step - 1);
+    }
+  };
+
+  const handleMorphySuggest = async () => {
+    setLoadingSuggestion(true);
+    try {
+      const photoTypeLabel = PHOTO_TYPES.find(t => t.id === formData.photoType)?.label || '';
+      const photographerLabel = PHOTOGRAPHERS.find(p => p.id === formData.photographer)?.label || '';
+      const environmentLabel = ENVIRONMENTS.find(e => e.id === formData.environment)?.label || '';
+      const lightingLabel = LIGHTING.find(l => l.id === formData.lighting)?.label || '';
+
+      const currentDescription = formData.context || '';
+      const outfitInfo = formData.outfit ? ` Wearing: ${formData.outfit}.` : '';
+      const expressionInfo = formData.expression ? ` Expression: ${formData.expression}.` : '';
+
+      const contextBuilder = [
+        currentDescription,
+        photoTypeLabel && `Photo type: ${photoTypeLabel}.`,
+        photographerLabel && `Photographer: ${photographerLabel}.`,
+        environmentLabel && `Environment: ${environmentLabel}.`,
+        lightingLabel && `Lighting: ${lightingLabel}.`,
+        outfitInfo,
+        expressionInfo
+      ].filter(Boolean).join(' ');
+
+      const description = contextBuilder || 'Casual lifestyle photo of the influencer';
+
+      console.log('🎨 Improving prompt with Morphy Safe...');
+
+      const enhancedPrompt = await improveSafePrompt(description, {
+        characterImageUrl: influencer.image_url,
+        aspectRatio: formData.aspectRatio
+      });
+
+      setFormData({ ...formData, context: enhancedPrompt });
+    } catch (error) {
+      console.error('Error getting Morphy suggestion:', error);
+      alert('Erro ao obter sugestão do Morphy: ' + error.message);
+    } finally {
+      setLoadingSuggestion(false);
     }
   };
 
@@ -263,15 +305,26 @@ export default function SafeImageQuiz({ isOpen, onClose, influencer, onGenerate 
 
           {currentStep.type === 'textarea' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Descreva o contexto da foto
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Descreva o contexto da foto
+                </label>
+                <button
+                  onClick={handleMorphySuggest}
+                  disabled={loadingSuggestion}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Sparkles className={`w-4 h-4 ${loadingSuggestion ? 'animate-spin' : ''}`} />
+                  {loadingSuggestion ? 'Melhorando...' : 'Melhorar com Morphy'}
+                </button>
+              </div>
               <textarea
                 value={formData[currentStep.field]}
                 onChange={(e) => handleTextChange(e.target.value)}
                 placeholder="Ex: Em um café aconchegante, tomando cappuccino, ambiente descontraído..."
                 rows={6}
                 className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white resize-none"
+                disabled={loadingSuggestion}
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                 Descreva apenas o contexto e a cena. A identidade física é preservada automaticamente.
