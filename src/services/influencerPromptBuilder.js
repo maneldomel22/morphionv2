@@ -189,35 +189,35 @@ export async function buildSeedreamPrompt({ influencer, scene, camera, isExplici
   if (isExplicit) {
     const ugcTemplate = `=== IMAGE REFERENCE INSTRUCTION ===
 SOURCE IMAGE IS FOR CHARACTER IDENTITY ONLY (Face/Body/Marks).
-OUTPUT MUST BE A SINGLE PHOTO. NO GRIDS, NO SPLIT SCREENS, NO COLLAGES.
+OUTPUT MUST BE A SINGLE PHOTO. NO GRIDS, NO SPLIT SCREENS.
 
-=== MEDIUM & AESTHETIC (CLEAN RAW) ===
-TYPE: Raw file from iPhone Camera Roll (DCIM), native smartphone photography.
-CAM: Front-facing wide angle lens.
-QUALITY: Full screen image (edge-to-edge), high ISO noise, slight motion blur on hands, harsh texture.
-LIGHTING: Direct hard flash (on-camera flash), deep shadows, shiny sweaty skin, "red-eye" aesthetic allowed but NO borders.
-NEGATIVE: film border, film strip, vignette, black edges, ui, interface, app icons, split screen.
+=== MEDIUM & AESTHETIC (VIDEO STILL) ===
+TYPE: Authentic smartphone video still, Instagram Story screenshot, captured mid-motion.
+QUALITY: Standard definition (SD), soft focus (slightly out of focus), significant motion blur on moving hands, digital noise/grain, raw unedited footage feel.
+LIGHTING: Direct hard flash (video torch mode), creating deep hard shadows and overexposed highlights on wet skin.
 
-=== IDENTITY LOCK ===
+=== IDENTITY LOCK (FROM REFERENCE) ===
 FACE: ${face.ethnicity || 'Latina'}, ${face.eyes?.color || 'amber'} ${face.eyes?.shape || 'almond'} eyes, ${face.face_shape || 'oval'} face, ${face.lips || 'full lips'}.
-HAIR: ${hair.color || 'Dark Brown'}, ${hair.style || 'messy/tousled'}.
-BODY: ${body.type || 'Athletic'}, ${body.proportions || 'slim'}, ${body.waist || 'defined waist'}.
+HAIR: ${hair.color || 'Dark Brown'}, ${hair.length || 'long'}, ${hair.style || 'messy/tousled'}, sticking to sweaty neck.
+BODY: ${body.type || 'Athletic'}, ${body.proportions || 'slim'}, ${body.waist || 'defined waist'}, ${body.hips || 'full hips'}.
 MARKS: ${tattoosDesc || 'Minimalist octopus tattoo near groin/hip'}, ${molesDesc ? `moles on ${molesDesc}` : 'moles'}.
-SKIN: Real texture, sweat droplets, oily sheen.
+SKIN: Real texture, heavy sweat droplets, oily sheen, flushed redness.
 
 === SCENE & ENVIRONMENT ===
 LOC: ${scene.environment}
-DETAILS: ${scene.scene_context || 'Intimate atmosphere'}.
+DETAILS: ${scene.scene_context || 'Torn condom wrapper on the floor, clothes pushed aside, messy nightstand background'}.
 
-=== ACTION & POSE ===
-POV: High-angle selfie (camera held high above head looking down).
-ACTION: ${scene.action_pose}
+=== ACTION & POSE (FREEZE-FRAME) ===
+POV: High-angle handheld selfie (video mode).
+ACTION: Freeze-frame of ${scene.action_pose}. She is **mid-motion**, actively gesturing or touching her hair/face with one hand.
+CRITICAL DETAIL: The moving hand has **heavy motion blur**, indicating speed. The other hand holds the camera (implied).
+ANATOMY: ${scene.pose_details || 'Legs spread wide but soft focus on the edges, focus is on the torso and expression'}.
 
 === EXPRESSION ===
-LOOK: Direct eye contact, heavy eyelids, mouth slightly open.
-VIBE: ${scene.expression_attitude}
+LOOK: Direct eye contact with the lens, breaking 4th wall.
+FACE: ${scene.expression_attitude || 'Mouth open mid-breath (panting) or biting lip, not a static smile. Exhausted, intense, "aftermath" vibe'}.
 
---no grid, collage, split screen, border, frame, film strip, vignette, ui, interface, rendering, cgi, 3d, airbrush`;
+--no grid, collage, split screen, border, film strip, sharp focus, 4k, ultra detailed, studio lighting, cgi, render`;
 
     // Truncate if needed
     if (ugcTemplate.length > MAX_SEEDREAM_PROMPT_LENGTH) {
