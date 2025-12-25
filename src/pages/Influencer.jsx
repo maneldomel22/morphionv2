@@ -258,14 +258,16 @@ export default function Influencer() {
 
               <button
                 onClick={() => setShowCreateInfluencerModal(true)}
-                className="group relative aspect-[3/4] rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-300 bg-gray-50 dark:bg-gray-800/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex flex-col items-center justify-center gap-3 cursor-pointer"
+                className="group bg-white dark:bg-gray-800 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-300 hover:shadow-lg overflow-hidden"
               >
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gray-200 dark:bg-gray-700 group-hover:bg-blue-500 dark:group-hover:bg-blue-500 flex items-center justify-center transition-colors duration-300">
-                  <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 group-hover:text-white transition-colors duration-300" />
+                <div className="p-5 flex flex-col items-center justify-center text-center h-full">
+                  <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 group-hover:bg-blue-500 dark:group-hover:bg-blue-500 flex items-center justify-center transition-colors duration-300 mb-3">
+                    <Plus className="w-10 h-10 text-gray-400 group-hover:text-white transition-colors duration-300" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                    Criar Influencer
+                  </span>
                 </div>
-                <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-                  Criar Influencer
-                </span>
               </button>
             </div>
           )}
