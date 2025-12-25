@@ -2,6 +2,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import ToolInfo from '../components/ui/ToolInfo';
+import AudioPlayer from '../components/ui/AudioPlayer';
 import { Upload, Sparkles, Download, Mic, Loader2, Trash2, Plus, Volume2, XCircle, CheckCircle2, FileAudio } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { toolsInfo } from '../data/toolsInfo';
@@ -316,16 +317,9 @@ export default function VoiceClone() {
                       </button>
                     </div>
                     {voice.demo_audio_url && (
-                      <audio
-                        controls
-                        className="w-full h-8 mt-2"
-                        style={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                          borderRadius: '8px',
-                        }}
-                      >
-                        <source src={voice.demo_audio_url} type="audio/mpeg" />
-                      </audio>
+                      <div className="mt-3">
+                        <AudioPlayer src={voice.demo_audio_url} />
+                      </div>
                     )}
                   </div>
                 ))}
@@ -409,17 +403,7 @@ export default function VoiceClone() {
                       <Download size={18} className="text-textSecondary" />
                     </button>
                   </div>
-                  <audio
-                    controls
-                    className="w-full h-10"
-                    style={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                      borderRadius: '8px',
-                    }}
-                  >
-                    <source src={currentTask.audio_url} type="audio/mpeg" />
-                    Seu navegador não suporta o elemento de áudio.
-                  </audio>
+                  <AudioPlayer src={currentTask.audio_url} />
                 </div>
               ) : currentTask.task_status === 'processing' ? (
                 <div className="flex flex-col items-center justify-center py-8">
@@ -474,24 +458,15 @@ export default function VoiceClone() {
                       </p>
 
                       {task.task_status === 'completed' && task.audio_url && (
-                        <div className="flex items-center gap-2">
-                          <audio
-                            controls
-                            className="flex-1 h-8"
-                            style={{
-                              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                              borderRadius: '8px',
-                            }}
-                          >
-                            <source src={task.audio_url} type="audio/mpeg" />
-                            Seu navegador não suporta o elemento de áudio.
-                          </audio>
+                        <div className="space-y-2">
+                          <AudioPlayer src={task.audio_url} />
                           <button
                             onClick={() => handleDownloadAudio(task.audio_url, `audio_${task.id}.mp3`)}
-                            className="p-2 bg-surfaceMuted/50 hover:bg-surfaceMuted/70 rounded-lg transition-colors flex items-center justify-center shrink-0"
+                            className="w-full text-xs py-1.5 px-3 bg-surfaceMuted/50 hover:bg-surfaceMuted/70 text-textSecondary rounded-lg transition-colors flex items-center justify-center gap-2"
                             title="Baixar áudio"
                           >
-                            <Download size={14} />
+                            <Download size={12} />
+                            Baixar
                           </button>
                         </div>
                       )}
