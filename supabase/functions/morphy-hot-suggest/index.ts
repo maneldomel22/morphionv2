@@ -22,14 +22,17 @@ REGRAS CRÍTICAS:
 
 const FIELD_INSTRUCTIONS = {
   action: {
-    description: `APENAS como a foto está sendo tirada. Varie entre opções realistas:
-- Selfie de espelho segurando celular
-- Celular apoiado em móvel/prateleira
-- Usando tripé improvisado
-- Foto tirada por outra pessoa
-- Selfie com celular na mão (braço esticado ou não)
-Seja específico e direto. Máximo 2 frases curtas.`,
-    restrictions: `NÃO mencione: pose do corpo, roupas, ambiente, iluminação, expressão facial. FOCO TOTAL em como a câmera está sendo usada. VARIE as opções, não use sempre a mesma.`
+    description: `APENAS a ação sexual que está acontecendo na foto. Exemplos:
+- Batendo siririca / se masturbando
+- Dando / fazendo boquete
+- Sendo fodida / transando
+- Mostrando o corpo / exibindo partes íntimas
+- Dedando / se tocando
+- Chupando pau / mamando
+- Levando porra
+- Abrindo a buceta/cu
+Seja direto e explícito. Máximo 2 frases curtas. VARIE as ações.`,
+    restrictions: `NÃO mencione: pose estática, roupas, ambiente, iluminação, expressão facial, como a foto foi tirada. FOCO TOTAL na ação sexual acontecendo.`
   },
   attire: {
     description: `APENAS o que ela está vestindo ou se está nua. Descreva roupas/lingerie/nudez de forma direta.`,
