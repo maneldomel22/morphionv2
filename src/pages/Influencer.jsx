@@ -3,6 +3,7 @@ import { Plus, Sparkles } from 'lucide-react';
 import Button from '../components/ui/Button';
 import CreateInfluencerModal from '../components/influencer/CreateInfluencerModal';
 import SelectInfluencerModal from '../components/influencer/SelectInfluencerModal';
+import DeleteInfluencerModal from '../components/influencer/DeleteInfluencerModal';
 import InfluencerProfile from '../components/influencer/InfluencerProfile';
 import InfluencerCard from '../components/influencer/InfluencerCard';
 import InfluencerCardSkeleton from '../components/influencer/InfluencerCardSkeleton';
@@ -21,6 +22,8 @@ export default function Influencer() {
   const [selectedInfluencer, setSelectedInfluencer] = useState(null);
   const [showCreateInfluencerModal, setShowCreateInfluencerModal] = useState(false);
   const [showSelectInfluencerModal, setShowSelectInfluencerModal] = useState(false);
+  const [showDeleteInfluencerModal, setShowDeleteInfluencerModal] = useState(false);
+  const [influencerToDelete, setInfluencerToDelete] = useState(null);
   const [showContentTypeSelector, setShowContentTypeSelector] = useState(false);
   const [showSafeImageQuiz, setShowSafeImageQuiz] = useState(false);
   const [showHotImageQuiz, setShowHotImageQuiz] = useState(false);
@@ -76,6 +79,25 @@ export default function Influencer() {
     setView('grid');
     setSelectedInfluencer(null);
     loadInfluencers();
+  };
+
+  const handleDeleteClick = (influencer) => {
+    setInfluencerToDelete(influencer);
+    setShowDeleteInfluencerModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!influencerToDelete) return;
+
+    try {
+      await influencerService.deleteInfluencer(influencerToDelete.id);
+      setShowDeleteInfluencerModal(false);
+      setInfluencerToDelete(null);
+      loadInfluencers();
+    } catch (error) {
+      console.error('Error deleting influencer:', error);
+      throw error;
+    }
   };
 
   const handleContentTypeSelect = ({ type, mode }) => {
@@ -179,13 +201,6 @@ export default function Influencer() {
               Crie e gerencie influencers virtuais
             </p>
           </div>
-
-          {view === 'grid' && (
-            <Button onClick={handleCreateContent} className="w-full sm:w-auto">
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-              <span className="text-sm sm:text-base">Criar Novo Conteúdo</span>
-            </Button>
-          )}
         </div>
       </div>
 
@@ -236,6 +251,7 @@ export default function Influencer() {
                   key={influencer.id}
                   influencer={influencer}
                   onSelect={() => handleSelectInfluencer(influencer)}
+                  onDelete={handleDeleteClick}
                   index={index}
                 />
               ))}
@@ -291,6 +307,16 @@ export default function Influencer() {
         isOpen={showCreateInfluencerModal}
         onClose={() => setShowCreateInfluencerModal(false)}
         onSuccess={handleInfluencerCreated}
+      />
+
+      <DeleteInfluencerModal
+        isOpen={showDeleteInfluencerModal}
+        onClose={() => {
+          setShowDeleteInfluencerModal(false);
+          setInfluencerToDelete(null);
+        }}
+        influencer={influencerToDelete}
+        onConfirm={handleConfirmDelete}
       />
 
       {selectedInfluencer && (
