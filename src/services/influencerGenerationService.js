@@ -60,20 +60,6 @@ export async function createInfluencerImage({
     // For Seedream, image_urls is required
     const imageUrls = influencer.image_url ? [influencer.image_url] : [];
 
-    // Adicionar todas as imagens de referência BCTS sempre no modo hot
-    if (mode === 'hot') {
-      const bctsReferenceUrls = [
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/reference-images/bct/prancheta_1.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/reference-images/bct/prancheta_1_copiar.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/reference-images/bct/prancheta_1_copiar_2.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/reference-images/bct/prancheta_1_copiar_3.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/reference-images/bct/prancheta_1_copiar_4.png',
-        'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/reference-images/bct/prancheta_1_copiar_5.png'
-      ];
-      imageUrls.push(...bctsReferenceUrls);
-      console.log(`🔥 Adicionando ${bctsReferenceUrls.length} imagens de referência BCTS`);
-    }
-
     const result = await imageService.generateInfluencerImage(
       prompt,
       aspectRatio,
@@ -168,31 +154,8 @@ export async function createInfluencerVideo({
       ? '/functions/v1/generate-video-wan'
       : '/functions/v1/wan-hot-create-task';
 
-    // Preparar URLs de imagem
+    // Preparar URLs de imagem - apenas a foto de perfil do influencer
     let imageUrls = [influencer.image_url];
-
-    // Adicionar todas as imagens de referência BCTS sempre no modo hot
-    if (mode === 'hot') {
-      const baseUrl = 'https://selmogfyeujesrayxrhs.supabase.co/storage/v1/object/public/wan-images/reference/bcts/';
-      const bctsReferenceUrls = [
-        `${baseUrl}captura_de_tela_2025-12-25_033842.png`,
-        `${baseUrl}captura_de_tela_2025-12-25_034223.png`,
-        `${baseUrl}captura_de_tela_2025-12-25_034230.png`,
-        `${baseUrl}captura_de_tela_2025-12-25_034351.png`,
-        `${baseUrl}captura_de_tela_2025-12-25_034432.png`,
-        `${baseUrl}captura_de_tela_2025-12-25_034554.png`,
-        `${baseUrl}captura_de_tela_2025-12-25_035819.png`,
-        `${baseUrl}captura_de_tela_2025-12-25_035826.png`,
-        `${baseUrl}captura_de_tela_2025-12-25_035840.png`,
-        `${baseUrl}captura_de_tela_2025-12-25_040020.png`,
-        `${baseUrl}captura_de_tela_2025-12-25_040037.png`,
-        `${baseUrl}exemplobct.png`,
-        `${baseUrl}captura_de_tela_2025-12-25_043231.png`,
-        `${baseUrl}captura_de_tela_2025-12-25_043244.png`
-      ];
-      imageUrls.push(...bctsReferenceUrls);
-      console.log(`🔥 Adicionando ${bctsReferenceUrls.length} imagens de referência BCTS ao vídeo`);
-    }
 
     // Build payload
     const payload = {
