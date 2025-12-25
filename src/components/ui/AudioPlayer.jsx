@@ -7,7 +7,9 @@ export default function AudioPlayer({ src, className = '' }) {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const audioRef = useRef(null);
+  const volumeRef = useRef(null);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -28,6 +30,22 @@ export default function AudioPlayer({ src, className = '' }) {
     };
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (volumeRef.current && !volumeRef.current.contains(event.target)) {
+        setShowVolumeSlider(false);
+      }
+    };
+
+    if (showVolumeSlider) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showVolumeSlider]);
+
   const togglePlay = () => {
     if (isPlaying) {
       audioRef.current?.pause();
@@ -47,6 +65,10 @@ export default function AudioPlayer({ src, className = '' }) {
       audioRef.current.currentTime = newTime;
       setCurrentTime(newTime);
     }
+  };
+
+  const toggleVolumeSlider = () => {
+    setShowVolumeSlider(!showVolumeSlider);
   };
 
   const toggleMute = () => {
@@ -111,9 +133,9 @@ export default function AudioPlayer({ src, className = '' }) {
         </span>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div ref={volumeRef} className="relative flex items-center gap-2">
         <button
-          onClick={toggleMute}
+          onClick={toggleVolumeSlider}
           className="text-textSecondary/70 hover:text-brandPrimary transition-colors p-1"
         >
           {isMuted || volume === 0 ? (
@@ -123,29 +145,31 @@ export default function AudioPlayer({ src, className = '' }) {
           )}
         </button>
 
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value={isMuted ? 0 : volume}
-          onChange={handleVolumeChange}
-          className="w-16 h-1 bg-white/10 rounded-full appearance-none cursor-pointer
-                     [&::-webkit-slider-thumb]:appearance-none
-                     [&::-webkit-slider-thumb]:w-2.5
-                     [&::-webkit-slider-thumb]:h-2.5
-                     [&::-webkit-slider-thumb]:rounded-full
-                     [&::-webkit-slider-thumb]:bg-white
-                     [&::-webkit-slider-thumb]:cursor-pointer
-                     [&::-webkit-slider-thumb]:shadow-md
-                     [&::-moz-range-thumb]:w-2.5
-                     [&::-moz-range-thumb]:h-2.5
-                     [&::-moz-range-thumb]:rounded-full
-                     [&::-moz-range-thumb]:bg-white
-                     [&::-moz-range-thumb]:border-0
-                     [&::-moz-range-thumb]:cursor-pointer
-                     [&::-moz-range-thumb]:shadow-md"
-        />
+        {showVolumeSlider && (
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={isMuted ? 0 : volume}
+            onChange={handleVolumeChange}
+            className="w-16 h-1 bg-white/10 rounded-full appearance-none cursor-pointer animate-in fade-in slide-in-from-left-2 duration-200
+                       [&::-webkit-slider-thumb]:appearance-none
+                       [&::-webkit-slider-thumb]:w-2.5
+                       [&::-webkit-slider-thumb]:h-2.5
+                       [&::-webkit-slider-thumb]:rounded-full
+                       [&::-webkit-slider-thumb]:bg-white
+                       [&::-webkit-slider-thumb]:cursor-pointer
+                       [&::-webkit-slider-thumb]:shadow-md
+                       [&::-moz-range-thumb]:w-2.5
+                       [&::-moz-range-thumb]:h-2.5
+                       [&::-moz-range-thumb]:rounded-full
+                       [&::-moz-range-thumb]:bg-white
+                       [&::-moz-range-thumb]:border-0
+                       [&::-moz-range-thumb]:cursor-pointer
+                       [&::-moz-range-thumb]:shadow-md"
+          />
+        )}
       </div>
     </div>
   );
