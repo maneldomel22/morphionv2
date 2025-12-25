@@ -36,7 +36,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[rgb(var(--background))]">
+    <div className="min-h-screen flex bg-[rgb(var(--surface))]">
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[rgb(var(--gradient-start))] via-[rgb(var(--gradient-mid))] to-[rgb(var(--gradient-end))]"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(var(--brand-primary),0.08),transparent_50%)]"></div>

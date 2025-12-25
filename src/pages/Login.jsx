@@ -63,7 +63,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[rgb(var(--background))]">
+    <div className="min-h-screen flex bg-[rgb(var(--surface))]">
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <AnimatedBackground enableGlow={true}>
           <div className="flex flex-col justify-center px-16 max-w-2xl animate-fadeIn h-full">

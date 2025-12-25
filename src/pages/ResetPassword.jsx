@@ -67,7 +67,7 @@ export default function ResetPassword() {
 
   if (checkingToken) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[rgb(var(--background))]">
+      <div className="min-h-screen flex items-center justify-center bg-[rgb(var(--surface))]">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-[rgb(var(--brand-primary))]" />
           <p className="text-[rgb(var(--text-secondary))]">Validando link...</p>
@@ -78,7 +78,7 @@ export default function ResetPassword() {
 
   if (!validToken) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[rgb(var(--background))] p-8">
+      <div className="min-h-screen flex items-center justify-center bg-[rgb(var(--surface))] p-8">
         <div className="w-full max-w-md">
           <div className="p-6 bg-[rgba(var(--error),0.1)] border border-[rgba(var(--error),0.2)] rounded-xl mb-6">
             <p className="text-sm text-[rgb(var(--error))]">{error}</p>
@@ -95,7 +95,7 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen flex bg-[rgb(var(--background))]">
+    <div className="min-h-screen flex bg-[rgb(var(--surface))]">
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[rgb(var(--gradient-start))] via-[rgb(var(--gradient-mid))] to-[rgb(var(--gradient-end))]"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(var(--brand-primary),0.08),transparent_50%)]"></div>
