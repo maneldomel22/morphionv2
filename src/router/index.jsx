@@ -54,11 +54,8 @@ export const router = createBrowserRouter([
       { path: 'folders/:folderId', element: <SharedFolder /> },
       { path: 'morphy', element: <Morphy /> },
       { path: 'plans', element: <Plans /> },
-      { path: 'profile', element: <Profile /> }
+      { path: 'profile', element: <Profile /> },
+      { path: '*', element: <Navigate to="/dashboard" replace /> }
     ]
-  },
-  {
-    path: '*',
-    element: <Navigate to="/login" replace />
   }
 ]);
