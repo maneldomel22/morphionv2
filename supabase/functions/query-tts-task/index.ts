@@ -54,11 +54,34 @@ Deno.serve(async (req: Request) => {
       throw new Error(data.base_resp?.status_msg || "Query failed");
     }
 
+    const status = data.status.toLowerCase();
+    let audioUrl = null;
+
+    if (status === 'success' && data.file_id) {
+      const fileUrl = new URL("https://api.minimax.io/v1/files/retrieve");
+      fileUrl.searchParams.append("file_id", data.file_id.toString());
+
+      const fileResponse = await fetch(fileUrl.toString(), {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${minimaxApiKey}`,
+        },
+      });
+
+      if (fileResponse.ok) {
+        const fileData = await fileResponse.json();
+        if (fileData.file?.download_url) {
+          audioUrl = fileData.file.download_url;
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({
         taskId: data.task_id,
-        status: data.status,
+        status: status,
         fileId: data.file_id,
+        audioUrl: audioUrl,
         statusCode: data.base_resp.status_code,
         statusMsg: data.base_resp.status_msg,
       }),

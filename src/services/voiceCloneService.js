@@ -271,14 +271,20 @@ export const voiceCloneService = {
 
       if (error) throw error;
 
-      if (data.status === 'success' || data.status === 'failed' || data.status === 'expired') {
+      const normalizedStatus = data.status === 'success' ? 'completed' : data.status;
+
+      if (data.status === 'success' || data.status === 'completed' || data.status === 'failed' || data.status === 'expired') {
         const updateData = {
-          task_status: data.status === 'success' ? 'completed' : data.status,
+          task_status: normalizedStatus,
           updated_at: new Date().toISOString(),
         };
 
-        if (data.status === 'success' && data.fileId) {
+        if ((data.status === 'success' || data.status === 'completed') && data.fileId) {
           updateData.file_id = data.fileId;
+        }
+
+        if ((data.status === 'success' || data.status === 'completed') && data.audioUrl) {
+          updateData.audio_url = data.audioUrl;
         }
 
         if (data.status === 'failed') {
@@ -293,7 +299,7 @@ export const voiceCloneService = {
         if (updateError) throw updateError;
 
         return {
-          status: updateData.task_status,
+          status: normalizedStatus,
           task: {
             ...task,
             ...updateData,
@@ -302,7 +308,7 @@ export const voiceCloneService = {
       }
 
       return {
-        status: data.status,
+        status: normalizedStatus,
         task,
       };
     } catch (error) {
