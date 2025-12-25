@@ -29,7 +29,6 @@ export default function ImageGeneration() {
   const [loadingMessage, setLoadingMessage] = useState('');
   const [viewingImage, setViewingImage] = useState(null);
   const [activeGenerations, setActiveGenerations] = useState(0);
-  const [improvingPrompt, setImprovingPrompt] = useState(false);
 
   const engineConfig = IMAGE_ENGINE_CONFIGS[imageEngine];
 
@@ -236,7 +235,6 @@ export default function ImageGeneration() {
     }
 
     setGenerating(true);
-    setImprovingPrompt(true);
 
     try {
       const imageData = {
@@ -252,18 +250,14 @@ export default function ImageGeneration() {
 
       const result = await imageService.generateImage(imageData);
 
-      setImprovingPrompt(false);
-
-      const enhancedDescription = result.enhancedPrompt || description;
-
       const pendingImage = await generatedImagesService.createPendingImage({
-        prompt: enhancedDescription,
+        prompt: description,
         originalPrompt: description,
         aspectRatio,
         productImageUrl: productImage,
         characterImageUrl: characterImage,
         taskId: result.taskId,
-        visualPrompt: result.visualPrompt,
+        visualPrompt: null,
         imageModel: imageEngine,
         kieModel: engineConfig.kieModel,
         generationMode: (productImage || characterImage) ? 'image-to-image' : 'text-to-image',
@@ -287,7 +281,7 @@ export default function ImageGeneration() {
 
       setHistory(prev => [{
         id: Date.now(),
-        prompt: enhancedDescription.substring(0, 50) + (enhancedDescription.length > 50 ? '...' : ''),
+        prompt: description.substring(0, 50) + (description.length > 50 ? '...' : ''),
         timestamp: new Date().toISOString()
       }, ...prev].slice(0, 10));
 
@@ -323,7 +317,6 @@ export default function ImageGeneration() {
       alert('Erro ao iniciar geração. Tente novamente.');
     } finally {
       setGenerating(false);
-      setImprovingPrompt(false);
     }
   };
 
@@ -617,17 +610,6 @@ export default function ImageGeneration() {
               </div>
             )}
 
-            {improvingPrompt && (
-              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-blue-500 animate-pulse" />
-                  <p className="text-sm text-blue-900 dark:text-blue-100 font-medium">
-                    Morphy está melhorando seu prompt automaticamente...
-                  </p>
-                </div>
-              </div>
-            )}
-
             <Button
               onClick={handleGenerate}
               disabled={generating || !description.trim()}
@@ -636,7 +618,7 @@ export default function ImageGeneration() {
               {generating ? (
                 <>
                   <Loader2 size={18} className="mr-2 animate-spin" />
-                  {improvingPrompt ? 'Melhorando prompt...' : loadingMessage || 'Gerando...'}
+                  {loadingMessage || 'Gerando...'}
                 </>
               ) : (
                 <>

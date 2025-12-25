@@ -46,8 +46,6 @@ export const imageService = {
 
       return {
         taskId: data.taskId,
-        enhancedPrompt: data.enhancedPrompt,
-        visualPrompt: data.visualPrompt,
         kieResponse: data.kieResponse
       };
     } catch (error) {

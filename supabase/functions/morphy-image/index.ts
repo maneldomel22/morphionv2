@@ -47,40 +47,10 @@ Deno.serve(async (req: Request) => {
 
     console.log("Processing image request for:", requestData.description.substring(0, 100));
 
-    // Get authorization header from request
-    const authHeader = req.headers.get("Authorization");
-
-    // Call morphy-safe-suggest to get enhanced prompt
-    console.log("Calling morphy-safe-suggest...");
-    const morphyResponse = await fetch(`${supabaseUrl}/functions/v1/morphy-safe-suggest`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(authHeader ? { "Authorization": authHeader } : {})
-      },
-      body: JSON.stringify({
-        description: requestData.description,
-        characterImageUrl: requestData.characterImageUrl,
-        productImageUrl: requestData.productImageUrl,
-        aspectRatio: requestData.aspectRatio || "4:5"
-      }),
-    });
-
-    if (!morphyResponse.ok) {
-      const errorText = await morphyResponse.text();
-      console.error("Morphy Safe Suggest error:", errorText);
-      throw new Error(`Morphy Safe Suggest returned status ${morphyResponse.status}`);
-    }
-
-    const morphyData = await morphyResponse.json();
-
-    if (!morphyData.success || !morphyData.prompt) {
-      throw new Error("Failed to generate prompt from Morphy");
-    }
-
-    const enhancedPrompt = morphyData.prompt;
-    console.log("Enhanced prompt generated:", enhancedPrompt.substring(0, 150) + "...");
-    console.log("Prompt length:", enhancedPrompt.length, "chars");
+    // Use the exact prompt from the user without any enhancement
+    const promptToUse = requestData.description;
+    console.log("Using original user prompt directly");
+    console.log("Prompt length:", promptToUse.length, "chars");
 
     // Prepare image URLs for KIE
     const imageInputUrls: string[] = [];
@@ -103,7 +73,7 @@ Deno.serve(async (req: Request) => {
       kiePayload = {
         model: "seedream/4.5-text-to-image",
         input: {
-          prompt: enhancedPrompt,
+          prompt: promptToUse,
           aspect_ratio: requestData.aspectRatio || "1:1",
           quality: requestData.quality || "basic"
         }
@@ -112,7 +82,7 @@ Deno.serve(async (req: Request) => {
       kiePayload = {
         model: "seedream/4.5-edit",
         input: {
-          prompt: enhancedPrompt,
+          prompt: promptToUse,
           image_urls: imageInputUrls,
           aspect_ratio: requestData.aspectRatio || "1:1",
           quality: requestData.quality || "basic"
@@ -122,7 +92,7 @@ Deno.serve(async (req: Request) => {
       kiePayload = {
         model: "nano-banana-pro",
         input: {
-          prompt: enhancedPrompt,
+          prompt: promptToUse,
           image_input: imageInputUrls,
           aspect_ratio: requestData.aspectRatio || "4:5",
           resolution: requestData.resolution || "2K",
@@ -157,7 +127,6 @@ Deno.serve(async (req: Request) => {
       JSON.stringify({
         success: true,
         taskId: kieData.data?.taskId,
-        enhancedPrompt: enhancedPrompt,
         kieResponse: kieData,
       }),
       {
