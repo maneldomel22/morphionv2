@@ -2,7 +2,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import ToolInfo from '../components/ui/ToolInfo';
-import { Upload, Play, Sparkles, Download, Mic, Loader2, Trash2, Plus, Pause, Volume2, XCircle, CheckCircle2, FileAudio } from 'lucide-react';
+import { Upload, Sparkles, Download, Mic, Loader2, Trash2, Plus, Volume2, XCircle, CheckCircle2, FileAudio } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { toolsInfo } from '../data/toolsInfo';
 import { voiceCloneService, TTS_MODELS } from '../services/voiceCloneService';
@@ -32,8 +32,6 @@ export default function VoiceClone() {
   const [ttsTasks, setTtsTasks] = useState([]);
   const [loadingTasks, setLoadingTasks] = useState(true);
 
-  const [playingAudio, setPlayingAudio] = useState(null);
-  const audioRef = useRef(null);
   const cloneFileInputRef = useRef(null);
   const promptFileInputRef = useRef(null);
   const pollCleanupRef = useRef(null);
@@ -46,9 +44,6 @@ export default function VoiceClone() {
     return () => {
       if (pollCleanupRef.current) {
         pollCleanupRef.current();
-      }
-      if (audioRef.current) {
-        audioRef.current.pause();
       }
     };
   }, []);
@@ -502,24 +497,24 @@ export default function VoiceClone() {
                       </p>
 
                       {task.task_status === 'completed' && task.audio_url && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handlePlayAudio(task.audio_url)}
-                            className="flex-1 text-xs py-2 px-3 bg-surfaceMuted/50 hover:bg-surfaceMuted/70 rounded-lg transition-colors flex items-center justify-center gap-2"
+                        <div className="flex items-center gap-2">
+                          <audio
+                            controls
+                            className="flex-1 h-8"
+                            style={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                              borderRadius: '8px',
+                            }}
                           >
-                            {playingAudio === task.audio_url ? (
-                              <Pause size={12} />
-                            ) : (
-                              <Play size={12} />
-                            )}
-                            Ouvir
-                          </button>
+                            <source src={task.audio_url} type="audio/mpeg" />
+                            Seu navegador não suporta o elemento de áudio.
+                          </audio>
                           <button
                             onClick={() => handleDownloadAudio(task.audio_url, `audio_${task.id}.mp3`)}
-                            className="flex-1 text-xs py-2 px-3 bg-surfaceMuted/50 hover:bg-surfaceMuted/70 rounded-lg transition-colors flex items-center justify-center gap-2"
+                            className="p-2 bg-surfaceMuted/50 hover:bg-surfaceMuted/70 rounded-lg transition-colors flex items-center justify-center shrink-0"
+                            title="Baixar áudio"
                           >
-                            <Download size={12} />
-                            Baixar
+                            <Download size={14} />
                           </button>
                         </div>
                       )}
