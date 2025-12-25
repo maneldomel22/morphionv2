@@ -840,18 +840,6 @@ export default function Library() {
                 </div>
               </button>
 
-              <FolderItem
-                folder={{ id: 'null', name: 'Sem pasta', color: '#6B7280' }}
-                isSelected={selectedFolder === 'no-folder'}
-                videosCount={getVideosCountInFolder('no-folder')}
-                onClick={() => setSelectedFolder('no-folder')}
-                onRename={() => {}}
-                onDelete={() => {}}
-                onDownload={() => handleDownloadFolder('no-folder')}
-                onShare={() => {}}
-                isDropTarget={dropTarget === 'null'}
-              />
-
               {folders.map((folder) => (
                 <FolderItem
                   key={folder.id}
