@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import { buildNanoBananaPrompt } from '../../services/influencerPromptBuilder';
+import { IMAGE_ENGINES } from '../../types/imageEngines';
 
 const PHOTO_TYPES = [
   { id: 'selfie', label: 'Selfie', description: 'Foto tirada pela própria pessoa' },
@@ -46,10 +47,31 @@ const OUTPUT_FORMATS = [
   { id: 'jpg', label: 'JPG', description: 'Menor tamanho' }
 ];
 
+const MODELS = [
+  {
+    id: IMAGE_ENGINES.NANO_BANANA,
+    label: 'Nano Banana Pro',
+    description: 'Mais controle de resolução e formato',
+    kieModel: 'nano-banana-pro'
+  },
+  {
+    id: IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE,
+    label: 'Seedream Simple',
+    description: 'Mais simples e rápido',
+    kieModel: 'seedream/4.5-text-to-image'
+  }
+];
+
+const QUALITY = [
+  { id: 'basic', label: 'Básica (2K)', description: 'Qualidade padrão' },
+  { id: 'high', label: 'Alta (4K)', description: 'Alta qualidade' }
+];
+
 export default function SafeImageQuiz({ isOpen, onClose, influencer, onGenerate }) {
   const [step, setStep] = useState(0);
   const [generating, setGenerating] = useState(false);
   const [formData, setFormData] = useState({
+    model: IMAGE_ENGINES.NANO_BANANA,
     photoType: null,
     photographer: null,
     environment: null,
@@ -59,10 +81,12 @@ export default function SafeImageQuiz({ isOpen, onClose, influencer, onGenerate 
     context: '',
     aspectRatio: '9:16',
     resolution: '2K',
-    outputFormat: 'png'
+    outputFormat: 'png',
+    quality: 'basic'
   });
 
-  const steps = [
+  const baseSteps = [
+    { title: 'Escolha o Modelo', field: 'model', options: MODELS },
     { title: 'Tipo de Foto', field: 'photoType', options: PHOTO_TYPES },
     { title: 'Quem Tira a Foto', field: 'photographer', options: PHOTOGRAPHERS },
     { title: 'Ambiente', field: 'environment', options: ENVIRONMENTS },
@@ -70,10 +94,22 @@ export default function SafeImageQuiz({ isOpen, onClose, influencer, onGenerate 
     { title: 'Roupa', field: 'outfit', type: 'text' },
     { title: 'Expressão', field: 'expression', type: 'text' },
     { title: 'Contexto Livre', field: 'context', type: 'textarea' },
-    { title: 'Proporção', field: 'aspectRatio', options: ASPECT_RATIOS },
-    { title: 'Resolução', field: 'resolution', options: RESOLUTIONS },
-    { title: 'Formato', field: 'outputFormat', options: OUTPUT_FORMATS }
+    { title: 'Proporção', field: 'aspectRatio', options: ASPECT_RATIOS }
   ];
+
+  const isNanoBanana = formData.model === IMAGE_ENGINES.NANO_BANANA;
+  const isSeedream = formData.model === IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE;
+
+  const conditionalSteps = isNanoBanana
+    ? [
+        { title: 'Resolução', field: 'resolution', options: RESOLUTIONS },
+        { title: 'Formato', field: 'outputFormat', options: OUTPUT_FORMATS }
+      ]
+    : [
+        { title: 'Qualidade', field: 'quality', options: QUALITY }
+      ];
+
+  const steps = [...baseSteps, ...conditionalSteps];
 
   const currentStep = steps[step];
   const canProceed = currentStep.type ? formData[currentStep.field] : formData[currentStep.field] !== null;
@@ -129,13 +165,22 @@ export default function SafeImageQuiz({ isOpen, onClose, influencer, onGenerate 
 
       handleClose();
 
-      await onGenerate({
-        model: 'nano-banana-pro',
+      const selectedModel = MODELS.find(m => m.id === formData.model);
+
+      const payload = {
+        model: selectedModel.kieModel,
         prompt,
-        aspectRatio: formData.aspectRatio,
-        resolution: formData.resolution,
-        outputFormat: formData.outputFormat
-      });
+        aspectRatio: formData.aspectRatio
+      };
+
+      if (isNanoBanana) {
+        payload.resolution = formData.resolution;
+        payload.outputFormat = formData.outputFormat;
+      } else {
+        payload.quality = formData.quality;
+      }
+
+      await onGenerate(payload);
     } catch (error) {
       console.error('Error generating image:', error);
       setGenerating(false);
@@ -146,6 +191,7 @@ export default function SafeImageQuiz({ isOpen, onClose, influencer, onGenerate 
     setStep(0);
     setGenerating(false);
     setFormData({
+      model: IMAGE_ENGINES.NANO_BANANA,
       photoType: null,
       photographer: null,
       environment: null,
@@ -155,7 +201,8 @@ export default function SafeImageQuiz({ isOpen, onClose, influencer, onGenerate 
       context: '',
       aspectRatio: '9:16',
       resolution: '2K',
-      outputFormat: 'png'
+      outputFormat: 'png',
+      quality: 'basic'
     });
     onClose();
   };

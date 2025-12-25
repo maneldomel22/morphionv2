@@ -1,5 +1,6 @@
 export const IMAGE_ENGINES = {
   NANO_BANANA: 'nano_banana_pro',
+  SEEDREAM_TEXT_TO_IMAGE: 'seedream_text_to_image',
   SEEDREAM: 'seedream_4_5'
 };
 
@@ -16,6 +17,22 @@ export const IMAGE_ENGINE_CONFIGS = {
     outputFormats: ['png', 'jpg'],
     maxPromptLength: 5000,
     tooltip: 'Ideal para criar imagens do zero ou com referências opcionais'
+  },
+  [IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE]: {
+    name: 'Geração Simples',
+    description: 'Crie imagens realistas',
+    kieModel: 'seedream/4.5-text-to-image',
+    supportsTextToImage: true,
+    supportsImageToImage: false,
+    requiresSourceImage: false,
+    qualities: ['basic', 'high'],
+    defaultQuality: 'basic',
+    qualityMap: {
+      basic: '2K',
+      high: '4K'
+    },
+    maxPromptLength: 3000,
+    tooltip: 'Modelo simples e rápido para criar imagens realistas do zero'
   },
   [IMAGE_ENGINES.SEEDREAM]: {
     name: 'Editor Realista',
@@ -43,6 +60,10 @@ export const GENERATION_MODES = {
 export function getGenerationMode(engine, hasSourceImage) {
   if (engine === IMAGE_ENGINES.SEEDREAM) {
     return GENERATION_MODES.IMAGE_TO_IMAGE;
+  }
+
+  if (engine === IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE) {
+    return GENERATION_MODES.TEXT_TO_IMAGE;
   }
 
   return hasSourceImage ? GENERATION_MODES.IMAGE_TO_IMAGE : GENERATION_MODES.TEXT_TO_IMAGE;

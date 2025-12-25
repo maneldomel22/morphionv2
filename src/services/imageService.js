@@ -69,20 +69,42 @@ export const imageService = {
       }
 
       // Determine model name and mode
-      const isSeedream = imageEngine === 'seedream';
-      const modelName = isSeedream ? 'seedream/4.5-edit' : 'nano-banana-pro';
-      const mode = isSeedream ? 'hot' : 'safe';
+      const isSeedreamEdit = imageEngine === 'seedream';
+      const isSeedreamTextToImage = imageEngine === 'seedream_text_to_image';
+
+      let modelName, mode;
+      if (isSeedreamEdit) {
+        modelName = 'seedream/4.5-edit';
+        mode = 'hot';
+      } else if (isSeedreamTextToImage) {
+        modelName = 'seedream/4.5-text-to-image';
+        mode = 'safe';
+      } else {
+        modelName = 'nano-banana-pro';
+        mode = 'safe';
+      }
 
       // Build nested payload structure expected by edge function
       let kiePayload;
-      if (isSeedream) {
-        // SeeDream format
+      if (isSeedreamEdit) {
+        // SeeDream Edit format
         kiePayload = {
           model: 'seedream/4.5-edit',
           callBackUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-callback`,
           input: {
             prompt: promptText,
             image_urls: imageInputUrls || [],
+            aspect_ratio: aspectRatio || '1:1',
+            quality: quality || 'basic'
+          }
+        };
+      } else if (isSeedreamTextToImage) {
+        // SeeDream Text-to-Image format
+        kiePayload = {
+          model: 'seedream/4.5-text-to-image',
+          callBackUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-callback`,
+          input: {
+            prompt: promptText,
             aspect_ratio: aspectRatio || '1:1',
             quality: quality || 'basic'
           }

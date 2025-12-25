@@ -11,6 +11,10 @@ interface ImageRequest {
   productImageUrl?: string;
   characterImageUrl?: string;
   aspectRatio?: string;
+  imageEngine?: string;
+  resolution?: string;
+  outputFormat?: string;
+  quality?: string;
 }
 
 const SYSTEM_PROMPT = `You are Morphy Image Engine v2.
@@ -270,16 +274,44 @@ Deno.serve(async (req: Request) => {
 
     console.log("Including image_input URLs:", imageInputUrls.length);
 
-    const kiePayload = {
-      model: "nano-banana-pro",
-      input: {
-        prompt: promptString,
-        image_input: imageInputUrls,
-        aspect_ratio: requestData.aspectRatio || "4:5",
-        resolution: "1K",
-        output_format: "png"
-      }
-    };
+    const imageEngine = requestData.imageEngine || 'nano_banana_pro';
+    const isSeedreamTextToImage = imageEngine === 'seedream_text_to_image';
+    const isSeedreamEdit = imageEngine === 'seedream_4_5';
+
+    let kiePayload: any;
+    if (isSeedreamTextToImage) {
+      kiePayload = {
+        model: "seedream/4.5-text-to-image",
+        input: {
+          prompt: promptString,
+          aspect_ratio: requestData.aspectRatio || "1:1",
+          quality: requestData.quality || "basic"
+        }
+      };
+    } else if (isSeedreamEdit) {
+      kiePayload = {
+        model: "seedream/4.5-edit",
+        input: {
+          prompt: promptString,
+          image_urls: imageInputUrls,
+          aspect_ratio: requestData.aspectRatio || "1:1",
+          quality: requestData.quality || "basic"
+        }
+      };
+    } else {
+      kiePayload = {
+        model: "nano-banana-pro",
+        input: {
+          prompt: promptString,
+          image_input: imageInputUrls,
+          aspect_ratio: requestData.aspectRatio || "4:5",
+          resolution: requestData.resolution || "2K",
+          output_format: requestData.outputFormat || "png"
+        }
+      };
+    }
+
+    console.log("KIE Payload model:", kiePayload.model);
 
     const kieResponse = await fetch("https://api.kie.ai/api/v1/jobs/createTask", {
       method: "POST",
