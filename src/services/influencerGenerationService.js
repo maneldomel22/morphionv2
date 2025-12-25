@@ -54,7 +54,7 @@ export async function createInfluencerImage({
     console.log('📝 Post created with ID:', post.id);
 
     // Start image generation
-    const imageEngine = model === 'nano-banana-pro' ? 'nano_banana_pro' : 'seedream';
+    const imageEngine = model === 'nano-banana-pro' ? 'nano_banana_pro' : 'seedream_4_5';
 
     // For Nano Banana Pro, image_input is optional (pass empty array if no image)
     // For Seedream, image_urls is required

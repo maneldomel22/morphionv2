@@ -1,13 +1,12 @@
 export const IMAGE_ENGINES = {
   NANO_BANANA: 'nano_banana_pro',
-  SEEDREAM_TEXT_TO_IMAGE: 'seedream_text_to_image',
   SEEDREAM: 'seedream_4_5'
 };
 
 export const IMAGE_ENGINE_CONFIGS = {
   [IMAGE_ENGINES.NANO_BANANA]: {
-    name: 'Geração Criativa',
-    description: 'Crie imagens do zero',
+    name: 'Nano Banana Pro',
+    description: 'Geração criativa com mais controle',
     kieModel: 'nano-banana-pro',
     supportsTextToImage: true,
     supportsImageToImage: true,
@@ -18,12 +17,12 @@ export const IMAGE_ENGINE_CONFIGS = {
     maxPromptLength: 5000,
     tooltip: 'Ideal para criar imagens do zero ou com referências opcionais'
   },
-  [IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE]: {
-    name: 'Geração Simples',
-    description: 'Crie imagens realistas',
-    kieModel: 'seedream/4.5-text-to-image',
+  [IMAGE_ENGINES.SEEDREAM]: {
+    name: 'Seedream',
+    description: 'Realista e automático',
+    kieModel: 'seedream/4.5',
     supportsTextToImage: true,
-    supportsImageToImage: false,
+    supportsImageToImage: true,
     requiresSourceImage: false,
     qualities: ['basic', 'high'],
     defaultQuality: 'basic',
@@ -32,23 +31,7 @@ export const IMAGE_ENGINE_CONFIGS = {
       high: '4K'
     },
     maxPromptLength: 3000,
-    tooltip: 'Modelo simples e rápido para criar imagens realistas do zero'
-  },
-  [IMAGE_ENGINES.SEEDREAM]: {
-    name: 'Editor Realista',
-    description: 'Edite imagens existentes',
-    kieModel: 'seedream/4.5-edit',
-    supportsTextToImage: false,
-    supportsImageToImage: true,
-    requiresSourceImage: true,
-    qualities: ['basic', 'high'],
-    defaultQuality: 'basic',
-    qualityMap: {
-      basic: '2K',
-      high: '4K'
-    },
-    maxPromptLength: 3000,
-    tooltip: 'Edita uma imagem existente ou criar imagens com referência. Requer imagem de entrada.'
+    tooltip: 'Escolhe automaticamente: text-to-image (sem foto) ou edit (com foto)'
   }
 };
 
@@ -58,14 +41,6 @@ export const GENERATION_MODES = {
 };
 
 export function getGenerationMode(engine, hasSourceImage) {
-  if (engine === IMAGE_ENGINES.SEEDREAM) {
-    return GENERATION_MODES.IMAGE_TO_IMAGE;
-  }
-
-  if (engine === IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE) {
-    return GENERATION_MODES.TEXT_TO_IMAGE;
-  }
-
   return hasSourceImage ? GENERATION_MODES.IMAGE_TO_IMAGE : GENERATION_MODES.TEXT_TO_IMAGE;
 }
 

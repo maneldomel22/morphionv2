@@ -55,9 +55,9 @@ const MODELS = [
     kieModel: 'nano-banana-pro'
   },
   {
-    id: IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE,
-    label: 'Seedream Simple',
-    description: 'Mais simples e rápido',
+    id: IMAGE_ENGINES.SEEDREAM,
+    label: 'Seedream',
+    description: 'Realista e automático',
     kieModel: 'seedream/4.5-text-to-image'
   }
 ];
@@ -98,7 +98,7 @@ export default function SafeImageQuiz({ isOpen, onClose, influencer, onGenerate 
   ];
 
   const isNanoBanana = formData.model === IMAGE_ENGINES.NANO_BANANA;
-  const isSeedream = formData.model === IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE;
+  const isSeedream = formData.model === IMAGE_ENGINES.SEEDREAM;
 
   const conditionalSteps = isNanoBanana
     ? [

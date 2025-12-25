@@ -69,16 +69,18 @@ export const imageService = {
       }
 
       // Determine model name and mode
-      const isSeedreamEdit = imageEngine === 'seedream';
-      const isSeedreamTextToImage = imageEngine === 'seedream_text_to_image';
+      const isSeedream = imageEngine === 'seedream_4_5';
+      const hasImage = imageInputUrls && imageInputUrls.length > 0;
 
       let modelName, mode;
-      if (isSeedreamEdit) {
-        modelName = 'seedream/4.5-edit';
-        mode = 'hot';
-      } else if (isSeedreamTextToImage) {
-        modelName = 'seedream/4.5-text-to-image';
-        mode = 'safe';
+      if (isSeedream) {
+        if (hasImage) {
+          modelName = 'seedream/4.5-edit';
+          mode = 'hot';
+        } else {
+          modelName = 'seedream/4.5-text-to-image';
+          mode = 'safe';
+        }
       } else {
         modelName = 'nano-banana-pro';
         mode = 'safe';
@@ -86,31 +88,30 @@ export const imageService = {
 
       // Build nested payload structure expected by edge function
       let kiePayload;
-      if (isSeedreamEdit) {
-        // SeeDream Edit format
-        kiePayload = {
-          model: 'seedream/4.5-edit',
-          callBackUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-callback`,
-          input: {
-            prompt: promptText,
-            image_urls: imageInputUrls || [],
-            aspect_ratio: aspectRatio || '1:1',
-            quality: quality || 'basic'
-          }
-        };
-      } else if (isSeedreamTextToImage) {
-        // SeeDream Text-to-Image format
-        kiePayload = {
-          model: 'seedream/4.5-text-to-image',
-          callBackUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-callback`,
-          input: {
-            prompt: promptText,
-            aspect_ratio: aspectRatio || '1:1',
-            quality: quality || 'basic'
-          }
-        };
+      if (isSeedream) {
+        if (hasImage) {
+          kiePayload = {
+            model: 'seedream/4.5-edit',
+            callBackUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-callback`,
+            input: {
+              prompt: promptText,
+              image_urls: imageInputUrls,
+              aspect_ratio: aspectRatio || '1:1',
+              quality: quality || 'basic'
+            }
+          };
+        } else {
+          kiePayload = {
+            model: 'seedream/4.5-text-to-image',
+            callBackUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-callback`,
+            input: {
+              prompt: promptText,
+              aspect_ratio: aspectRatio || '1:1',
+              quality: quality || 'basic'
+            }
+          };
+        }
       } else {
-        // Nano Banana Pro format
         kiePayload = {
           model: 'nano-banana-pro',
           callBackUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-callback`,

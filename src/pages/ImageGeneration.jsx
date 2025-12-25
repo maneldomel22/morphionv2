@@ -58,18 +58,7 @@ export default function ImageGeneration() {
   const getLoadingMessages = (engine) => {
     if (engine === IMAGE_ENGINES.SEEDREAM) {
       return [
-        'Analisando imagem de referência...',
-        'Processando edição realista...',
-        'Aplicando transformações...',
-        'Mantendo estrutura original...',
-        'Gerando resultado final...',
-        'Finalizando...'
-      ];
-    }
-
-    if (engine === IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE) {
-      return [
-        'Analisando sua descrição...',
+        'Analisando sua solicitação...',
         'Gerando imagem realista...',
         'Processando detalhes...',
         'Aplicando qualidade...',
@@ -143,7 +132,7 @@ export default function ImageGeneration() {
         imageEngine,
         resolution: imageEngine === IMAGE_ENGINES.NANO_BANANA ? resolution : undefined,
         outputFormat: imageEngine === IMAGE_ENGINES.NANO_BANANA ? outputFormat : undefined,
-        quality: (imageEngine === IMAGE_ENGINES.SEEDREAM || imageEngine === IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE) ? quality : undefined
+        quality: imageEngine === IMAGE_ENGINES.SEEDREAM ? quality : undefined
       };
 
       const result = await imageService.generateImage(imageData);
@@ -240,7 +229,7 @@ export default function ImageGeneration() {
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-textSecondary mb-2">Engine de Geração</label>
-              <div className="grid grid-cols-3 gap-3 mb-2">
+              <div className="grid grid-cols-2 gap-3 mb-2">
                 <button
                   type="button"
                   onClick={() => setImageEngine(IMAGE_ENGINES.NANO_BANANA)}
@@ -260,28 +249,6 @@ export default function ImageGeneration() {
                   </div>
                   <p className="text-xs text-textSecondary">
                     {IMAGE_ENGINE_CONFIGS[IMAGE_ENGINES.NANO_BANANA].description}
-                  </p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setImageEngine(IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE)}
-                  className={`p-4 rounded-xl border-2 transition-all text-left ${
-                    imageEngine === IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE
-                      ? 'border-brandPrimary bg-brandPrimary/5'
-                      : 'border-surfaceMuted hover:border-brandPrimary/30'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-textPrimary">
-                      {IMAGE_ENGINE_CONFIGS[IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE].name}
-                    </span>
-                    {imageEngine === IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE && (
-                      <Badge variant="primary">Ativo</Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-textSecondary">
-                    {IMAGE_ENGINE_CONFIGS[IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE].description}
                   </p>
                 </button>
 
@@ -492,7 +459,7 @@ export default function ImageGeneration() {
               </div>
             )}
 
-            {(imageEngine === IMAGE_ENGINES.SEEDREAM || imageEngine === IMAGE_ENGINES.SEEDREAM_TEXT_TO_IMAGE) && (
+            {imageEngine === IMAGE_ENGINES.SEEDREAM && (
               <div className="mb-6">
                 <label className="block text-sm font-medium text-textSecondary mb-3">Qualidade</label>
                 <div className="grid grid-cols-2 gap-3">
