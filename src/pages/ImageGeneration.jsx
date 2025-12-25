@@ -23,12 +23,11 @@ export default function ImageGeneration() {
   const [productImage, setProductImage] = useState(null);
   const [characterImage, setCharacterImage] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [generating, setGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState([]);
   const [history, setHistory] = useState([]);
-  const [loadingMessage, setLoadingMessage] = useState('');
   const [viewingImage, setViewingImage] = useState(null);
   const [activeGenerations, setActiveGenerations] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
 
   const engineConfig = IMAGE_ENGINE_CONFIGS[imageEngine];
 
@@ -234,7 +233,7 @@ export default function ImageGeneration() {
       return;
     }
 
-    setGenerating(true);
+    setSubmitting(true);
 
     try {
       const imageData = {
@@ -316,7 +315,7 @@ export default function ImageGeneration() {
       console.error('Error starting image generation:', error);
       alert('Erro ao iniciar geração. Tente novamente.');
     } finally {
-      setGenerating(false);
+      setSubmitting(false);
     }
   };
 
@@ -612,13 +611,13 @@ export default function ImageGeneration() {
 
             <Button
               onClick={handleGenerate}
-              disabled={generating || !description.trim()}
+              disabled={submitting || !description.trim()}
               className="w-full"
             >
-              {generating ? (
+              {submitting ? (
                 <>
                   <Loader2 size={18} className="mr-2 animate-spin" />
-                  {loadingMessage || 'Gerando...'}
+                  Enviando...
                 </>
               ) : (
                 <>
