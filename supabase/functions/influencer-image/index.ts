@@ -8,9 +8,13 @@ const corsHeaders = {
 };
 
 interface InfluencerImageRequest {
-  influencer_id: string;
-  model: string;
-  payload: {
+  influencer_id?: string;
+  influencerId?: string;
+  model?: string;
+  prompt?: string;
+  referenceImage?: string;
+  type?: 'profile' | 'bodymap' | 'post';
+  payload?: {
     model: string;
     callBackUrl: string;
     input: {
@@ -23,7 +27,7 @@ interface InfluencerImageRequest {
       quality?: string;
     };
   };
-  mode: string;
+  mode?: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -32,26 +36,61 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { influencer_id, model, payload, mode }: InfluencerImageRequest = await req.json();
+    const requestData: InfluencerImageRequest = await req.json();
 
-    console.log('📥 Received request:', { influencer_id, model, mode });
+    const influencer_id = requestData.influencer_id || requestData.influencerId;
+    const type = requestData.type || 'post';
+    const mode = requestData.mode || 'safe';
+
+    let model: string;
+    let payload: any;
+    let promptText: string;
+    let imageUrls: string[] = [];
+
+    if (requestData.payload) {
+      model = requestData.model || requestData.payload.model;
+      payload = requestData.payload;
+      promptText = payload.input.prompt;
+      imageUrls = payload.input.image_urls || [];
+    } else {
+      model = requestData.model || 'seedream/4.5-edit';
+      promptText = requestData.prompt || '';
+
+      if (requestData.referenceImage) {
+        imageUrls = [requestData.referenceImage];
+      }
+
+      const supabaseUrl = Deno.env.get("SUPABASE_URL");
+      const callbackUrl = `${supabaseUrl}/functions/v1/check-influencer-post?influencer_id=${influencer_id}&type=${type}`;
+
+      payload = {
+        model: model,
+        callBackUrl: callbackUrl,
+        input: {
+          prompt: promptText,
+          image_urls: imageUrls.length > 0 ? imageUrls : undefined,
+          aspect_ratio: type === 'profile' ? '1:1' : '9:16',
+          quality: 'high'
+        }
+      };
+    }
+
+    console.log('📥 Received request:', { influencer_id, model, mode, type });
     console.log('📥 Payload input:', {
-      hasPrompt: !!payload?.input?.prompt,
-      hasImageUrls: !!payload?.input?.image_urls,
-      hasImageInput: !!payload?.input?.image_input,
-      imageUrlsCount: payload?.input?.image_urls?.length || 0,
-      imageInputCount: payload?.input?.image_input?.length || 0
+      hasPrompt: !!promptText,
+      hasImageUrls: imageUrls.length > 0,
+      imageUrlsCount: imageUrls.length
     });
 
-    if (!influencer_id || !payload?.input?.prompt) {
+    if (!influencer_id || !promptText) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: influencer_id, payload.input.prompt" }),
+        JSON.stringify({ error: "Missing required fields: influencer_id, prompt" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Validate image_urls for Seedream (required by KIE API)
-    if (model === 'seedream/4.5-edit') {
+    // Validate image_urls for Seedream (only for non-creation flows)
+    if (model === 'seedream/4.5-edit' && type === 'post') {
       if (!payload.input.image_urls || payload.input.image_urls.length === 0) {
         return new Response(
           JSON.stringify({
@@ -69,6 +108,15 @@ Deno.serve(async (req: Request) => {
         console.warn('⚠️ Nano Banana Pro called without image_input - this is optional but recommended');
       }
     }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const kieApiKey = Deno.env.get("KIE_API_KEY");
     if (!kieApiKey) {
@@ -167,10 +215,30 @@ Deno.serve(async (req: Request) => {
 
     console.log('✅ Image generation task created:', taskId);
 
-    // Return immediately with taskId - let background polling handle the rest
+    if (type === 'profile' || type === 'bodymap') {
+      const { error: insertError } = await supabase
+        .from("influencer_posts")
+        .insert({
+          influencer_id: influencer_id,
+          type: type,
+          status: 'generating',
+          task_id: taskId,
+          metadata: {
+            prompt: promptText,
+            model: model,
+            reference_image: requestData.referenceImage
+          }
+        });
+
+      if (insertError) {
+        console.error('Failed to create influencer_post:', insertError);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
+        task_id: taskId,
         taskId: taskId,
         kieResponse: kieResult
       }),

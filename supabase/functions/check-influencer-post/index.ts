@@ -21,30 +21,56 @@ Deno.serve(async (req: Request) => {
     const kieApiKey = Deno.env.get('KIE_API_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { postId } = await req.json();
+    const url = new URL(req.url);
+    const influencer_id = url.searchParams.get("influencer_id");
+    const type = url.searchParams.get("type");
 
-    if (!postId) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'postId is required' }),
-        {
-          status: 400,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+    let post: any = null;
+    let postId: string | null = null;
+
+    if (influencer_id && type) {
+      console.log(`Checking status for influencer ${influencer_id}, type ${type}`);
+
+      const { data, error: postError } = await supabase
+        .from('influencer_posts')
+        .select('*')
+        .eq('influencer_id', influencer_id)
+        .eq('type', type)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      post = data;
+      postId = post?.id;
+    } else {
+      const body = await req.json();
+      postId = body.postId;
+
+      if (!postId) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'postId or (influencer_id + type) required' }),
+          {
+            status: 400,
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+      }
+
+      console.log('Checking status for influencer post:', postId);
+
+      const { data, error: postError } = await supabase
+        .from('influencer_posts')
+        .select('*')
+        .eq('id', postId)
+        .maybeSingle();
+
+      post = data;
     }
 
-    console.log('Checking status for influencer post:', postId);
-
-    const { data: post, error: postError } = await supabase
-      .from('influencer_posts')
-      .select('*')
-      .eq('id', postId)
-      .maybeSingle();
-
-    if (postError || !post) {
+    if (!post) {
       console.error('Post not found:', postId);
       return new Response(
         JSON.stringify({ success: false, error: 'Post not found' }),
@@ -58,11 +84,11 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const taskId = post.metadata?.taskId;
+    const taskId = post.task_id || post.metadata?.taskId;
     if (!taskId) {
-      console.error('No taskId in post metadata:', postId);
+      console.error('No taskId found:', postId);
       return new Response(
-        JSON.stringify({ success: false, error: 'No taskId found in post metadata' }),
+        JSON.stringify({ success: false, error: 'No taskId found' }),
         {
           status: 400,
           headers: {

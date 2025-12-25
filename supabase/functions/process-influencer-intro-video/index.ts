@@ -1,0 +1,365 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
+};
+
+async function createReferenceImageFromVideo(videoUrl: string, influencer: any, kieApiKey: string): Promise<string> {
+  console.log("Creating reference image from video prompt");
+
+  const prompt = `Professional reference portrait photo.
+
+Character identity:
+${influencer.ethnicity} woman, ${influencer.age} years old.
+Face: ${influencer.facial_traits}
+Hair: ${influencer.hair}
+
+This is a reference image that matches the character from a video.
+
+FRAMING:
+Close-up portrait. Head and shoulders. Front-facing.
+
+POSE:
+Neutral relaxed expression. Direct eye contact. Slight natural smile.
+
+BACKGROUND:
+Solid neutral background. Clean and simple.
+
+LIGHTING:
+Soft even lighting. Professional but natural.
+
+STYLE:
+Natural skin texture. Realistic. Clean reference photo quality.`;
+
+  const response = await fetch("https://api.kie.ai/api/v1/jobs/createTask", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${kieApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "nano-banana-pro",
+      input: {
+        prompt: prompt,
+        aspect_ratio: "1:1",
+        quality: "high"
+      }
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create reference image task");
+  }
+
+  const data = await response.json();
+
+  if (data.code !== 200 || !data.data?.taskId) {
+    throw new Error("Failed to get task ID for reference image");
+  }
+
+  return data.data.taskId;
+}
+
+function buildProfileImagePrompt(influencer: any, referenceUrl: string): string {
+  return `Professional portrait photo.
+
+REFERENCE IMAGE:
+Use the face from the reference image as the FACE AUTHORITY. Match it exactly.
+
+SUBJECT:
+${influencer.ethnicity} woman, ${influencer.age} years old.
+Face: ${influencer.facial_traits}
+Hair: ${influencer.hair}
+
+FRAMING:
+Close-up portrait. Head and shoulders only. No body below shoulders visible.
+
+POSE:
+Neutral relaxed expression. Direct eye contact with camera. Slight natural smile.
+
+BACKGROUND:
+Solid neutral background. Soft gradient or plain wall. No objects. No context.
+
+LIGHTING:
+Soft even lighting. No harsh shadows. Professional but natural.
+
+STYLE:
+Natural skin texture. No heavy filters. Realistic but polished. Professional headshot quality.
+
+STRICT RULES:
+- No body visible below shoulders
+- No text or watermarks
+- No props or objects
+- Clean professional portrait only`;
+}
+
+function buildBodymapPrompt(influencer: any, referenceUrl: string): string {
+  return `Full body reference photo for character consistency.
+
+REFERENCE IMAGE:
+Use the face from the reference image as the FACE AUTHORITY. Match it exactly.
+
+SUBJECT:
+${influencer.ethnicity} woman, ${influencer.age} years old.
+Face: ${influencer.facial_traits}
+Hair: ${influencer.hair}
+Body: ${influencer.body}
+Body marks: ${influencer.marks}
+
+POSE:
+Standing straight. Arms slightly away from body. Neutral pose. Front-facing.
+
+ATTIRE:
+Form-fitting neutral clothing that shows body shape clearly. Tank top and fitted shorts.
+
+BACKGROUND:
+Plain solid neutral background. No props. No context.
+
+LIGHTING:
+Even soft lighting. Full body clearly visible. No harsh shadows.
+
+PURPOSE:
+This is a reference map for maintaining body consistency across future generations. Include all distinguishing marks and features.
+
+STYLE:
+Realistic. Natural. Clean reference photo quality.`;
+}
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 200, headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const kieApiKey = Deno.env.get("KIE_API_KEY");
+
+    if (!supabaseUrl || !supabaseServiceKey || !kieApiKey) {
+      throw new Error("Missing required environment variables");
+    }
+
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("Missing authorization header");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      throw new Error("Unauthorized");
+    }
+
+    const { influencer_id } = await req.json();
+
+    if (!influencer_id) {
+      throw new Error("Missing influencer_id");
+    }
+
+    const { data: influencer, error: fetchError } = await supabase
+      .from("influencers")
+      .select("*")
+      .eq("id", influencer_id)
+      .eq("user_id", user.id)
+      .single();
+
+    if (fetchError || !influencer) {
+      throw new Error("Influencer not found");
+    }
+
+    if (!influencer.intro_video_task_id) {
+      throw new Error("No video task ID found");
+    }
+
+    console.log("Checking video status for task:", influencer.intro_video_task_id);
+
+    const statusResponse = await fetch(
+      `https://api.kie.one/api/v2/video/${influencer.intro_video_task_id}`,
+      {
+        headers: {
+          "Authorization": `Bearer ${kieApiKey}`,
+        },
+      }
+    );
+
+    if (!statusResponse.ok) {
+      throw new Error("Failed to check video status");
+    }
+
+    const statusData = await statusResponse.json();
+    console.log("Video status:", statusData.status);
+
+    if (statusData.status !== "completed") {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          status: statusData.status,
+          message: "Video still processing"
+        }),
+        {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    const videoUrl = statusData.video_url;
+    console.log("Video completed, URL:", videoUrl);
+
+    await supabase
+      .from("influencers")
+      .update({
+        intro_video_url: videoUrl,
+        creation_status: 'creating_profile_image'
+      })
+      .eq("id", influencer_id);
+
+    console.log("Creating reference image from character description...");
+    const referenceTaskId = await createReferenceImageFromVideo(videoUrl, influencer, kieApiKey);
+
+    console.log("Reference image task created:", referenceTaskId);
+
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    const refStatusResponse = await fetch(
+      `https://api.kie.ai/api/v1/jobs/getTask/${referenceTaskId}`,
+      {
+        headers: {
+          "Authorization": `Bearer ${kieApiKey}`,
+        },
+      }
+    );
+
+    if (!refStatusResponse.ok) {
+      throw new Error("Failed to check reference image status");
+    }
+
+    const refStatusData = await refStatusResponse.json();
+
+    if (refStatusData.code !== 200 || refStatusData.data?.state !== 'success') {
+      console.log("Reference image not ready yet, will retry later");
+      return new Response(
+        JSON.stringify({
+          success: true,
+          status: 'creating_profile_image',
+          message: 'Creating reference image'
+        }),
+        {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    const referenceFrameUrl = refStatusData.data?.resultJson?.resultUrls?.[0];
+
+    if (!referenceFrameUrl) {
+      throw new Error("No reference image URL in response");
+    }
+
+    console.log("Reference image ready:", referenceFrameUrl);
+
+    await supabase
+      .from("influencers")
+      .update({
+        reference_frame_url: referenceFrameUrl,
+        creation_status: 'optimizing_identity'
+      })
+      .eq("id", influencer_id);
+
+    console.log("Starting parallel generation of profile image and bodymap...");
+
+    const profilePrompt = buildProfileImagePrompt(influencer, referenceFrameUrl);
+    const bodymapPrompt = buildBodymapPrompt(influencer, referenceFrameUrl);
+
+    const profileImageResponse = await fetch(
+      `${supabaseUrl}/functions/v1/influencer-image`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          influencerId: influencer_id,
+          prompt: profilePrompt,
+          referenceImage: referenceFrameUrl,
+          type: 'profile'
+        }),
+      }
+    );
+
+    const bodymapResponse = await fetch(
+      `${supabaseUrl}/functions/v1/influencer-image`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          influencerId: influencer_id,
+          prompt: bodymapPrompt,
+          referenceImage: referenceFrameUrl,
+          type: 'bodymap'
+        }),
+      }
+    );
+
+    const profileData = await profileImageResponse.json();
+    const bodymapData = await bodymapResponse.json();
+
+    console.log("Profile task:", profileData.task_id);
+    console.log("Bodymap task:", bodymapData.task_id);
+
+    await supabase
+      .from("influencers")
+      .update({
+        profile_image_task_id: profileData.task_id,
+        bodymap_task_id: bodymapData.task_id,
+      })
+      .eq("id", influencer_id);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        status: 'optimizing_identity',
+        reference_frame_url: referenceFrameUrl,
+        profile_task_id: profileData.task_id,
+        bodymap_task_id: bodymapData.task_id,
+        message: 'Frame extracted. Generating profile image and bodymap.'
+      }),
+      {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  } catch (error) {
+    console.error("Error in process-influencer-intro-video:", error);
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message || "Internal server error",
+      }),
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  }
+});
