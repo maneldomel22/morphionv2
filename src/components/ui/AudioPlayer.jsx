@@ -75,38 +75,38 @@ export default function AudioPlayer({ src, className = '' }) {
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <div className={`flex items-center gap-3 bg-transparent ${className}`}>
       <audio ref={audioRef} src={src} preload="metadata" />
 
       <button
         onClick={togglePlay}
-        className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-brandPrimary hover:bg-brandPrimary/80 rounded-lg transition-colors"
+        className="flex-shrink-0 w-9 h-9 flex items-center justify-center bg-brandPrimary/90 hover:bg-brandPrimary rounded-full transition-all"
       >
         {isPlaying ? (
-          <Pause size={18} className="text-white" />
+          <Pause size={16} className="text-white fill-white" />
         ) : (
-          <Play size={18} className="text-white ml-0.5" />
+          <Play size={16} className="text-white fill-white ml-0.5" />
         )}
       </button>
 
       <div className="flex-1 flex items-center gap-3">
-        <span className="text-xs text-textSecondary font-mono min-w-[35px]">
+        <span className="text-[11px] text-textSecondary/80 font-mono min-w-[35px] tabular-nums">
           {formatTime(currentTime)}
         </span>
 
         <div
-          className="flex-1 h-2 bg-surfaceMuted/30 rounded-full cursor-pointer group relative"
+          className="flex-1 h-1.5 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
           onClick={handleProgressClick}
         >
           <div
-            className="h-full bg-brandPrimary rounded-full transition-all relative"
+            className="h-full bg-brandPrimary/90 rounded-full transition-all relative"
             style={{ width: `${progress}%` }}
           >
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-brandPrimary rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" />
           </div>
         </div>
 
-        <span className="text-xs text-textSecondary font-mono min-w-[35px]">
+        <span className="text-[11px] text-textSecondary/80 font-mono min-w-[35px] tabular-nums">
           {formatTime(duration)}
         </span>
       </div>
@@ -114,7 +114,7 @@ export default function AudioPlayer({ src, className = '' }) {
       <div className="flex items-center gap-2">
         <button
           onClick={toggleMute}
-          className="text-textSecondary hover:text-brandPrimary transition-colors"
+          className="text-textSecondary/70 hover:text-brandPrimary transition-colors p-1"
         >
           {isMuted || volume === 0 ? (
             <VolumeX size={16} />
@@ -130,19 +130,21 @@ export default function AudioPlayer({ src, className = '' }) {
           step="0.01"
           value={isMuted ? 0 : volume}
           onChange={handleVolumeChange}
-          className="w-16 h-1 bg-surfaceMuted/30 rounded-full appearance-none cursor-pointer
+          className="w-16 h-1 bg-white/10 rounded-full appearance-none cursor-pointer
                      [&::-webkit-slider-thumb]:appearance-none
-                     [&::-webkit-slider-thumb]:w-3
-                     [&::-webkit-slider-thumb]:h-3
+                     [&::-webkit-slider-thumb]:w-2.5
+                     [&::-webkit-slider-thumb]:h-2.5
                      [&::-webkit-slider-thumb]:rounded-full
-                     [&::-webkit-slider-thumb]:bg-brandPrimary
+                     [&::-webkit-slider-thumb]:bg-white
                      [&::-webkit-slider-thumb]:cursor-pointer
-                     [&::-moz-range-thumb]:w-3
-                     [&::-moz-range-thumb]:h-3
+                     [&::-webkit-slider-thumb]:shadow-md
+                     [&::-moz-range-thumb]:w-2.5
+                     [&::-moz-range-thumb]:h-2.5
                      [&::-moz-range-thumb]:rounded-full
-                     [&::-moz-range-thumb]:bg-brandPrimary
+                     [&::-moz-range-thumb]:bg-white
                      [&::-moz-range-thumb]:border-0
-                     [&::-moz-range-thumb]:cursor-pointer"
+                     [&::-moz-range-thumb]:cursor-pointer
+                     [&::-moz-range-thumb]:shadow-md"
         />
       </div>
     </div>
