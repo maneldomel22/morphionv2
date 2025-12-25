@@ -38,8 +38,18 @@ export default function ImageGeneration() {
   const realtimeChannelRef = useRef(null);
 
   useEffect(() => {
-    loadGeneratedImages();
-    setupRealtimeSubscription();
+    const initPage = async () => {
+      await loadGeneratedImages();
+      setupRealtimeSubscription();
+
+      const images = await generatedImagesService.getUserImages();
+      const generating = images.filter(img => img.status === 'generating').length;
+      if (generating > 0) {
+        checkPendingImages();
+      }
+    };
+
+    initPage();
 
     return () => {
       if (realtimeChannelRef.current) {
@@ -47,6 +57,18 @@ export default function ImageGeneration() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    const pollingInterval = setInterval(() => {
+      if (activeGenerations > 0) {
+        checkPendingImages();
+      }
+    }, 10000);
+
+    return () => {
+      clearInterval(pollingInterval);
+    };
+  }, [activeGenerations]);
 
   const loadGeneratedImages = async () => {
     try {
@@ -69,6 +91,32 @@ export default function ImageGeneration() {
       setActiveGenerations(generating);
     } catch (error) {
       console.error('Error loading images:', error);
+    }
+  };
+
+  const checkPendingImages = async () => {
+    try {
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-pending-images`;
+      const headers = {
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      };
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({})
+      });
+
+      if (!response.ok) {
+        console.error('Failed to check pending images:', response.status);
+        return;
+      }
+
+      const data = await response.json();
+      console.log('Checked pending images:', data);
+    } catch (error) {
+      console.error('Error checking pending images:', error);
     }
   };
 
