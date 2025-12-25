@@ -11,6 +11,21 @@ export const lipSyncService = {
         throw new Error('Não autenticado');
       }
 
+      const requestBody = {
+        srcVideoUrl,
+        audioUrl,
+        videoParams: {
+          video_width: videoParams.video_width ?? 0,
+          video_height: videoParams.video_height ?? 0,
+          video_enhance: videoParams.video_enhance ?? 0,
+          fps: videoParams.fps ?? 'original',
+        },
+      };
+
+      console.group('%c[LipSync] Starting LipSync Task', 'color: #4CAF50; font-weight: bold');
+      console.log('Timestamp:', new Date().toISOString());
+      console.log('Request Body:', requestBody);
+
       const response = await fetch(`${SUPABASE_URL}/functions/v1/start-lipsync`, {
         method: 'POST',
         headers: {
@@ -18,19 +33,14 @@ export const lipSyncService = {
           'Content-Type': 'application/json',
           'apikey': SUPABASE_ANON_KEY,
         },
-        body: JSON.stringify({
-          srcVideoUrl,
-          audioUrl,
-          videoParams: {
-            video_width: videoParams.video_width ?? 0,
-            video_height: videoParams.video_height ?? 0,
-            video_enhance: videoParams.video_enhance ?? 0,
-            fps: videoParams.fps ?? 'original',
-          },
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
+
+      console.log('Response Status:', response.status);
+      console.log('Response Data:', data);
+      console.groupEnd();
 
       if (!data.success) {
         throw new Error(data.error || 'Erro ao iniciar LipSync');
@@ -41,7 +51,7 @@ export const lipSyncService = {
         newportTaskId: data.newportTaskId,
       };
     } catch (error) {
-      console.error('Erro ao iniciar LipSync:', error);
+      console.error('%c[LipSync] Error starting LipSync:', 'color: #f44336; font-weight: bold', error);
       throw error;
     }
   },
@@ -52,6 +62,10 @@ export const lipSyncService = {
       if (!session) {
         throw new Error('Não autenticado');
       }
+
+      console.group('%c[LipSync] Checking Status', 'color: #2196F3; font-weight: bold');
+      console.log('Timestamp:', new Date().toISOString());
+      console.log('Task ID:', taskId);
 
       const response = await fetch(`${SUPABASE_URL}/functions/v1/check-lipsync-status`, {
         method: 'POST',
@@ -65,6 +79,19 @@ export const lipSyncService = {
 
       const data = await response.json();
 
+      console.log('Response Status:', response.status);
+      console.log('Response Data:', data);
+
+      if (data.newportData) {
+        console.log('Newport Task Details:', {
+          status: data.newportData.task?.status,
+          taskType: data.newportData.task?.taskType,
+          reason: data.newportData.task?.reason,
+        });
+      }
+
+      console.groupEnd();
+
       if (!data.success) {
         throw new Error(data.error || 'Erro ao verificar status');
       }
@@ -73,9 +100,10 @@ export const lipSyncService = {
         status: data.status,
         resultVideoUrl: data.resultVideoUrl,
         errorMessage: data.errorMessage,
+        newportData: data.newportData,
       };
     } catch (error) {
-      console.error('Erro ao verificar status:', error);
+      console.error('%c[LipSync] Error checking status:', 'color: #f44336; font-weight: bold', error);
       throw error;
     }
   },

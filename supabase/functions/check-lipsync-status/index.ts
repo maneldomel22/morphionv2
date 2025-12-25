@@ -81,8 +81,8 @@ Deno.serve(async (req: Request) => {
       throw new Error("Newport API key not configured");
     }
 
-    // Poll Newport AI for status
-    const pollingResponse = await fetch("https://api.newportai.com/api/polling", {
+    // Poll Newport AI for status using correct endpoint
+    const pollingResponse = await fetch("https://api.newportai.com/api/getAsyncResult", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${newportApiKey}`,
@@ -142,38 +142,50 @@ Deno.serve(async (req: Request) => {
       throw new Error(pollingData.message || "Failed to check lipsync status");
     }
 
-    // Check if task is complete (has videos array with results)
-    if (pollingData.data && pollingData.data.videos && pollingData.data.videos.length > 0) {
-      const videoUrl = pollingData.data.videos[0].videoUrl;
-      console.log("Task completed, video URL:", videoUrl);
+    // Check task status according to Newport AI documentation
+    // status: 1=submitted, 2=processing, 3=success, 4=failed
+    const taskStatus = pollingData.data?.task?.status;
+    const taskReason = pollingData.data?.task?.reason || "";
 
-      // Update task as completed
-      await supabase
-        .from("lipsync_tasks")
-        .update({
-          status: "completed",
-          result_video_url: videoUrl,
-        })
-        .eq("id", taskId);
+    console.log("Newport task status:", taskStatus, "reason:", taskReason);
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          status: "completed",
-          resultVideoUrl: videoUrl,
-        }),
-        {
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+    if (taskStatus === 3) {
+      // Task completed successfully
+      if (pollingData.data?.videos && pollingData.data.videos.length > 0) {
+        const videoUrl = pollingData.data.videos[0].videoUrl;
+        console.log("Task completed, video URL:", videoUrl);
+
+        await supabase
+          .from("lipsync_tasks")
+          .update({
+            status: "completed",
+            result_video_url: videoUrl,
+          })
+          .eq("id", taskId);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            status: "completed",
+            resultVideoUrl: videoUrl,
+            newportData: pollingData.data,
+          }),
+          {
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      } else {
+        console.error("Task status is 3 (success) but no videos found");
+        throw new Error("Task completed but no video URL available");
+      }
     }
 
-    // Check if task failed
-    if (pollingData.data && pollingData.data.state === "FAILED") {
-      const errorMessage = pollingData.data.failMessage || "Unknown error";
+    if (taskStatus === 4) {
+      // Task failed
+      const errorMessage = taskReason || "Unknown error";
       console.log("Task failed:", errorMessage);
 
       await supabase
@@ -199,8 +211,8 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Still processing (response exists but no videos yet)
-    console.log("Task still processing, state:", pollingData.data?.state);
+    // Status 1 (submitted) or 2 (processing) - still processing
+    console.log("Task still processing, status:", taskStatus);
     return new Response(
       JSON.stringify({
         success: true,

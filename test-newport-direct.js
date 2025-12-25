@@ -89,7 +89,7 @@ async function testNewportDirect() {
 
       await new Promise(resolve => setTimeout(resolve, 5000));
 
-      const pollingResponse = await fetch('https://api.newportai.com/api/polling', {
+      const pollingResponse = await fetch('https://api.newportai.com/api/getAsyncResult', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${NEWPORT_API_KEY}`,
@@ -118,16 +118,27 @@ async function testNewportDirect() {
         break;
       }
 
-      if (pollingData.data && pollingData.data.videos && pollingData.data.videos.length > 0) {
-        console.log('✓ LipSync concluído!');
-        console.log(`  - Video URL: ${pollingData.data.videos[0].videoUrl}\n`);
+      // Check task status: 1=submitted, 2=processing, 3=success, 4=failed
+      const taskStatus = pollingData.data?.task?.status;
+      const taskReason = pollingData.data?.task?.reason || '';
+
+      if (taskStatus === 3) {
+        // Task completed successfully
+        if (pollingData.data?.videos && pollingData.data.videos.length > 0) {
+          console.log('✓ LipSync concluído!');
+          console.log(`  - Video URL: ${pollingData.data.videos[0].videoUrl}\n`);
+          break;
+        }
+      }
+
+      if (taskStatus === 4) {
+        // Task failed
+        console.error(`❌ LipSync falhou: ${taskReason || 'Desconhecido'}\n`);
         break;
       }
 
-      if (pollingData.data && pollingData.data.state === 'FAILED') {
-        console.error(`❌ LipSync falhou: ${pollingData.data.failMessage || 'Desconhecido'}\n`);
-        break;
-      }
+      // Status 1 (submitted) or 2 (processing) - still processing
+      console.log(`  - Status: Processando (status=${taskStatus})`);
     }
 
     if (attempts >= maxAttempts) {
