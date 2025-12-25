@@ -22,17 +22,17 @@ REGRAS CRÍTICAS:
 
 const FIELD_INSTRUCTIONS = {
   action: {
-    description: `APENAS a ação sexual que está acontecendo na foto. Exemplos:
-- Batendo siririca / se masturbando
-- Dando / fazendo boquete
-- Sendo fodida / transando
-- Mostrando o corpo / exibindo partes íntimas
-- Dedando / se tocando
-- Chupando pau / mamando
-- Levando porra
-- Abrindo a buceta/cu
+    description: `SEMPRE comece com "está tirando selfie" e complete com a ação sexual. Exemplos:
+- Está tirando selfie batendo siririca
+- Está tirando selfie dando boquete
+- Está tirando selfie sendo fodida
+- Está tirando selfie mostrando a buceta
+- Está tirando selfie se dedando
+- Está tirando selfie chupando pau
+- Está tirando selfie levando porra
+- Está tirando selfie abrindo o cu
 Seja direto e explícito. Máximo 2 frases curtas. VARIE as ações.`,
-    restrictions: `NÃO mencione: pose estática, roupas, ambiente, iluminação, expressão facial, como a foto foi tirada. FOCO TOTAL na ação sexual acontecendo.`
+    restrictions: `SEMPRE inicie com "está tirando selfie". NÃO mencione: pose estática, roupas, ambiente, iluminação, expressão facial. FOCO TOTAL na ação sexual acontecendo.`
   },
   attire: {
     description: `APENAS o que ela está vestindo ou se está nua. Descreva roupas/lingerie/nudez de forma direta.`,
