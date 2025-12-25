@@ -68,10 +68,13 @@ Deno.serve(async (req: Request) => {
     const isSeedream = imageEngine === 'seedream_4_5';
     const hasImages = imageInputUrls.length > 0;
 
+    const callbackUrl = `${supabaseUrl}/functions/v1/kie-callback`;
+
     let kiePayload: any;
     if (isSeedream && !hasImages) {
       kiePayload = {
         model: "seedream/4.5-text-to-image",
+        callBackUrl: callbackUrl,
         input: {
           prompt: promptToUse,
           aspect_ratio: requestData.aspectRatio || "1:1",
@@ -81,6 +84,7 @@ Deno.serve(async (req: Request) => {
     } else if (isSeedream && hasImages) {
       kiePayload = {
         model: "seedream/4.5-edit",
+        callBackUrl: callbackUrl,
         input: {
           prompt: promptToUse,
           image_urls: imageInputUrls,
@@ -91,6 +95,7 @@ Deno.serve(async (req: Request) => {
     } else {
       kiePayload = {
         model: "nano-banana-pro",
+        callBackUrl: callbackUrl,
         input: {
           prompt: promptToUse,
           image_input: imageInputUrls,
