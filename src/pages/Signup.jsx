@@ -56,7 +56,11 @@ export default function Signup() {
       if (signUpError) throw signUpError;
 
       if (authData.user) {
-        navigate('/dashboard');
+        if (authData.user.confirmed_at) {
+          navigate('/dashboard');
+        } else {
+          navigate('/confirm-email', { state: { email } });
+        }
       } else {
         setError('Erro ao criar conta. Tente novamente.');
       }

@@ -108,13 +108,23 @@ export function AuthProvider({ children }) {
     setProfile(null);
   };
 
+  const resendConfirmation = async (email) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email
+    });
+
+    if (error) throw error;
+  };
+
   const value = {
     user,
     profile,
     loading,
     signIn,
     signUp,
-    signOut
+    signOut,
+    resendConfirmation
   };
 
   return (

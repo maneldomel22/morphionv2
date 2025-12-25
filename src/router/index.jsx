@@ -4,6 +4,8 @@ import Login from '../pages/Login';
 import Signup from '../pages/Signup';
 import ForgotPassword from '../pages/ForgotPassword';
 import ResetPassword from '../pages/ResetPassword';
+import ConfirmEmail from '../pages/ConfirmEmail';
+import AuthCallback from '../pages/AuthCallback';
 import Dashboard from '../pages/Dashboard';
 import Metrics from '../pages/Metrics';
 import SoraManual from '../pages/SoraManual';
@@ -45,6 +47,14 @@ export const router = createBrowserRouter([
   {
     path: '/reset-password',
     element: <ResetPassword />
+  },
+  {
+    path: '/confirm-email',
+    element: <ConfirmEmail />
+  },
+  {
+    path: '/auth/callback',
+    element: <AuthCallback />
   },
   {
     path: '/',

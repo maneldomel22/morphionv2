@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { getErrorMessage } from '../services/authService';
 import { Loader2, Zap, Users, Target } from 'lucide-react';
 
 export default function Login() {
@@ -9,6 +10,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
 
   useEffect(() => {
     async function checkSession() {
@@ -23,6 +25,7 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setNeedsConfirmation(false);
     setLoading(true);
 
     try {
@@ -31,14 +34,26 @@ export default function Login() {
         password
       });
 
-      if (signInError) throw signInError;
+      if (signInError) {
+        if (signInError.message === 'Email not confirmed') {
+          setNeedsConfirmation(true);
+          setError(getErrorMessage(signInError));
+        } else {
+          throw signInError;
+        }
+        return;
+      }
 
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message || 'Erro ao fazer login. Verifique suas credenciais.');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleResendConfirmation = () => {
+    navigate('/confirm-email', { state: { email } });
   };
 
   return (
@@ -120,6 +135,15 @@ export default function Login() {
             {error && (
               <div className="p-3.5 bg-[rgba(var(--error),0.1)] border border-[rgba(var(--error),0.2)] rounded-xl animate-fadeIn">
                 <p className="text-sm text-[rgb(var(--error))]">{error}</p>
+                {needsConfirmation && (
+                  <button
+                    type="button"
+                    onClick={handleResendConfirmation}
+                    className="mt-2 text-sm text-[rgb(var(--brand-primary))] hover:underline"
+                  >
+                    Reenviar email de confirmação
+                  </button>
+                )}
               </div>
             )}
 
