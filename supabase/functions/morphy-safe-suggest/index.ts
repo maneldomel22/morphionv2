@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,6 +8,7 @@ const corsHeaders = {
 };
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const IMAGE_SIZE_THRESHOLD_MB = 5;
 
 const MORPHY_SAFE_SYSTEM = `You are Morphy Image Engine - Safe Mode.
 
@@ -63,7 +65,86 @@ No explanations, no markdown formatting, no quotes around it.
 Keep it natural and simple, like describing a real photo someone took.
 Target length: 150-300 words.`;
 
-function buildPromptRequest(data: any): any[] {
+async function checkImageSize(imageUrl: string): Promise<number | null> {
+  try {
+    const headResponse = await fetch(imageUrl, { method: 'HEAD' });
+    if (!headResponse.ok) {
+      return null;
+    }
+    const contentLength = headResponse.headers.get('content-length');
+    if (!contentLength) {
+      return null;
+    }
+    return Number(contentLength) / 1024 / 1024;
+  } catch (error) {
+    console.error('Error checking image size:', error);
+    return null;
+  }
+}
+
+async function processLargeImage(imageUrl: string, authToken: string): Promise<string> {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const processImageUrl = `${supabaseUrl}/functions/v1/process-image`;
+
+    console.log(`🔄 Processing large image: ${imageUrl.substring(0, 100)}...`);
+
+    const response = await fetch(processImageUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        imageUrl: imageUrl,
+        maxDimension: 1024,
+        quality: 0.75,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Failed to process image, using original URL');
+      return imageUrl;
+    }
+
+    const data = await response.json();
+
+    if (data.success && data.processedUrl) {
+      console.log(`✅ Image processed: ${data.originalSize.toFixed(2)}MB -> ${data.processedSize.toFixed(2)}MB`);
+      return data.processedUrl;
+    }
+
+    return imageUrl;
+  } catch (error) {
+    console.error('Error processing image:', error);
+    return imageUrl;
+  }
+}
+
+async function cleanupTempImage(imageUrl: string, supabase: any): Promise<void> {
+  try {
+    if (!imageUrl.includes('/temp-images/')) {
+      return;
+    }
+
+    const urlParts = imageUrl.split('/temp-images/');
+    if (urlParts.length < 2) {
+      return;
+    }
+
+    const filePath = urlParts[1].split('?')[0];
+
+    await supabase.storage
+      .from('temp-images')
+      .remove([filePath]);
+
+    console.log(`🗑️ Cleaned up temp image: ${filePath}`);
+  } catch (error) {
+    console.error('Error cleaning up temp image:', error);
+  }
+}
+
+async function buildPromptRequest(data: any, authToken: string): Promise<any[]> {
   const content: any[] = [];
 
   let textPrompt = `User request:\n\n`;
@@ -97,25 +178,48 @@ function buildPromptRequest(data: any): any[] {
     text: textPrompt,
   });
 
+  let characterImageToUse = data.characterImageUrl;
+  let productImageToUse = data.productImageUrl;
+
   if (data.characterImageUrl) {
+    const characterSize = await checkImageSize(data.characterImageUrl);
+    if (characterSize && characterSize > IMAGE_SIZE_THRESHOLD_MB) {
+      console.log(`⚠️ Character image is large (${characterSize.toFixed(2)}MB), processing...`);
+      characterImageToUse = await processLargeImage(data.characterImageUrl, authToken);
+    }
+
     content.push({
       type: "image_url",
       image_url: {
-        url: data.characterImageUrl,
+        url: characterImageToUse,
+        detail: "low",
       },
     });
   }
 
   if (data.productImageUrl) {
+    const productSize = await checkImageSize(data.productImageUrl);
+    if (productSize && productSize > IMAGE_SIZE_THRESHOLD_MB) {
+      console.log(`⚠️ Product image is large (${productSize.toFixed(2)}MB), processing...`);
+      productImageToUse = await processLargeImage(data.productImageUrl, authToken);
+    }
+
     content.push({
       type: "image_url",
       image_url: {
-        url: data.productImageUrl,
+        url: productImageToUse,
+        detail: "low",
       },
     });
   }
 
-  return content;
+  return {
+    content,
+    tempImages: [
+      characterImageToUse !== data.characterImageUrl ? characterImageToUse : null,
+      productImageToUse !== data.productImageUrl ? productImageToUse : null,
+    ].filter(Boolean),
+  };
 }
 
 Deno.serve(async (req: Request) => {
@@ -126,7 +230,20 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  let tempImages: string[] = [];
+
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("No authorization header");
+    }
+
+    const authToken = authHeader.replace("Bearer ", "");
+
     const data = await req.json();
 
     if (!data.description || data.description.trim() === '') {
@@ -135,7 +252,8 @@ Deno.serve(async (req: Request) => {
 
     console.log("Building safe prompt for:", data.description.substring(0, 100));
 
-    const userContent = buildPromptRequest(data);
+    const { content: userContent, tempImages: processedImages } = await buildPromptRequest(data, authToken);
+    tempImages = processedImages;
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -171,6 +289,10 @@ Deno.serve(async (req: Request) => {
     console.log("Generated prompt:", prompt.substring(0, 150) + "...");
     console.log("Prompt length:", prompt.length, "chars");
 
+    for (const tempImage of tempImages) {
+      await cleanupTempImage(tempImage, supabase);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -185,6 +307,11 @@ Deno.serve(async (req: Request) => {
     );
   } catch (error) {
     console.error("Error in morphy-safe-suggest:", error);
+
+    for (const tempImage of tempImages) {
+      await cleanupTempImage(tempImage, supabase);
+    }
+
     return new Response(
       JSON.stringify({
         success: false,
