@@ -1,7 +1,7 @@
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import ToolInfo from '../components/ui/ToolInfo';
-import { Upload, Play, Download, Video, Loader2, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Upload, Play, Download, Video, Loader2, CheckCircle2, XCircle, Clock, RefreshCw } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { toolsInfo } from '../data/toolsInfo';
 import { lipSyncService } from '../services/lipSyncService';
@@ -15,6 +15,8 @@ export default function LipSync() {
   const [currentTask, setCurrentTask] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [checkingStatus, setCheckingStatus] = useState(false);
 
   const [videoParams, setVideoParams] = useState({
     video_width: 0,
@@ -26,10 +28,40 @@ export default function LipSync() {
   const videoInputRef = useRef(null);
   const audioInputRef = useRef(null);
   const resultVideoRef = useRef(null);
+  const pollCleanupRef = useRef(null);
+  const timerRef = useRef(null);
 
   useEffect(() => {
     loadTasks();
+
+    return () => {
+      if (pollCleanupRef.current) {
+        pollCleanupRef.current();
+      }
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
   }, []);
+
+  useEffect(() => {
+    if (processing) {
+      setElapsedTime(0);
+      timerRef.current = setInterval(() => {
+        setElapsedTime((prev) => prev + 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [processing]);
 
   const loadTasks = async () => {
     try {
@@ -78,7 +110,11 @@ export default function LipSync() {
       const task = await lipSyncService.getTask(taskId);
       setCurrentTask(task);
 
-      lipSyncService.pollStatus(taskId, (status) => {
+      if (pollCleanupRef.current) {
+        pollCleanupRef.current();
+      }
+
+      pollCleanupRef.current = lipSyncService.pollStatus(taskId, (status) => {
         if (status.status === 'completed') {
           setCurrentTask((prev) => ({
             ...prev,
@@ -95,6 +131,11 @@ export default function LipSync() {
           }));
           setProcessing(false);
           loadTasks();
+        } else {
+          setCurrentTask((prev) => ({
+            ...prev,
+            status: status.status,
+          }));
         }
       });
     } catch (error) {
@@ -102,6 +143,35 @@ export default function LipSync() {
       alert('Erro ao processar LipSync: ' + error.message);
       setProcessing(false);
     }
+  };
+
+  const handleCheckStatus = async (taskId) => {
+    try {
+      setCheckingStatus(true);
+      const status = await lipSyncService.checkStatus(taskId);
+
+      if (currentTask && currentTask.id === taskId) {
+        setCurrentTask((prev) => ({
+          ...prev,
+          status: status.status,
+          result_video_url: status.resultVideoUrl || prev.result_video_url,
+          error_message: status.errorMessage || prev.error_message,
+        }));
+      }
+
+      await loadTasks();
+    } catch (error) {
+      console.error('Erro ao verificar status:', error);
+      alert('Erro ao verificar status: ' + error.message);
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleDownload = async (url, filename = 'lipsync-result.mp4') => {
@@ -330,10 +400,17 @@ export default function LipSync() {
                 </div>
               </div>
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <p className="text-textSecondary text-sm">Com Lip Sync</p>
-                  {getStatusIcon(currentTask.status)}
-                  <span className="text-sm text-textSecondary">{getStatusText(currentTask.status)}</span>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <p className="text-textSecondary text-sm">Com Lip Sync</p>
+                    {getStatusIcon(currentTask.status)}
+                    <span className="text-sm text-textSecondary">{getStatusText(currentTask.status)}</span>
+                  </div>
+                  {processing && (
+                    <span className="text-xs text-textSecondary">
+                      {formatTime(elapsedTime)}
+                    </span>
+                  )}
                 </div>
                 <div className="aspect-video bg-surfaceMuted/30 rounded-xl overflow-hidden border">
                   {currentTask.status === 'completed' && currentTask.result_video_url ? (
@@ -344,8 +421,10 @@ export default function LipSync() {
                       controls
                     />
                   ) : currentTask.status === 'processing' ? (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Loader2 size={32} className="text-textSecondary animate-spin" />
+                    <div className="w-full h-full flex flex-col items-center justify-center p-4">
+                      <Loader2 size={32} className="text-textSecondary animate-spin mb-4" />
+                      <p className="text-textSecondary text-sm mb-2">Processando vídeo...</p>
+                      <p className="text-textSecondary text-xs">Tempo decorrido: {formatTime(elapsedTime)}</p>
                     </div>
                   ) : currentTask.status === 'failed' ? (
                     <div className="w-full h-full flex flex-col items-center justify-center p-4">
@@ -368,6 +447,26 @@ export default function LipSync() {
                   >
                     <Download size={16} className="mr-2" />
                     Baixar Resultado
+                  </Button>
+                )}
+                {currentTask.status === 'processing' && (
+                  <Button
+                    onClick={() => handleCheckStatus(currentTask.id)}
+                    variant="secondary"
+                    disabled={checkingStatus}
+                    className="w-full mt-3"
+                  >
+                    {checkingStatus ? (
+                      <>
+                        <Loader2 size={16} className="mr-2 animate-spin" />
+                        Verificando...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw size={16} className="mr-2" />
+                        Verificar Status
+                      </>
+                    )}
                   </Button>
                 )}
               </div>
@@ -435,6 +534,26 @@ export default function LipSync() {
                         Baixar
                       </Button>
                     </div>
+                  )}
+                  {task.status === 'processing' && (
+                    <Button
+                      onClick={() => handleCheckStatus(task.id)}
+                      variant="secondary"
+                      disabled={checkingStatus}
+                      className="text-sm w-full"
+                    >
+                      {checkingStatus ? (
+                        <>
+                          <Loader2 size={14} className="mr-2 animate-spin" />
+                          Verificando...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw size={14} className="mr-2" />
+                          Verificar Status
+                        </>
+                      )}
+                    </Button>
                   )}
                   {task.status === 'failed' && task.error_message && (
                     <p className="text-red-500 text-sm">{task.error_message}</p>

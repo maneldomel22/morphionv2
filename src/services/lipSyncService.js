@@ -139,21 +139,53 @@ export const lipSyncService = {
     }
   },
 
-  pollStatus(taskId, onUpdate, interval = 5000) {
+  pollStatus(taskId, onUpdate, interval = 5000, maxAttempts = 180) {
+    let attempts = 0;
+    let pollInterval;
+
     const poll = async () => {
       try {
+        attempts++;
+        console.log(`Verificando status do LipSync (tentativa ${attempts}/${maxAttempts})...`);
+
         const status = await this.checkStatus(taskId);
         onUpdate(status);
 
-        if (status.status === 'processing') {
-          setTimeout(poll, interval);
+        if (status.status === 'completed' || status.status === 'failed') {
+          if (pollInterval) {
+            clearInterval(pollInterval);
+          }
+          return;
+        }
+
+        if (attempts >= maxAttempts) {
+          console.error('Timeout: número máximo de tentativas atingido');
+          onUpdate({
+            status: 'failed',
+            errorMessage: 'Tempo limite excedido. O vídeo pode ainda estar processando, tente verificar mais tarde.'
+          });
+          if (pollInterval) {
+            clearInterval(pollInterval);
+          }
         }
       } catch (error) {
         console.error('Erro no polling:', error);
-        onUpdate({ status: 'failed', errorMessage: error.message });
+        if (attempts >= 3) {
+          onUpdate({ status: 'failed', errorMessage: error.message });
+          if (pollInterval) {
+            clearInterval(pollInterval);
+          }
+        }
       }
     };
 
     poll();
+    pollInterval = setInterval(poll, interval);
+
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
   },
 };

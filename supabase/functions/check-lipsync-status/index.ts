@@ -99,15 +99,53 @@ Deno.serve(async (req: Request) => {
       throw new Error("Failed to check lipsync status");
     }
 
-    const pollingData = await pollingResponse.json();
+    const responseText = await pollingResponse.text();
+    console.log("Newport polling response:", responseText);
+
+    if (!responseText || responseText.trim() === '') {
+      console.log("Empty response from Newport, task still processing");
+      return new Response(
+        JSON.stringify({
+          success: true,
+          status: "processing",
+        }),
+        {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    let pollingData;
+    try {
+      pollingData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("Failed to parse Newport response:", parseError);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          status: "processing",
+        }),
+        {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
 
     if (pollingData.code !== 0) {
+      console.error("Newport API error code:", pollingData.code, pollingData.message);
       throw new Error(pollingData.message || "Failed to check lipsync status");
     }
 
-    // Check if task is complete
+    // Check if task is complete (has videos array with results)
     if (pollingData.data && pollingData.data.videos && pollingData.data.videos.length > 0) {
       const videoUrl = pollingData.data.videos[0].videoUrl;
+      console.log("Task completed, video URL:", videoUrl);
 
       // Update task as completed
       await supabase
@@ -136,6 +174,7 @@ Deno.serve(async (req: Request) => {
     // Check if task failed
     if (pollingData.data && pollingData.data.state === "FAILED") {
       const errorMessage = pollingData.data.failMessage || "Unknown error";
+      console.log("Task failed:", errorMessage);
 
       await supabase
         .from("lipsync_tasks")
@@ -160,7 +199,8 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Still processing
+    // Still processing (response exists but no videos yet)
+    console.log("Task still processing, state:", pollingData.data?.state);
     return new Response(
       JSON.stringify({
         success: true,
