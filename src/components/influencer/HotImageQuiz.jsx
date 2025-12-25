@@ -169,6 +169,7 @@ export default function HotImageQuiz({ isOpen, onClose, influencer, onGenerate }
       }
 
       const identityProfile = influencer.identity_profile || null;
+      const referenceImage = influencer.profile_images?.[0] || '';
 
       const suggestion = await getMorphyHotSuggestion(
         currentStep.field,
@@ -176,7 +177,8 @@ export default function HotImageQuiz({ isOpen, onClose, influencer, onGenerate }
         influencer.age,
         formData[currentStep.field],
         sceneContext,
-        identityProfile
+        identityProfile,
+        referenceImage
       );
       setFormData({ ...formData, [currentStep.field]: suggestion });
 

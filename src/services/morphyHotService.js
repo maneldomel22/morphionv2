@@ -3,7 +3,7 @@ import { getPhysicalProfileAsText } from './identityTranslationService';
 
 const MAX_FIELD_LENGTH = 300;
 
-export async function getMorphyHotSuggestion(field, influencerName, influencerAge, currentValue = '', sceneContext = {}, identityProfile = null) {
+export async function getMorphyHotSuggestion(field, influencerName, influencerAge, currentValue = '', sceneContext = {}, identityProfile = null, referenceImage = '') {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session) {
@@ -27,6 +27,7 @@ export async function getMorphyHotSuggestion(field, influencerName, influencerAg
       currentValue,
       sceneContext,
       physicalProfile,
+      referenceImage,
       maxChars: MAX_FIELD_LENGTH
     })
   });

@@ -65,7 +65,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { field, influencerName, influencerAge, currentValue, sceneContext, physicalProfile, maxChars } = await req.json();
+    const { field, influencerName, influencerAge, currentValue, sceneContext, physicalProfile, maxChars, referenceImage } = await req.json();
 
     if (!field || !FIELD_INSTRUCTIONS[field]) {
       throw new Error("Invalid field specified");
@@ -103,6 +103,11 @@ Deno.serve(async (req: Request) => {
       physicalProfileSection = `\nPERFIL FÍSICO FIXO:\n${physicalProfile}\n\nNUNCA invente características físicas diferentes do perfil acima.\n`;
     }
 
+    let referenceImageSection = '';
+    if (referenceImage && referenceImage.trim()) {
+      referenceImageSection = `\nIMAGEM DE REFERÊNCIA DA PERSONAGEM:\nUse a imagem "${referenceImage}" como referência visual para a aparência da personagem.\nMANTENHA as características físicas exatas mostradas nesta imagem de referência.\n`;
+    }
+
     const isImproving = currentValue && currentValue.trim();
 
     let userPrompt = `SEJA BREVE! MÁXIMO ${availableSpace} CARACTERES!
@@ -116,7 +121,7 @@ ${fieldConfig.description}
 
 RESTRIÇÕES CRÍTICAS:
 ${fieldConfig.restrictions}
-${contextSection}${physicalProfileSection}`;
+${contextSection}${physicalProfileSection}${referenceImageSection}`;
 
     if (isImproving) {
       userPrompt += `\nTEXTO DO USUÁRIO:\n"${currentValue}"\n\nMELHORE este texto mantendo a essência e escolhas principais. Apenas torne mais explícito sem adicionar outros aspectos.`;
