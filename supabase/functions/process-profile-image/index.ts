@@ -176,14 +176,29 @@ Deno.serve(async (req: Request) => {
       }
     );
 
+    if (!bodymapResponse.ok) {
+      const errorText = await bodymapResponse.text();
+      console.error("Failed to create bodymap task:", errorText);
+      throw new Error(`Bodymap generation failed: ${errorText}`);
+    }
+
     const bodymapData = await bodymapResponse.json();
 
-    console.log("Bodymap task created:", bodymapData.task_id);
+    console.log("Bodymap response:", bodymapData);
+
+    const bodymapTaskId = bodymapData.task_id || bodymapData.taskId;
+
+    if (!bodymapTaskId) {
+      console.error("No task_id in bodymap response:", bodymapData);
+      throw new Error("Bodymap task created but no task_id returned");
+    }
+
+    console.log("Bodymap task created:", bodymapTaskId);
 
     await supabase
       .from("influencers")
       .update({
-        bodymap_task_id: bodymapData.task_id,
+        bodymap_task_id: bodymapTaskId,
       })
       .eq("id", influencer_id);
 
@@ -192,7 +207,7 @@ Deno.serve(async (req: Request) => {
         success: true,
         status: 'creating_bodymap',
         profile_image_url: profileImageUrl,
-        bodymap_task_id: bodymapData.task_id,
+        bodymap_task_id: bodymapTaskId,
         message: 'Profile image saved. Creating bodymap.'
       }),
       {

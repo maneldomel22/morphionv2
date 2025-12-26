@@ -299,14 +299,29 @@ Deno.serve(async (req: Request) => {
       }
     );
 
+    if (!profileImageResponse.ok) {
+      const errorText = await profileImageResponse.text();
+      console.error("Failed to create profile image task:", errorText);
+      throw new Error(`Profile image generation failed: ${errorText}`);
+    }
+
     const profileData = await profileImageResponse.json();
 
-    console.log("Profile task created:", profileData.task_id);
+    console.log("Profile image response:", profileData);
+
+    const taskId = profileData.task_id || profileData.taskId;
+
+    if (!taskId) {
+      console.error("No task_id in response:", profileData);
+      throw new Error("Profile image task created but no task_id returned");
+    }
+
+    console.log("Profile task created:", taskId);
 
     await supabase
       .from("influencers")
       .update({
-        profile_image_task_id: profileData.task_id,
+        profile_image_task_id: taskId,
       })
       .eq("id", influencer_id);
 
@@ -315,7 +330,7 @@ Deno.serve(async (req: Request) => {
         success: true,
         status: 'creating_profile_image',
         reference_frame_url: referenceFrameUrl,
-        profile_task_id: profileData.task_id,
+        profile_task_id: taskId,
         message: 'Reference extracted. Creating profile image.'
       }),
       {
