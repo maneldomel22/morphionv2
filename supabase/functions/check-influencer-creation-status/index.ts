@@ -92,7 +92,8 @@ Deno.serve(async (req: Request) => {
     }
 
     const currentStatus = influencer.creation_status;
-    console.log("Current influencer status:", currentStatus);
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] Current influencer status: ${currentStatus}, video_task: ${influencer.intro_video_task_id || 'none'}, profile_task: ${influencer.profile_image_task_id || 'none'}, bodymap_task: ${influencer.bodymap_task_id || 'none'}`);
 
     if (currentStatus === 'ready') {
       return new Response(
@@ -154,7 +155,8 @@ Deno.serve(async (req: Request) => {
       }
 
       if (videoStatus.state === 'success') {
-        console.log("Video completed, calling process-influencer-intro-video...");
+        const timestamp = new Date().toISOString();
+        console.log(`[${timestamp}] Video completed (task_id: ${influencer.intro_video_task_id}), calling process-influencer-intro-video...`);
         try {
           const processResponse = await fetch(
             `${supabaseUrl}/functions/v1/process-influencer-intro-video`,
@@ -170,11 +172,25 @@ Deno.serve(async (req: Request) => {
 
           if (processResponse.ok) {
             const processData = await processResponse.json();
+
+            // Recarregar dados do banco para pegar task IDs atualizados
+            const { data: updatedInfluencer, error: reloadError } = await supabase
+              .from("influencers")
+              .select("*")
+              .eq("id", influencer_id)
+              .single();
+
+            if (reloadError) {
+              console.error(`[${timestamp}] Failed to reload influencer:`, reloadError);
+            } else {
+              console.log(`[${timestamp}] Influencer reloaded, profile_image_task_id: ${updatedInfluencer?.profile_image_task_id}`);
+            }
+
             return new Response(
               JSON.stringify({
                 success: true,
                 status: processData.status || 'creating_profile_image',
-                influencer,
+                influencer: updatedInfluencer || influencer,
                 progress: 40,
               }),
               {
@@ -186,10 +202,12 @@ Deno.serve(async (req: Request) => {
             );
           }
         } catch (error) {
-          console.error("Error calling process-influencer-intro-video:", error);
+          console.error(`[${timestamp}] Error calling process-influencer-intro-video:`, error);
         }
       }
 
+      const timestamp2 = new Date().toISOString();
+      console.log(`[${timestamp2}] Video still processing, KIE state: ${videoStatus.state}`);
       return new Response(
         JSON.stringify({
           success: true,
@@ -250,7 +268,8 @@ Deno.serve(async (req: Request) => {
       }
 
       if (profileStatus.state === 'success') {
-        console.log("Profile image completed, calling process-profile-image...");
+        const timestamp = new Date().toISOString();
+        console.log(`[${timestamp}] Profile image completed (task_id: ${influencer.profile_image_task_id}), calling process-profile-image...`);
         try {
           const processResponse = await fetch(
             `${supabaseUrl}/functions/v1/process-profile-image`,
@@ -266,11 +285,25 @@ Deno.serve(async (req: Request) => {
 
           if (processResponse.ok) {
             const processData = await processResponse.json();
+
+            // Recarregar dados do banco para pegar task IDs atualizados
+            const { data: updatedInfluencer, error: reloadError } = await supabase
+              .from("influencers")
+              .select("*")
+              .eq("id", influencer_id)
+              .single();
+
+            if (reloadError) {
+              console.error(`[${timestamp}] Failed to reload influencer:`, reloadError);
+            } else {
+              console.log(`[${timestamp}] Influencer reloaded, bodymap_task_id: ${updatedInfluencer?.bodymap_task_id}`);
+            }
+
             return new Response(
               JSON.stringify({
                 success: true,
                 status: processData.status || 'creating_bodymap',
-                influencer,
+                influencer: updatedInfluencer || influencer,
                 progress: 65,
               }),
               {
@@ -282,10 +315,12 @@ Deno.serve(async (req: Request) => {
             );
           }
         } catch (error) {
-          console.error("Error calling process-profile-image:", error);
+          console.error(`[${timestamp}] Error calling process-profile-image:`, error);
         }
       }
 
+      const timestamp3 = new Date().toISOString();
+      console.log(`[${timestamp3}] Profile image still processing, KIE state: ${profileStatus.state}`);
       return new Response(
         JSON.stringify({
           success: true,
@@ -346,7 +381,8 @@ Deno.serve(async (req: Request) => {
       }
 
       if (bodymapStatus.state === 'success') {
-        console.log("Bodymap completed, calling process-bodymap...");
+        const timestamp = new Date().toISOString();
+        console.log(`[${timestamp}] Bodymap completed (task_id: ${influencer.bodymap_task_id}), calling process-bodymap...`);
         try {
           const processResponse = await fetch(
             `${supabaseUrl}/functions/v1/process-bodymap`,
@@ -362,11 +398,25 @@ Deno.serve(async (req: Request) => {
 
           if (processResponse.ok) {
             const processData = await processResponse.json();
+
+            // Recarregar dados do banco para confirmar conclusão
+            const { data: updatedInfluencer, error: reloadError } = await supabase
+              .from("influencers")
+              .select("*")
+              .eq("id", influencer_id)
+              .single();
+
+            if (reloadError) {
+              console.error(`[${timestamp}] Failed to reload influencer:`, reloadError);
+            } else {
+              console.log(`[${timestamp}] Influencer reloaded, creation_status: ${updatedInfluencer?.creation_status}`);
+            }
+
             return new Response(
               JSON.stringify({
                 success: true,
-                status: processData.status || 'completed',
-                influencer,
+                status: processData.status || 'ready',
+                influencer: updatedInfluencer || influencer,
                 progress: 100,
               }),
               {
@@ -378,10 +428,12 @@ Deno.serve(async (req: Request) => {
             );
           }
         } catch (error) {
-          console.error("Error calling process-bodymap:", error);
+          console.error(`[${timestamp}] Error calling process-bodymap:`, error);
         }
       }
 
+      const timestamp4 = new Date().toISOString();
+      console.log(`[${timestamp4}] Bodymap still processing, KIE state: ${bodymapStatus.state}`);
       return new Response(
         JSON.stringify({
           success: true,

@@ -20,42 +20,101 @@ interface CreateInfluencerRequest {
 }
 
 function buildIntroVideoPrompt(data: CreateInfluencerRequest): string {
-  const greetingText = data.language === 'pt-BR'
-    ? `Oi, eu sou ${data.name} e sou sua nova influencer virtual.`
-    : `Hi, I'm ${data.name} and I'm your new virtual influencer.`;
+  return `TECHNICAL HEADER:
+A casual, selfie-style IPHONE 15 PRO front-camera vertical video (9:16), recorded handheld at arm's length, with subtle micro-jitters, natural exposure shifts, and realistic smartphone stabilization artifacts.
 
-  return `UGC-style selfie video for influencer identity creation.
+ENVIRONMENT (LOCKED — MUST FOLLOW EXACTLY):
+Location: Sala de estar brasileira simples e bem iluminada
+Details: Piso frio de cerâmica branca, sofá neutro, ventilador de pedestal plástico ao fundo
+Lighting: Luz natural de janela lateral, suave e realista
 
-CHARACTER:
+This environment is FIXED.
+Do NOT replace it.
+Do NOT simplify it.
+Do NOT generalize it.
+The entire video must take place in this exact environment.
+
+CHARACTER (IDENTITY LOCK):
 Name: ${data.name}
-Age: ${data.age}
+Age: ${data.age} years old
+Gender: female
 Ethnicity: ${data.ethnicity}
-Face: ${data.facialTraits}
+Skin tone: Morena clara, textura real com poros visíveis
 Hair: ${data.hair}
+Face: ${data.facialTraits}
+Expression base: Confiante e simpática
 
-WARDROBE:
-Casual top. Simple and comfortable.
+WARDROBE (CASUAL BR):
+Blusa regata de alcinha branca simples.
+Short jeans casual.
+Visual confortável, típico de casa no Brasil.
 
-SCENE:
-Indoor home setting. Natural daylight. Relaxed vibe.
+CINEMATOGRAPHY:
+Framing: Medium close-up (rosto e parte do tronco)
+Camera angle: Eye-level
+Lens: iPhone front camera (~24mm equivalent)
+Camera movement: Leve balanço de mão apenas
+No tripod.
+Single continuous take.
 
-CAMERA:
-Vertical smartphone selfie (9:16). Front camera. Arm-length distance.
+ACTION & PERFORMANCE:
+Creative style: Apresentação casual / UGC real
+Sequence of actions (IMPORTANT — FOLLOW ORDER):
 
-ACTION (10 seconds):
-0-4s: She smiles at camera and says: "${greetingText}"
-4-7s: She maintains the smile, slight natural head movements, relaxed and friendly.
-7-10s: Holds direct eye contact, silent, minimal movement, clear face visibility.
+1) ${data.name} olha diretamente para a câmera e diz com naturalidade:
+"Oi, eu sou a ${data.name}."
 
-FINAL 3 SECONDS CRITICAL:
-- Complete silence
-- Neutral relaxed face
-- Minimal to no movement
-- Perfect face visibility
-- Direct camera gaze
+2) Após falar, ela dá um pequeno sorriso, dá um passo para trás,
+se afasta levemente da câmera, vira o corpo de lado,
+faz um pequeno giro casual (volta simples, natural).
 
-STYLE:
-Raw UGC smartphone video. Natural lighting. No effects. No music. No text. No overlays. Realistic amateur selfie.`;
+3) Em seguida, ela se aproxima novamente da câmera,
+segura o celular com firmeza,
+olha diretamente para a lente
+e permanece em SILÊNCIO absoluto por 3 segundos.
+
+No cuts.
+No scene changes.
+Movimentos naturais, sem exagero.
+
+LANGUAGE RULE (CRITICAL):
+Speak ONLY in Portuguese (pt-BR).
+Do NOT translate.
+Do NOT mix languages.
+Pronounce clearly and naturally.
+
+TIMING RULES:
+- Spoken dialogue must end within the first 4 seconds.
+- Final 3 seconds MUST be silent.
+- Total video duration: ~8–10 seconds.
+- Never cut off speech mid-sentence.
+
+AUDIO:
+Clear smartphone microphone audio.
+Slight natural room reverb.
+No background music.
+No noise effects.
+
+QUALITY & AUTHENTICITY MODIFIERS:
+smartphone selfie,
+real UGC,
+handheld realism,
+minor digital noise,
+imperfect framing,
+raw Instagram-style footage.
+
+NEGATIVE CONSTRAINTS:
+No subtitles.
+No captions.
+No text overlays.
+No logos.
+No watermarks.
+No CGI look.
+No plastic skin.
+No exaggerated gestures.
+No studio lighting.
+No generic environments.
+No third person view.`;
 }
 
 Deno.serve(async (req: Request) => {

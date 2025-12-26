@@ -101,15 +101,40 @@ export const influencerCreationService = {
 
   async monitorCreation(influencerId, onProgress) {
     let attempts = 0;
-    const maxAttempts = 180;
-    const pollInterval = 10000;
+    const maxAttempts = 300;
     let consecutiveErrors = 0;
     const maxConsecutiveErrors = 3;
+    const startTime = Date.now();
+    let lastStatus = null;
+    let statusChangeBoost = false;
+
+    const getAdaptiveInterval = (elapsedMinutes) => {
+      if (statusChangeBoost) {
+        return 2000;
+      }
+
+      if (elapsedMinutes < 5) {
+        return 3000;
+      } else if (elapsedMinutes < 10) {
+        return 5000;
+      } else {
+        return 8000;
+      }
+    };
 
     const checkStatus = async () => {
       try {
         const result = await this.checkCreationStatus(influencerId);
         consecutiveErrors = 0;
+
+        if (lastStatus !== null && lastStatus !== result.status) {
+          console.log(`Status changed from ${lastStatus} to ${result.status} - activating boost`);
+          statusChangeBoost = true;
+          setTimeout(() => {
+            statusChangeBoost = false;
+          }, 15000);
+        }
+        lastStatus = result.status;
 
         const statusLabel = statusLabels[result.status] || result.status;
         onProgress({
@@ -132,6 +157,12 @@ export const influencerCreationService = {
           throw new Error('Tempo limite excedido');
         }
 
+        const elapsedMs = Date.now() - startTime;
+        const elapsedMinutes = elapsedMs / 60000;
+        const pollInterval = getAdaptiveInterval(elapsedMinutes);
+
+        console.log(`Polling in ${pollInterval}ms (elapsed: ${elapsedMinutes.toFixed(1)} min, boost: ${statusChangeBoost})`);
+
         await new Promise(resolve => setTimeout(resolve, pollInterval));
         return checkStatus();
       } catch (error) {
@@ -146,6 +177,10 @@ export const influencerCreationService = {
         if (attempts >= maxAttempts) {
           throw error;
         }
+
+        const elapsedMs = Date.now() - startTime;
+        const elapsedMinutes = elapsedMs / 60000;
+        const pollInterval = getAdaptiveInterval(elapsedMinutes);
 
         await new Promise(resolve => setTimeout(resolve, pollInterval));
         return checkStatus();

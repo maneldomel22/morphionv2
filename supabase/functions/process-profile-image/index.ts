@@ -16,7 +16,7 @@ REFERENCE IMAGE:
 Use the face from the reference image as the FACE AUTHORITY. Match it exactly.
 
 SUBJECT:
-${identity.ethnicity || 'woman'} woman, ${identity.age || '25'} years old.
+${identity.ethnicity || 'woman'} woman, ${influencer.age || '25'} years old.
 Face: ${identity.facial_traits || 'attractive features'}
 Hair: ${identity.hair || 'long hair'}
 Body: ${identity.body || 'fit body'}
