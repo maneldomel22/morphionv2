@@ -53,7 +53,15 @@ Deno.serve(async (req: Request) => {
       promptText = payload.input.prompt;
       imageUrls = payload.input.image_urls || [];
     } else {
-      model = requestData.model || 'seedream/4.5-edit';
+      // Use nano-banana-pro for profile and bodymap creation (no reference), seedream for posts
+      if (type === 'profile') {
+        model = requestData.model || 'nano-banana-pro';
+      } else if (type === 'bodymap') {
+        model = requestData.model || 'nano-banana-pro';
+      } else {
+        model = requestData.model || 'seedream/4.5-edit';
+      }
+
       promptText = requestData.prompt || '';
 
       if (requestData.referenceImage) {
@@ -63,15 +71,23 @@ Deno.serve(async (req: Request) => {
       const supabaseUrl = Deno.env.get("SUPABASE_URL");
       const callbackUrl = `${supabaseUrl}/functions/v1/check-influencer-post?influencer_id=${influencer_id}&type=${type}`;
 
+      const inputPayload: any = {
+        prompt: promptText,
+        aspect_ratio: type === 'profile' ? '1:1' : '9:16',
+        quality: 'high'
+      };
+
+      // For bodymap with reference, use image_input (nano-banana-pro format)
+      if (type === 'bodymap' && imageUrls.length > 0) {
+        inputPayload.image_input = imageUrls;
+      } else if (imageUrls.length > 0) {
+        inputPayload.image_urls = imageUrls;
+      }
+
       payload = {
         model: model,
         callBackUrl: callbackUrl,
-        input: {
-          prompt: promptText,
-          image_urls: imageUrls.length > 0 ? imageUrls : undefined,
-          aspect_ratio: type === 'profile' ? '1:1' : '9:16',
-          quality: 'high'
-        }
+        input: inputPayload
       };
     }
 

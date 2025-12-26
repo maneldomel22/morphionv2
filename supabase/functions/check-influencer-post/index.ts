@@ -186,6 +186,40 @@ Deno.serve(async (req: Request) => {
 
       console.log('Post updated to completed with image URL');
 
+      // Update influencer table for profile and bodymap types during creation flow
+      if (post.type === 'profile') {
+        console.log('Updating influencer profile_image_url and triggering bodymap creation:', influencer_id || post.influencer_id);
+
+        // Update profile_image_url and transition to creating_bodymap
+        const { error: updateInfluencerError } = await supabase
+          .from('influencers')
+          .update({
+            profile_image_url: imageUrl,
+            creation_status: 'profile_ready_for_bodymap'
+          })
+          .eq('id', influencer_id || post.influencer_id);
+
+        if (updateInfluencerError) {
+          console.error('Failed to update influencer after profile completion:', updateInfluencerError);
+        }
+      } else if (post.type === 'bodymap') {
+        console.log('Updating influencer bodymap_url and marking as ready:', influencer_id || post.influencer_id);
+
+        // Update bodymap_url and mark as ready
+        const { error: updateInfluencerError } = await supabase
+          .from('influencers')
+          .update({
+            bodymap_url: imageUrl,
+            creation_status: 'ready',
+            image_url: imageUrl  // Use bodymap as the main image_url
+          })
+          .eq('id', influencer_id || post.influencer_id);
+
+        if (updateInfluencerError) {
+          console.error('Failed to update influencer after bodymap completion:', updateInfluencerError);
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: true,

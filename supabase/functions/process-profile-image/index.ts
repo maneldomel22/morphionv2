@@ -85,79 +85,20 @@ Deno.serve(async (req: Request) => {
       throw new Error("Influencer not found");
     }
 
-    if (!influencer.profile_image_task_id) {
-      throw new Error("No profile image task ID found");
+    if (!influencer.profile_image_url) {
+      throw new Error("Profile image URL not yet available");
     }
 
-    console.log("Checking profile image status for task:", influencer.profile_image_task_id);
-
-    const statusResponse = await fetch(
-      `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${influencer.profile_image_task_id}`,
-      {
-        headers: {
-          "Authorization": `Bearer ${kieApiKey}`,
-        },
-      }
-    );
-
-    if (!statusResponse.ok) {
-      throw new Error("Failed to check profile image status");
-    }
-
-    const statusData = await statusResponse.json();
-
-    if (statusData.code !== 200) {
-      throw new Error(`KIE API error: ${statusData.msg || 'Unknown error'}`);
-    }
-
-    const taskState = statusData.data?.state;
-    console.log("Profile image status:", taskState);
-
-    if (taskState !== "success") {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          status: taskState,
-          message: "Profile image still processing"
-        }),
-        {
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
-
-    let profileImageUrl: string | undefined;
-    if (statusData.data?.resultJson) {
-      try {
-        const parsedResult = typeof statusData.data.resultJson === 'string'
-          ? JSON.parse(statusData.data.resultJson)
-          : statusData.data.resultJson;
-        profileImageUrl = parsedResult.resultUrls?.[0];
-      } catch (error) {
-        console.error("Failed to parse resultJson:", error);
-      }
-    }
-
-    if (!profileImageUrl) {
-      throw new Error("No profile image URL in completed task");
-    }
-
-    console.log("Profile image completed, URL:", profileImageUrl);
+    console.log("Creating bodymap using profile image as reference:", influencer.profile_image_url);
 
     await supabase
       .from("influencers")
       .update({
-        profile_image_url: profileImageUrl,
         creation_status: 'creating_bodymap'
       })
       .eq("id", influencer_id);
 
-    console.log("Starting bodymap generation using profile image as reference...");
-
-    const bodymapPrompt = buildBodymapPrompt(influencer, profileImageUrl);
+    const bodymapPrompt = buildBodymapPrompt(influencer, influencer.profile_image_url);
 
     const bodymapResponse = await fetch(
       `${supabaseUrl}/functions/v1/influencer-image`,
@@ -170,7 +111,7 @@ Deno.serve(async (req: Request) => {
         body: JSON.stringify({
           influencerId: influencer_id,
           prompt: bodymapPrompt,
-          referenceImage: profileImageUrl,
+          referenceImage: influencer.profile_image_url,
           type: 'bodymap'
         }),
       }
@@ -206,9 +147,9 @@ Deno.serve(async (req: Request) => {
       JSON.stringify({
         success: true,
         status: 'creating_bodymap',
-        profile_image_url: profileImageUrl,
+        profile_image_url: influencer.profile_image_url,
         bodymap_task_id: bodymapTaskId,
-        message: 'Profile image saved. Creating bodymap.'
+        message: 'Creating bodymap using profile as reference.'
       }),
       {
         headers: {
