@@ -103,22 +103,27 @@ export const influencerCreationService = {
         .maybeSingle();
 
       // Determine current status based on media completion
+      // Now video and profile are created together, so check both
       let status = 'creating_video';
       let progress = 25;
 
-      if (presentationVideo?.status === 'ready') {
+      const videoReady = presentationVideo?.status === 'ready';
+      const profileReady = profileImage?.status === 'completed';
+
+      // Both are being created simultaneously
+      if (videoReady && profileReady) {
+        // Both complete, now creating bodymap
+        status = 'creating_bodymap';
+        progress = 65;
+
+        if (bodymapImage?.status === 'completed') {
+          status = 'ready';
+          progress = 100;
+        }
+      } else if (videoReady || profileReady) {
+        // At least one is ready
         status = 'creating_profile_image';
         progress = 40;
-
-        if (profileImage?.status === 'completed') {
-          status = 'creating_bodymap';
-          progress = 65;
-
-          if (bodymapImage?.status === 'completed') {
-            status = 'ready';
-            progress = 100;
-          }
-        }
       }
 
       // Check for failures
@@ -196,13 +201,15 @@ export const influencerCreationService = {
           throw new Error('Criação falhou');
         }
 
-        // Trigger next step if needed
-        if (result.status === 'creating_profile_image' && !result.media.profile) {
-          // Profile image not created yet, trigger it
-          await this.processIntroVideo(influencerId);
-        } else if (result.status === 'creating_bodymap' && !result.media.bodymap) {
-          // Bodymap not created yet, trigger it
-          await this.triggerBodymapCreation(influencerId);
+        // Trigger bodymap creation when both video and profile are ready
+        if (result.status === 'creating_bodymap' && !result.media.bodymap) {
+          // Both video and profile are ready, but bodymap not created yet
+          console.log('Triggering bodymap creation automatically...');
+          try {
+            await this.triggerBodymapCreation(influencerId);
+          } catch (error) {
+            console.error('Failed to trigger bodymap creation:', error);
+          }
         }
 
         attempts++;

@@ -68,7 +68,19 @@ export default function Influencer() {
     try {
       setLoading(true);
       const data = await influencerService.getInfluencersWithPostCount();
-      setInfluencers(data);
+
+      // Separate creating influencers from ready ones
+      const creating = data.filter(inf => inf.creation_status && inf.creation_status !== 'ready' && inf.creation_status !== 'completed');
+      const ready = data.filter(inf => !inf.creation_status || inf.creation_status === 'ready' || inf.creation_status === 'completed');
+
+      // Add creating influencers to the creating list if not already there
+      const creatingIds = creating.map(inf => inf.id);
+      setCreatingInfluencerIds(prev => {
+        const newIds = creatingIds.filter(id => !prev.includes(id));
+        return [...prev, ...newIds];
+      });
+
+      setInfluencers(ready);
     } catch (error) {
       console.error('Error loading influencers:', error);
     } finally {

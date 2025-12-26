@@ -149,37 +149,96 @@ Deno.serve(async (req: Request) => {
     const videoPrompt = buildIntroVideoPrompt(requestData);
 
     console.log("Creating influencer with intro video...");
-    console.log("Prompt:", videoPrompt);
+    console.log("Video Prompt:", videoPrompt);
 
-    const kieResponse = await fetch("https://api.kie.ai/api/v1/jobs/createTask", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${kieApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "sora-2-text-to-video",
-        input: {
-          prompt: videoPrompt,
-          aspect_ratio: "portrait",
-          n_frames: "10",
-          size: "standard",
-          remove_watermark: true
-        }
+    // Build profile image prompt
+    const profilePrompt = `Professional portrait photo.
+
+SUBJECT:
+${requestData.ethnicity} woman, ${requestData.age} years old.
+Face: ${requestData.facialTraits}
+Hair: ${requestData.hair}
+Body: ${requestData.body}
+
+FRAMING:
+Close-up portrait. Head and shoulders only. No body below shoulders visible.
+
+POSE:
+Neutral relaxed expression. Direct eye contact with camera. Slight natural smile.
+
+BACKGROUND:
+Solid neutral background. Soft gradient or plain wall. No objects. No context.
+
+LIGHTING:
+Soft even lighting. No harsh shadows. Professional but natural.
+
+STYLE:
+Natural skin texture. No heavy filters. Realistic but polished. Professional headshot quality.
+
+STRICT RULES:
+- No body visible below shoulders
+- No text or watermarks
+- No props or objects
+- Clean professional portrait only`;
+
+    console.log("Profile Prompt:", profilePrompt);
+
+    // Create both video and profile image tasks simultaneously
+    const [videoResponse, profileResponse] = await Promise.all([
+      fetch("https://api.kie.ai/api/v1/jobs/createTask", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${kieApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "sora-2-text-to-video",
+          input: {
+            prompt: videoPrompt,
+            aspect_ratio: "portrait",
+            n_frames: "10",
+            size: "standard",
+            remove_watermark: true
+          }
+        }),
       }),
-    });
+      fetch("https://api.kie.ai/api/v1/jobs/createTask", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${kieApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "nano-banana-pro",
+          input: {
+            prompt: profilePrompt,
+            aspect_ratio: "1:1",
+            quality: "high"
+          }
+        }),
+      })
+    ]);
 
-    const kieData = await kieResponse.json();
+    const videoData = await videoResponse.json();
+    const profileData = await profileResponse.json();
 
-    if (kieData.code !== 200 || !kieData.data?.taskId) {
-      const errorText = kieData.msg || kieData.message || "Unknown error";
-      console.error("KIE API error:", errorText);
+    if (videoData.code !== 200 || !videoData.data?.taskId) {
+      const errorText = videoData.msg || videoData.message || "Unknown error";
+      console.error("KIE API error (video):", errorText);
       throw new Error(`Failed to create intro video: ${errorText}`);
     }
 
-    const taskId = kieData.data.taskId;
+    if (profileData.code !== 200 || !profileData.data?.taskId) {
+      const errorText = profileData.msg || profileData.message || "Unknown error";
+      console.error("KIE API error (profile):", errorText);
+      throw new Error(`Failed to create profile image: ${errorText}`);
+    }
 
-    console.log("Video task created:", taskId);
+    const videoTaskId = videoData.data.taskId;
+    const profileTaskId = profileData.data.taskId;
+
+    console.log("Video task created:", videoTaskId);
+    console.log("Profile task created:", profileTaskId);
 
     // First, create the influencer record
     const { data: influencer, error: insertError } = await supabase
@@ -202,6 +261,7 @@ Deno.serve(async (req: Request) => {
         creation_metadata: {
           language: requestData.language,
           video_prompt: videoPrompt,
+          profile_prompt: profilePrompt,
           started_at: new Date().toISOString()
         }
       })
@@ -215,7 +275,7 @@ Deno.serve(async (req: Request) => {
 
     console.log("Influencer created:", influencer.id);
 
-    // Now insert the video in the videos table (reusing existing infrastructure)
+    // Insert the video in the videos table
     const { data: video, error: videoError } = await supabase
       .from("videos")
       .insert({
@@ -224,7 +284,7 @@ Deno.serve(async (req: Request) => {
         video_type: 'influencer_presentation',
         title: `${requestData.name} - Vídeo de Apresentação`,
         status: 'queued',
-        kie_task_id: taskId,
+        kie_task_id: videoTaskId,
         video_model: 'sora-2-text-to-video',
         source_mode: 'influencer',
         dialogue: `Oi, eu sou a ${requestData.name}.`,
@@ -245,19 +305,49 @@ Deno.serve(async (req: Request) => {
 
     console.log("Video record created:", video.id);
 
-    // Update influencer with video reference
+    // Insert the profile image in the generated_images table
+    const { data: profileImage, error: profileError } = await supabase
+      .from("generated_images")
+      .insert({
+        user_id: user.id,
+        influencer_id: influencer.id,
+        image_type: 'influencer_profile',
+        status: 'generating',
+        task_id: profileTaskId,
+        prompt: profilePrompt,
+        original_prompt: profilePrompt,
+        aspect_ratio: '1:1',
+        image_model: 'nano_banana',
+        kie_model: 'nano-banana-pro',
+        generation_mode: 'text-to-image'
+      })
+      .select()
+      .single();
+
+    if (profileError) {
+      console.error("Profile image insert error:", profileError);
+      throw profileError;
+    }
+
+    console.log("Profile image record created:", profileImage.id);
+
+    // Update influencer with references
     await supabase
       .from("influencers")
-      .update({ presentation_video_id: video.id })
+      .update({
+        presentation_video_id: video.id,
+        profile_image_id: profileImage.id
+      })
       .eq("id", influencer.id);
 
     return new Response(
       JSON.stringify({
         success: true,
         influencer_id: influencer.id,
-        task_id: taskId,
+        video_task_id: videoTaskId,
+        profile_task_id: profileTaskId,
         status: 'creating_video',
-        message: 'Influencer creation started. Video generation in progress.'
+        message: 'Influencer creation started. Video and profile image generation in progress.'
       }),
       {
         headers: {
