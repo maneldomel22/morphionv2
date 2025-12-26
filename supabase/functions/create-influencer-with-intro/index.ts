@@ -283,6 +283,7 @@ STRICT RULES:
         influencer_id: influencer.id,
         video_type: 'influencer_presentation',
         title: `${requestData.name} - Vídeo de Apresentação`,
+        avatar_name: requestData.name,
         status: 'queued',
         kie_task_id: videoTaskId,
         video_model: 'sora-2-text-to-video',
