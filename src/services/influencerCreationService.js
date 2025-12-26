@@ -2,10 +2,11 @@ import { supabase } from '../lib/supabase';
 
 const statusLabels = {
   creating_video: 'Criando vídeo de apresentação...',
-  extracting_frame: 'Extraindo frame de referência...',
+  extracting_frame: 'Extraindo referência do vídeo...',
+  optimizing_identity: 'Processando referência...',
   creating_profile_image: 'Gerando foto de perfil...',
   creating_bodymap: 'Gerando mapa corporal...',
-  optimizing_identity: 'Otimizando identidade visual...',
+  completed: 'Influencer pronta!',
   ready: 'Influencer pronta!',
   failed: 'Falha na criação'
 };
@@ -118,16 +119,12 @@ export const influencerCreationService = {
           progress: result.progress || 0
         });
 
-        if (result.status === 'ready') {
+        if (result.status === 'completed' || result.status === 'ready') {
           return result.influencer;
         }
 
         if (result.status === 'failed') {
           throw new Error('Criação falhou');
-        }
-
-        if (result.status === 'creating_video' && result.kieState === 'success') {
-          await this.processIntroVideo(influencerId);
         }
 
         attempts++;

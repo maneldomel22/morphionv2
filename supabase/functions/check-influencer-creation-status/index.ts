@@ -153,6 +153,43 @@ Deno.serve(async (req: Request) => {
         );
       }
 
+      if (videoStatus.state === 'success') {
+        console.log("Video completed, calling process-influencer-intro-video...");
+        try {
+          const processResponse = await fetch(
+            `${supabaseUrl}/functions/v1/process-influencer-intro-video`,
+            {
+              method: "POST",
+              headers: {
+                "Authorization": authHeader,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ influencer_id }),
+            }
+          );
+
+          if (processResponse.ok) {
+            const processData = await processResponse.json();
+            return new Response(
+              JSON.stringify({
+                success: true,
+                status: processData.status || 'creating_profile_image',
+                influencer,
+                progress: 40,
+              }),
+              {
+                headers: {
+                  ...corsHeaders,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+          }
+        } catch (error) {
+          console.error("Error calling process-influencer-intro-video:", error);
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -170,13 +207,92 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (currentStatus === 'extracting_frame' || currentStatus === 'creating_profile_image') {
+    if (currentStatus === 'extracting_frame') {
       return new Response(
         JSON.stringify({
           success: true,
-          status: currentStatus,
+          status: 'extracting_frame',
           influencer,
-          progress: 50
+          progress: 35
+        }),
+        {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    if (currentStatus === 'creating_profile_image' && influencer.profile_image_task_id) {
+      const profileStatus = await checkKieTaskStatus(influencer.profile_image_task_id, kieApiKey);
+
+      if (profileStatus.state === 'fail') {
+        await supabase
+          .from("influencers")
+          .update({ creation_status: 'failed' })
+          .eq("id", influencer_id);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            status: 'failed',
+            influencer: { ...influencer, creation_status: 'failed' },
+            progress: 0
+          }),
+          {
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      }
+
+      if (profileStatus.state === 'success') {
+        console.log("Profile image completed, calling process-profile-image...");
+        try {
+          const processResponse = await fetch(
+            `${supabaseUrl}/functions/v1/process-profile-image`,
+            {
+              method: "POST",
+              headers: {
+                "Authorization": authHeader,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ influencer_id }),
+            }
+          );
+
+          if (processResponse.ok) {
+            const processData = await processResponse.json();
+            return new Response(
+              JSON.stringify({
+                success: true,
+                status: processData.status || 'creating_bodymap',
+                influencer,
+                progress: 65,
+              }),
+              {
+                headers: {
+                  ...corsHeaders,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+          }
+        } catch (error) {
+          console.error("Error calling process-profile-image:", error);
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          status: 'creating_profile_image',
+          influencer,
+          progress: 50,
+          kieState: profileStatus.state
         }),
         {
           headers: {
@@ -188,104 +304,37 @@ Deno.serve(async (req: Request) => {
     }
 
     if (currentStatus === 'optimizing_identity') {
-      let allReady = true;
-
-      if (influencer.profile_image_task_id) {
-        const profileStatus = await checkKieTaskStatus(influencer.profile_image_task_id, kieApiKey);
-
-        if (profileStatus.state === 'fail') {
-          await supabase
-            .from("influencers")
-            .update({ creation_status: 'failed' })
-            .eq("id", influencer_id);
-
-          return new Response(
-            JSON.stringify({
-              success: true,
-              status: 'failed',
-              influencer: { ...influencer, creation_status: 'failed' },
-              progress: 0
-            }),
-            {
-              headers: {
-                ...corsHeaders,
-                "Content-Type": "application/json",
-              },
-            }
-          );
+      return new Response(
+        JSON.stringify({
+          success: true,
+          status: 'optimizing_identity',
+          influencer,
+          progress: 45
+        }),
+        {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
         }
+      );
+    }
 
-        if (profileStatus.state === 'success' && profileStatus.resultUrls.length > 0 && !influencer.profile_image_url) {
-          await supabase
-            .from("influencers")
-            .update({
-              profile_image_url: profileStatus.resultUrls[0],
-              image_url: profileStatus.resultUrls[0]
-            })
-            .eq("id", influencer_id);
+    if (currentStatus === 'creating_bodymap' && influencer.bodymap_task_id) {
+      const bodymapStatus = await checkKieTaskStatus(influencer.bodymap_task_id, kieApiKey);
 
-          influencer.profile_image_url = profileStatus.resultUrls[0];
-          influencer.image_url = profileStatus.resultUrls[0];
-        }
-
-        if (profileStatus.state !== 'success') {
-          allReady = false;
-        }
-      }
-
-      if (influencer.bodymap_task_id) {
-        const bodymapStatus = await checkKieTaskStatus(influencer.bodymap_task_id, kieApiKey);
-
-        if (bodymapStatus.state === 'fail') {
-          await supabase
-            .from("influencers")
-            .update({ creation_status: 'failed' })
-            .eq("id", influencer_id);
-
-          return new Response(
-            JSON.stringify({
-              success: true,
-              status: 'failed',
-              influencer: { ...influencer, creation_status: 'failed' },
-              progress: 0
-            }),
-            {
-              headers: {
-                ...corsHeaders,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-        }
-
-        if (bodymapStatus.state === 'success' && bodymapStatus.resultUrls.length > 0 && !influencer.bodymap_url) {
-          await supabase
-            .from("influencers")
-            .update({ bodymap_url: bodymapStatus.resultUrls[0] })
-            .eq("id", influencer_id);
-
-          influencer.bodymap_url = bodymapStatus.resultUrls[0];
-        }
-
-        if (bodymapStatus.state !== 'success') {
-          allReady = false;
-        }
-      }
-
-      if (allReady && influencer.profile_image_url && influencer.bodymap_url) {
+      if (bodymapStatus.state === 'fail') {
         await supabase
           .from("influencers")
-          .update({ creation_status: 'ready' })
+          .update({ creation_status: 'failed' })
           .eq("id", influencer_id);
-
-        influencer.creation_status = 'ready';
 
         return new Response(
           JSON.stringify({
             success: true,
-            status: 'ready',
-            influencer,
-            progress: 100
+            status: 'failed',
+            influencer: { ...influencer, creation_status: 'failed' },
+            progress: 0
           }),
           {
             headers: {
@@ -296,12 +345,67 @@ Deno.serve(async (req: Request) => {
         );
       }
 
+      if (bodymapStatus.state === 'success') {
+        console.log("Bodymap completed, calling process-bodymap...");
+        try {
+          const processResponse = await fetch(
+            `${supabaseUrl}/functions/v1/process-bodymap`,
+            {
+              method: "POST",
+              headers: {
+                "Authorization": authHeader,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ influencer_id }),
+            }
+          );
+
+          if (processResponse.ok) {
+            const processData = await processResponse.json();
+            return new Response(
+              JSON.stringify({
+                success: true,
+                status: processData.status || 'completed',
+                influencer,
+                progress: 100,
+              }),
+              {
+                headers: {
+                  ...corsHeaders,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+          }
+        } catch (error) {
+          console.error("Error calling process-bodymap:", error);
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
-          status: 'optimizing_identity',
+          status: 'creating_bodymap',
           influencer,
-          progress: 75
+          progress: 75,
+          kieState: bodymapStatus.state
+        }),
+        {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    if (currentStatus === 'completed') {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          status: 'completed',
+          influencer,
+          progress: 100
         }),
         {
           headers: {

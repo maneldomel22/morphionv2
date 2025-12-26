@@ -100,40 +100,6 @@ STRICT RULES:
 - Clean professional portrait only`;
 }
 
-function buildBodymapPrompt(influencer: any, referenceUrl: string): string {
-  const identity = influencer.identity_profile || {};
-
-  return `Full body reference photo for character consistency.
-
-REFERENCE IMAGE:
-Use the face from the reference image as the FACE AUTHORITY. Match it exactly.
-
-SUBJECT:
-${identity.ethnicity || 'woman'} woman, ${identity.age || '25'} years old.
-Face: ${identity.facial_traits || 'attractive features'}
-Hair: ${identity.hair || 'long hair'}
-Body: ${identity.body || 'fit body'}
-Body marks: ${identity.marks || 'none'}
-
-POSE:
-Standing straight. Arms slightly away from body. Neutral pose. Front-facing.
-
-ATTIRE:
-Form-fitting neutral clothing that shows body shape clearly. Tank top and fitted shorts.
-
-BACKGROUND:
-Plain solid neutral background. No props. No context.
-
-LIGHTING:
-Even soft lighting. Full body clearly visible. No harsh shadows.
-
-PURPOSE:
-This is a reference map for maintaining body consistency across future generations. Include all distinguishing marks and features.
-
-STYLE:
-Realistic. Natural. Clean reference photo quality.`;
-}
-
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -312,10 +278,9 @@ Deno.serve(async (req: Request) => {
       })
       .eq("id", influencer_id);
 
-    console.log("Starting parallel generation of profile image and bodymap...");
+    console.log("Starting profile image generation...");
 
     const profilePrompt = buildProfileImagePrompt(influencer, referenceFrameUrl);
-    const bodymapPrompt = buildBodymapPrompt(influencer, referenceFrameUrl);
 
     const profileImageResponse = await fetch(
       `${supabaseUrl}/functions/v1/influencer-image`,
@@ -334,45 +299,24 @@ Deno.serve(async (req: Request) => {
       }
     );
 
-    const bodymapResponse = await fetch(
-      `${supabaseUrl}/functions/v1/influencer-image`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          influencerId: influencer_id,
-          prompt: bodymapPrompt,
-          referenceImage: referenceFrameUrl,
-          type: 'bodymap'
-        }),
-      }
-    );
-
     const profileData = await profileImageResponse.json();
-    const bodymapData = await bodymapResponse.json();
 
-    console.log("Profile task:", profileData.task_id);
-    console.log("Bodymap task:", bodymapData.task_id);
+    console.log("Profile task created:", profileData.task_id);
 
     await supabase
       .from("influencers")
       .update({
         profile_image_task_id: profileData.task_id,
-        bodymap_task_id: bodymapData.task_id,
       })
       .eq("id", influencer_id);
 
     return new Response(
       JSON.stringify({
         success: true,
-        status: 'optimizing_identity',
+        status: 'creating_profile_image',
         reference_frame_url: referenceFrameUrl,
         profile_task_id: profileData.task_id,
-        bodymap_task_id: bodymapData.task_id,
-        message: 'Frame extracted. Generating profile image and bodymap.'
+        message: 'Reference extracted. Creating profile image.'
       }),
       {
         headers: {
