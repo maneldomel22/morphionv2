@@ -76,19 +76,12 @@ export default function CreateInfluencerModal({ isOpen, onClose, onSuccess }) {
 
       console.log('Influencer creation started:', result);
 
-      const influencer = await influencerCreationService.monitorCreation(
-        result.influencer_id,
-        (progress) => {
-          setStatusLabel(progress.label);
-        }
-      );
-
-      onSuccess(influencer);
+      // Close modal immediately and let the list handle polling
+      onSuccess(result.influencer_id);
       handleClose();
     } catch (error) {
       console.error('Error creating influencer:', error);
       alert('Falha ao criar influencer. Por favor, tente novamente.');
-    } finally {
       setLoading(false);
       setStatusLabel('');
     }
