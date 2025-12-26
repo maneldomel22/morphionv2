@@ -77,6 +77,12 @@ Deno.serve(async (req: Request) => {
         quality: 'high'
       };
 
+      // Add 4K resolution for bodymaps
+      if (type === 'bodymap') {
+        inputPayload.resolution = '4K';
+        inputPayload.output_format = 'png';
+      }
+
       // For bodymap with reference, use image_input (nano-banana-pro format)
       if (type === 'bodymap' && imageUrls.length > 0) {
         inputPayload.image_input = imageUrls;
