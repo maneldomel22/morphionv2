@@ -21,7 +21,7 @@ async function checkBodymapStatus() {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        taskId: 'e2e99276548fdf1fc3f1bdea65b03184'
+        taskId: '3e8ecff7306cb7ab8f6d92a7cb9cd9cb'
       })
     });
 
