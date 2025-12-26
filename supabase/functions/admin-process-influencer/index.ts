@@ -148,88 +148,37 @@ STRICT RULES:
 - No props or objects
 - Clean professional portrait only`;
 
-    const bodymapPrompt = `Full body reference photo for character consistency.
+    console.log("Creating profile image task...");
 
-SUBJECT:
-${identity.ethnicity || 'woman'} woman, ${identity.age || '25'} years old.
-Face: ${identity.facial_traits || 'attractive features'}
-Hair: ${identity.hair || 'long hair'}
-Body: ${identity.body || 'fit body'}
-Body marks: ${identity.marks || 'none'}
-
-POSE:
-Standing straight. Arms slightly away from body. Neutral pose. Front-facing.
-
-ATTIRE:
-Form-fitting neutral clothing that shows body shape clearly. Tank top and fitted shorts.
-
-BACKGROUND:
-Plain solid neutral background. No props. No context.
-
-LIGHTING:
-Even soft lighting. Full body clearly visible. No harsh shadows.
-
-PURPOSE:
-This is a reference map for maintaining body consistency across future generations. Include all distinguishing marks and features.
-
-STYLE:
-Realistic. Natural. Clean reference photo quality.`;
-
-    const [profileResponse, bodymapResponse] = await Promise.all([
-      fetch("https://api.kie.ai/api/v1/jobs/createTask", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${kieApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "nano-banana-pro",
-          input: {
-            prompt: profilePrompt,
-            aspect_ratio: "1:1",
-            quality: "high"
-          }
-        }),
+    const profileResponse = await fetch("https://api.kie.ai/api/v1/jobs/createTask", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${kieApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "nano-banana-pro",
+        input: {
+          prompt: profilePrompt,
+          aspect_ratio: "1:1",
+          quality: "high"
+        }
       }),
-      fetch("https://api.kie.ai/api/v1/jobs/createTask", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${kieApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "nano-banana-pro",
-          input: {
-            prompt: bodymapPrompt,
-            aspect_ratio: "9:16",
-            quality: "high"
-          }
-        }),
-      })
-    ]);
+    });
 
     const profileData = await profileResponse.json();
-    const bodymapData = await bodymapResponse.json();
 
     if (profileData.code !== 200 || !profileData.data?.taskId) {
       throw new Error("Failed to create profile image task");
     }
 
-    if (bodymapData.code !== 200 || !bodymapData.data?.taskId) {
-      throw new Error("Failed to create bodymap task");
-    }
-
     const profileTaskId = profileData.data.taskId;
-    const bodymapTaskId = bodymapData.data.taskId;
-
-    console.log("Profile task:", profileTaskId);
-    console.log("Bodymap task:", bodymapTaskId);
+    console.log("Profile task created:", profileTaskId);
 
     await supabase
       .from("influencers")
       .update({
         profile_image_task_id: profileTaskId,
-        bodymap_task_id: bodymapTaskId,
         creation_status: 'creating_profile_image'
       })
       .eq("id", influencer_id);
@@ -237,10 +186,9 @@ Realistic. Natural. Clean reference photo quality.`;
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Profile and bodymap tasks created",
+        message: "Profile image task created. Bodymap will be created after profile completes.",
         video_url: videoUrl,
         profile_task_id: profileTaskId,
-        bodymap_task_id: bodymapTaskId,
         status: 'creating_profile_image'
       }),
       {

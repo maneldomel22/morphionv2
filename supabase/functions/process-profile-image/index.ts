@@ -155,9 +155,9 @@ Deno.serve(async (req: Request) => {
       })
       .eq("id", influencer_id);
 
-    console.log("Starting bodymap generation...");
+    console.log("Starting bodymap generation using profile image as reference...");
 
-    const bodymapPrompt = buildBodymapPrompt(influencer, influencer.reference_frame_url);
+    const bodymapPrompt = buildBodymapPrompt(influencer, profileImageUrl);
 
     const bodymapResponse = await fetch(
       `${supabaseUrl}/functions/v1/influencer-image`,
@@ -170,7 +170,7 @@ Deno.serve(async (req: Request) => {
         body: JSON.stringify({
           influencerId: influencer_id,
           prompt: bodymapPrompt,
-          referenceImage: influencer.reference_frame_url,
+          referenceImage: profileImageUrl,
           type: 'bodymap'
         }),
       }
