@@ -22,32 +22,40 @@ RETURNS TRIGGER AS $$
 BEGIN
   -- Only process if status changed to completed and has influencer_id
   IF NEW.status = 'completed' AND NEW.influencer_id IS NOT NULL AND NEW.image_url IS NOT NULL THEN
-    
+
     -- Update profile image
     IF NEW.image_type = 'influencer_profile' THEN
       UPDATE influencers
-      SET 
+      SET
         profile_image_url = NEW.image_url,
         profile_image_id = NEW.id,
+        creation_status = CASE
+          WHEN creation_status = 'creating_profile_image' THEN 'profile_ready_for_bodymap'
+          ELSE creation_status
+        END,
         updated_at = now()
       WHERE id = NEW.influencer_id;
-      
-      RAISE NOTICE 'Updated profile image for influencer %', NEW.influencer_id;
-    
+
+      RAISE NOTICE 'Updated profile image for influencer % and transitioned to profile_ready_for_bodymap', NEW.influencer_id;
+
     -- Update bodymap
     ELSIF NEW.image_type = 'influencer_bodymap' THEN
       UPDATE influencers
-      SET 
+      SET
         bodymap_url = NEW.image_url,
         bodymap_image_id = NEW.id,
+        creation_status = CASE
+          WHEN creation_status = 'creating_bodymap' THEN 'ready'
+          ELSE creation_status
+        END,
         updated_at = now()
       WHERE id = NEW.influencer_id;
-      
-      RAISE NOTICE 'Updated bodymap for influencer %', NEW.influencer_id;
+
+      RAISE NOTICE 'Updated bodymap for influencer % and marked as ready', NEW.influencer_id;
     END IF;
-    
+
   END IF;
-  
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
