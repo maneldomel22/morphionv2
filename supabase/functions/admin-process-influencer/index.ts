@@ -175,10 +175,34 @@ STRICT RULES:
     const profileTaskId = profileData.data.taskId;
     console.log("Profile task created:", profileTaskId);
 
+    // Insert into generated_images table
+    const { data: profileImage, error: profileInsertError } = await supabase
+      .from("generated_images")
+      .insert({
+        user_id: influencer.user_id,
+        influencer_id: influencer_id,
+        image_type: 'influencer_profile',
+        status: 'generating',
+        task_id: profileTaskId,
+        prompt: profilePrompt,
+        original_prompt: profilePrompt,
+        aspect_ratio: '1:1',
+        image_model: 'nano_banana_pro',
+        kie_model: 'nano-banana-pro',
+        generation_mode: 'text-to-image'
+      })
+      .select()
+      .single();
+
+    if (profileInsertError) {
+      console.error("Failed to insert profile image record:", profileInsertError);
+    }
+
     await supabase
       .from("influencers")
       .update({
         profile_image_task_id: profileTaskId,
+        profile_image_id: profileImage?.id,
         creation_status: 'creating_profile_image'
       })
       .eq("id", influencer_id);

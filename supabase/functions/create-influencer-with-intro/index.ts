@@ -317,7 +317,7 @@ STRICT RULES:
         prompt: profilePrompt,
         original_prompt: profilePrompt,
         aspect_ratio: '1:1',
-        image_model: 'nano_banana',
+        image_model: 'nano_banana_pro',
         kie_model: 'nano-banana-pro',
         generation_mode: 'text-to-image'
       })
