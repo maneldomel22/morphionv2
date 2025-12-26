@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
 import { influencerCreationService } from '../../services/influencerCreationService';
 
 const statusLabels = {
@@ -10,10 +11,11 @@ const statusLabels = {
   'failed': 'Falhou'
 };
 
-export default function InfluencerLoadingCard({ influencerId, onComplete, onError }) {
+export default function InfluencerLoadingCard({ influencerId, onComplete, onError, onDelete }) {
   const [status, setStatus] = useState('creating_video');
   const [progress, setProgress] = useState(0);
   const [influencer, setInfluencer] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -56,8 +58,33 @@ export default function InfluencerLoadingCard({ influencerId, onComplete, onErro
     };
   }, [influencerId, onComplete, onError]);
 
+  const handleDelete = () => {
+    if (showDeleteConfirm) {
+      onDelete?.(influencerId);
+    } else {
+      setShowDeleteConfirm(true);
+      // Reset confirmation after 3 seconds
+      setTimeout(() => setShowDeleteConfirm(false), 3000);
+    }
+  };
+
   return (
     <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 shadow-lg">
+      {/* Delete button */}
+      {onDelete && (
+        <button
+          onClick={handleDelete}
+          className={`absolute top-2 right-2 z-10 p-1.5 rounded-full transition-all duration-200 ${
+            showDeleteConfirm
+              ? 'bg-red-500 hover:bg-red-600 text-white scale-110'
+              : 'bg-white/80 dark:bg-gray-700/80 hover:bg-red-500 text-gray-600 dark:text-gray-400 hover:text-white'
+          }`}
+          title={showDeleteConfirm ? 'Clique novamente para confirmar' : 'Cancelar criação'}
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
+
       {/* Animated shimmer effect */}
       <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
@@ -98,12 +125,20 @@ export default function InfluencerLoadingCard({ influencerId, onComplete, onErro
           <h3 className="font-semibold text-gray-900 dark:text-white">
             {influencer?.name || 'Criando...'}
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {statusLabels[status] || 'Processando...'}
-          </p>
-          <div className="text-xs text-gray-500 dark:text-gray-500">
-            {progress}%
-          </div>
+          {showDeleteConfirm ? (
+            <p className="text-sm text-red-500 dark:text-red-400 font-medium animate-pulse">
+              Clique no X novamente para cancelar
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {statusLabels[status] || 'Processando...'}
+              </p>
+              <div className="text-xs text-gray-500 dark:text-gray-500">
+                {progress}%
+              </div>
+            </>
+          )}
         </div>
 
         {/* Progress dots */}

@@ -114,6 +114,17 @@ export default function Influencer() {
     alert('Falha ao criar influencer. Por favor, tente novamente.');
   };
 
+  const handleDeleteCreatingInfluencer = async (influencerId) => {
+    try {
+      await influencerService.deleteInfluencer(influencerId);
+      // Remove from creating list
+      setCreatingInfluencerIds(prev => prev.filter(id => id !== influencerId));
+    } catch (error) {
+      console.error('Error deleting creating influencer:', error);
+      alert('Erro ao cancelar criação do influencer.');
+    }
+  };
+
   const handleInfluencerSelected = (influencer) => {
     setSelectedInfluencer(influencer);
     setShowSelectInfluencerModal(false);
@@ -348,6 +359,7 @@ export default function Influencer() {
                   influencerId={influencerId}
                   onComplete={handleInfluencerCreationComplete}
                   onError={() => handleInfluencerCreationError(influencerId)}
+                  onDelete={handleDeleteCreatingInfluencer}
                 />
               ))}
 
