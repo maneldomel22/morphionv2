@@ -73,7 +73,7 @@ Deno.serve(async (req: Request) => {
 
       const inputPayload: any = {
         prompt: promptText,
-        aspect_ratio: type === 'profile' ? '1:1' : '9:16',
+        aspect_ratio: type === 'profile' ? '1:1' : (type === 'bodymap' ? '16:9' : '9:16'),
         quality: 'high'
       };
 

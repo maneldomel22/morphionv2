@@ -10,35 +10,72 @@ const corsHeaders = {
 function buildBodymapPrompt(influencer: any, referenceUrl: string): string {
   const identity = influencer.identity_profile || {};
 
-  return `Full body reference photo for character consistency.
+  const ethnicity = identity.ethnicity || 'woman';
+  const facialTraits = identity.facial_traits || 'attractive features';
+  const hairDesc = identity.hair || 'long hair';
+  const bodyDesc = identity.body || 'fit body';
+  const marksDesc = identity.marks || 'none';
+
+  return `Create a high-resolution CHARACTER IDENTITY MAP image.
+
+The image must be a clean studio composite grid showing the SAME woman multiple times,
+each panel documenting a specific physical aspect for long-term identity consistency.
 
 REFERENCE IMAGE:
-Use the face from the reference image as the FACE AUTHORITY. Match it exactly.
+Use the provided reference image as the FACE AUTHORITY. Match the face EXACTLY in all panels.
 
-SUBJECT:
-${identity.ethnicity || 'woman'} woman, ${influencer.age || '25'} years old.
-Face: ${identity.facial_traits || 'attractive features'}
-Hair: ${identity.hair || 'long hair'}
-Body: ${identity.body || 'fit body'}
-Body marks: ${identity.marks || 'none'}
+STYLE & QUALITY:
+- Ultra-realistic photography
+- Neutral studio background (light gray)
+- Soft, even studio lighting
+- No dramatic shadows
+- No artistic styling
+- No fashion posing
+- Documentary / reference style
+- Clean, clinical, identity-focused
 
-POSE:
-Standing straight. Arms slightly away from body. Neutral pose. Front-facing.
+GRID LAYOUT (MANDATORY – SINGLE IMAGE):
 
-ATTIRE:
-Form-fitting neutral clothing that shows body shape clearly. Tank top and fitted shorts.
+Panel 1: Full body – front view
+Panel 2: Full body – back view
+Panel 3: Face close-up – neutral expression
+Panel 4: Upper torso close-up (chest & abdomen)
+Panel 5: Left arm close-up
+Panel 6: Right arm close-up
+Panel 7: Legs close-up (thighs & calves)
+Panel 8: Back close-up (upper and lower back)
+Panel 9: Detail panel highlighting permanent body marks
 
-BACKGROUND:
-Plain solid neutral background. No props. No context.
+SUBJECT DESCRIPTION (LOCKED):
 
-LIGHTING:
-Even soft lighting. Full body clearly visible. No harsh shadows.
+Gender: Female
+Age: ${influencer.age || '25'}
+Ethnicity: ${ethnicity}
 
-PURPOSE:
-This is a reference map for maintaining body consistency across future generations. Include all distinguishing marks and features.
+Facial features: ${facialTraits}
 
-STYLE:
-Realistic. Natural. Clean reference photo quality.`;
+Hair: ${hairDesc}
+
+Body: ${bodyDesc}
+
+ATTIRE (CRITICAL):
+Fitted sports top and short athletic shorts. The clothing must show body shape clearly and reveal potential body marks on arms, legs, torso, and back.
+
+PERMANENT BODY MARKS:
+${marksDesc}
+
+All panels must depict the SAME person with PERFECT consistency.
+This image will be used as a permanent identity reference for future image and video generation.
+
+Do NOT:
+- Change proportions between panels
+- Add or remove marks
+- Stylize the body
+- Alter identity across panels
+- Use artistic filters or effects
+
+CRITICAL: Every panel shows the exact same woman with identical physical features, body proportions, and permanent marks.
+This is a comprehensive identity documentation image, not a fashion or portrait photoshoot.`;
 }
 
 Deno.serve(async (req: Request) => {

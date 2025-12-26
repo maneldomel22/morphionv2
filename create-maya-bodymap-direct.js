@@ -20,7 +20,7 @@ The image must be a clean studio composite grid showing the SAME woman multiple 
 each panel documenting a specific physical aspect for long-term identity consistency.
 
 REFERENCE IMAGE:
-Use the provided reference image as the FACE AUTHORITY. Match the face EXACTLY.
+Use the provided reference image as the FACE AUTHORITY. Match the face EXACTLY in all panels.
 
 STYLE & QUALITY:
 - Ultra-realistic photography
@@ -56,8 +56,10 @@ Hair: ${influencer.identity_profile.hair}
 
 Body: ${influencer.identity_profile.body}
 
-PERMANENT BODY MARKS (CRITICAL – MUST MATCH EXACTLY):
+ATTIRE (CRITICAL):
+Fitted sports top and short athletic shorts. The clothing must show body shape clearly and reveal potential body marks on arms, legs, torso, and back.
 
+PERMANENT BODY MARKS:
 ${influencer.identity_profile.marks}
 
 All panels must depict the SAME person with PERFECT consistency.
@@ -90,8 +92,7 @@ async function createBodymapGrid() {
         prompt: bodymapPrompt,
         aspect_ratio: '16:9',
         quality: 'high',
-        reference_image: influencer.profile_image_url,
-        reference_strength: 0.8
+        image_input: [influencer.profile_image_url]
       }
     })
   });
