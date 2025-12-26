@@ -269,8 +269,8 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // When profile completes, KIE callback sets status to 'profile_ready_for_bodymap'
-    if (currentStatus === 'profile_ready_for_bodymap' && influencer.profile_image_url) {
+    // When profile completes, check if we can move to bodymap
+    if (currentStatus === 'creating_profile_image' && influencer.profile_image_url && !influencer.bodymap_task_id) {
       const timestamp = new Date().toISOString();
       console.log(`[${timestamp}] Profile ready, creating bodymap using profile as reference...`);
 
