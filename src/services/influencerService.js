@@ -35,7 +35,11 @@ export const influencerService = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+
+    return (data || []).map(influencer => ({
+      ...influencer,
+      image_url: influencer.profile_image_url || influencer.bodymap_url || influencer.image_url || ''
+    }));
   },
 
   async getInfluencerById(id) {
