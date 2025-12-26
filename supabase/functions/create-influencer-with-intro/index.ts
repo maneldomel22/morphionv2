@@ -181,6 +181,7 @@ Deno.serve(async (req: Request) => {
 
     console.log("Video task created:", taskId);
 
+    // First, create the influencer record
     const { data: influencer, error: insertError } = await supabase
       .from("influencers")
       .insert({
@@ -191,7 +192,6 @@ Deno.serve(async (req: Request) => {
         age: requestData.age,
         mode: requestData.mode || 'safe',
         creation_status: 'creating_video',
-        intro_video_task_id: taskId,
         identity_profile: {
           ethnicity: requestData.ethnicity,
           facial_traits: requestData.facialTraits,
@@ -214,6 +214,42 @@ Deno.serve(async (req: Request) => {
     }
 
     console.log("Influencer created:", influencer.id);
+
+    // Now insert the video in the videos table (reusing existing infrastructure)
+    const { data: video, error: videoError } = await supabase
+      .from("videos")
+      .insert({
+        user_id: user.id,
+        influencer_id: influencer.id,
+        video_type: 'influencer_presentation',
+        title: `${requestData.name} - Vídeo de Apresentação`,
+        status: 'queued',
+        kie_task_id: taskId,
+        video_model: 'sora-2-text-to-video',
+        source_mode: 'influencer',
+        dialogue: `Oi, eu sou a ${requestData.name}.`,
+        aspect_ratio: '9:16',
+        duration: '10s',
+        metadata: {
+          prompt: videoPrompt,
+          identity_profile: influencer.identity_profile
+        }
+      })
+      .select()
+      .single();
+
+    if (videoError) {
+      console.error("Video insert error:", videoError);
+      throw videoError;
+    }
+
+    console.log("Video record created:", video.id);
+
+    // Update influencer with video reference
+    await supabase
+      .from("influencers")
+      .update({ presentation_video_id: video.id })
+      .eq("id", influencer.id);
 
     return new Response(
       JSON.stringify({

@@ -70,76 +70,122 @@ export const influencerCreationService = {
 
   async checkCreationStatus(influencerId) {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Não autenticado');
+      // Query directly from Supabase instead of using custom edge function
+      const { data: influencer, error } = await supabase
+        .from('influencers')
+        .select('*')
+        .eq('id', influencerId)
+        .maybeSingle();
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-influencer-creation-status`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ influencer_id: influencerId }),
+      if (error) throw error;
+      if (!influencer) throw new Error('Influencer não encontrado');
+
+      // Get associated media from generated_images and videos tables
+      const { data: profileImage } = await supabase
+        .from('generated_images')
+        .select('*')
+        .eq('influencer_id', influencerId)
+        .eq('image_type', 'influencer_profile')
+        .maybeSingle();
+
+      const { data: bodymapImage } = await supabase
+        .from('generated_images')
+        .select('*')
+        .eq('influencer_id', influencerId)
+        .eq('image_type', 'influencer_bodymap')
+        .maybeSingle();
+
+      const { data: presentationVideo } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('influencer_id', influencerId)
+        .eq('video_type', 'influencer_presentation')
+        .maybeSingle();
+
+      // Determine current status based on media completion
+      let status = 'creating_video';
+      let progress = 25;
+
+      if (presentationVideo?.status === 'ready') {
+        status = 'creating_profile_image';
+        progress = 40;
+
+        if (profileImage?.status === 'completed') {
+          status = 'creating_bodymap';
+          progress = 65;
+
+          if (bodymapImage?.status === 'completed') {
+            status = 'ready';
+            progress = 100;
+          }
         }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Falha ao verificar status');
       }
 
-      return await response.json();
+      // Check for failures
+      if (presentationVideo?.status === 'failed' ||
+          profileImage?.status === 'failed' ||
+          bodymapImage?.status === 'failed') {
+        status = 'failed';
+        progress = 0;
+      }
+
+      return {
+        success: true,
+        status,
+        progress,
+        influencer,
+        media: {
+          video: presentationVideo,
+          profile: profileImage,
+          bodymap: bodymapImage
+        }
+      };
     } catch (error) {
       console.error('Error checking creation status:', error);
       throw error;
     }
   },
 
+  async triggerMediaUpdate() {
+    // Call update-pending-images to check all generating images
+    // Call check-all-pending-videos implicitly via individual video status checks
+    try {
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-pending-images`;
+      await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
+    } catch (error) {
+      console.error('Error triggering media update:', error);
+    }
+  },
+
   async monitorCreation(influencerId, onProgress) {
     let attempts = 0;
-    const maxAttempts = 300;
+    const maxAttempts = 180; // Reduced from 300 since we're using existing infrastructure
     let consecutiveErrors = 0;
     const maxConsecutiveErrors = 3;
-    const startTime = Date.now();
-    let lastStatus = null;
-    let statusChangeBoost = false;
-
-    const getAdaptiveInterval = (elapsedMinutes) => {
-      if (statusChangeBoost) {
-        return 2000;
-      }
-
-      if (elapsedMinutes < 5) {
-        return 3000;
-      } else if (elapsedMinutes < 10) {
-        return 5000;
-      } else {
-        return 8000;
-      }
-    };
+    const pollInterval = 10000; // Fixed 10s interval, matching existing infrastructure
 
     const checkStatus = async () => {
       try {
+        // Trigger update-pending-images on each check (like ImageGeneration.jsx does)
+        await this.triggerMediaUpdate();
+
         const result = await this.checkCreationStatus(influencerId);
         consecutiveErrors = 0;
-
-        if (lastStatus !== null && lastStatus !== result.status) {
-          console.log(`Status changed from ${lastStatus} to ${result.status} - activating boost`);
-          statusChangeBoost = true;
-          setTimeout(() => {
-            statusChangeBoost = false;
-          }, 15000);
-        }
-        lastStatus = result.status;
 
         const statusLabel = statusLabels[result.status] || result.status;
         onProgress({
           status: result.status,
           label: statusLabel,
           influencer: result.influencer,
-          progress: result.progress || 0
+          progress: result.progress || 0,
+          media: result.media
         });
 
         if (result.status === 'completed' || result.status === 'ready') {
@@ -150,16 +196,19 @@ export const influencerCreationService = {
           throw new Error('Criação falhou');
         }
 
+        // Trigger next step if needed
+        if (result.status === 'creating_profile_image' && !result.media.profile) {
+          // Profile image not created yet, trigger it
+          await this.processIntroVideo(influencerId);
+        } else if (result.status === 'creating_bodymap' && !result.media.bodymap) {
+          // Bodymap not created yet, trigger it
+          await this.triggerBodymapCreation(influencerId);
+        }
+
         attempts++;
         if (attempts >= maxAttempts) {
           throw new Error('Tempo limite excedido');
         }
-
-        const elapsedMs = Date.now() - startTime;
-        const elapsedMinutes = elapsedMs / 60000;
-        const pollInterval = getAdaptiveInterval(elapsedMinutes);
-
-        console.log(`Polling in ${pollInterval}ms (elapsed: ${elapsedMinutes.toFixed(1)} min, boost: ${statusChangeBoost})`);
 
         await new Promise(resolve => setTimeout(resolve, pollInterval));
         return checkStatus();
@@ -176,16 +225,41 @@ export const influencerCreationService = {
           throw error;
         }
 
-        const elapsedMs = Date.now() - startTime;
-        const elapsedMinutes = elapsedMs / 60000;
-        const pollInterval = getAdaptiveInterval(elapsedMinutes);
-
         await new Promise(resolve => setTimeout(resolve, pollInterval));
         return checkStatus();
       }
     };
 
     return checkStatus();
+  },
+
+  async triggerBodymapCreation(influencerId) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Não autenticado');
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-profile-image`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ influencer_id: influencerId }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Falha ao criar bodymap');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error triggering bodymap creation:', error);
+      throw error;
+    }
   },
 
   getStatusLabel(status) {

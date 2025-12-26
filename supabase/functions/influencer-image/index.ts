@@ -237,31 +237,75 @@ Deno.serve(async (req: Request) => {
 
     console.log('✅ Image generation task created:', taskId);
 
-    if (type === 'profile' || type === 'bodymap') {
-      const { error: insertError } = await supabase
-        .from("influencer_posts")
-        .insert({
-          influencer_id: influencer_id,
-          type: type,
-          status: 'generating',
-          task_id: taskId,
-          metadata: {
-            prompt: promptText,
-            model: model,
-            reference_image: requestData.referenceImage
-          }
-        });
+    // Get user from auth header to insert in generated_images
+    const authHeader = req.headers.get("Authorization");
+    let userId: string | null = null;
 
-      if (insertError) {
-        console.error('Failed to create influencer_post:', insertError);
-      }
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user } } = await supabase.auth.getUser(token);
+      userId = user?.id || null;
     }
+
+    // If no auth header or user, try to get from influencer
+    if (!userId && influencer_id) {
+      const { data: influencer } = await supabase
+        .from("influencers")
+        .select("user_id")
+        .eq("id", influencer_id)
+        .maybeSingle();
+
+      userId = influencer?.user_id || null;
+    }
+
+    if (!userId) {
+      console.error('No user_id found for image generation');
+      throw new Error('Could not determine user_id for image generation');
+    }
+
+    // Map type to image_type for generated_images table
+    let imageType: string;
+    if (type === 'profile') {
+      imageType = 'influencer_profile';
+    } else if (type === 'bodymap') {
+      imageType = 'influencer_bodymap';
+    } else {
+      imageType = 'influencer_post';
+    }
+
+    // Insert into generated_images table (reusing existing infrastructure)
+    const { data: imageRecord, error: insertError } = await supabase
+      .from("generated_images")
+      .insert({
+        user_id: userId,
+        influencer_id: influencer_id,
+        image_type: imageType,
+        status: 'generating',
+        task_id: taskId,
+        prompt: promptText,
+        original_prompt: promptText,
+        aspect_ratio: payload.input.aspect_ratio || '1:1',
+        image_model: model === 'nano-banana-pro' ? 'nano_banana' : (model.includes('seedream') ? 'seedream_4_5' : model),
+        kie_model: model,
+        generation_mode: imageUrls.length > 0 ? 'image-to-image' : 'text-to-image',
+        source_image_url: imageUrls[0] || null
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Failed to insert into generated_images:', insertError);
+      throw insertError;
+    }
+
+    console.log('✅ Image record created in generated_images:', imageRecord.id);
 
     return new Response(
       JSON.stringify({
         success: true,
         task_id: taskId,
         taskId: taskId,
+        image_id: imageRecord.id,
         kieResponse: kieResult
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
