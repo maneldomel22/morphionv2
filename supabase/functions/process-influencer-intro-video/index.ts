@@ -7,76 +7,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-async function createReferenceImageFromVideo(videoUrl: string, influencer: any, kieApiKey: string): Promise<string> {
-  console.log("Creating reference image from video prompt");
-
-  const identity = influencer.identity_profile || {};
-
-  const prompt = `Professional reference portrait photo.
-
-Character identity:
-${identity.ethnicity || 'woman'} woman, ${influencer.age || '25'} years old.
-Face: ${identity.facial_traits || 'attractive features'}
-Hair: ${identity.hair || 'long hair'}
-
-This is a reference image that matches the character from a video.
-
-FRAMING:
-Close-up portrait. Head and shoulders. Front-facing.
-
-POSE:
-Neutral relaxed expression. Direct eye contact. Slight natural smile.
-
-BACKGROUND:
-Solid neutral background. Clean and simple.
-
-LIGHTING:
-Soft even lighting. Professional but natural.
-
-STYLE:
-Natural skin texture. Realistic. Clean reference photo quality.`;
-
-  const response = await fetch("https://api.kie.ai/api/v1/jobs/createTask", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${kieApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "nano-banana-pro",
-      input: {
-        prompt: prompt,
-        aspect_ratio: "1:1",
-        quality: "high"
-      }
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to create reference image task");
-  }
-
-  const data = await response.json();
-
-  if (data.code !== 200 || !data.data?.taskId) {
-    throw new Error("Failed to get task ID for reference image");
-  }
-
-  return data.data.taskId;
-}
-
-function buildProfileImagePrompt(influencer: any, referenceUrl: string): string {
+function buildProfileImagePrompt(influencer: any): string {
   const identity = influencer.identity_profile || {};
 
   return `Professional portrait photo.
-
-REFERENCE IMAGE:
-Use the face from the reference image as the FACE AUTHORITY. Match it exactly.
 
 SUBJECT:
 ${identity.ethnicity || 'woman'} woman, ${influencer.age || '25'} years old.
 Face: ${identity.facial_traits || 'attractive features'}
 Hair: ${identity.hair || 'long hair'}
+Body: ${identity.body || 'natural physique'}
 
 FRAMING:
 Close-up portrait. Head and shoulders only. No body below shoulders visible.
@@ -213,74 +153,9 @@ Deno.serve(async (req: Request) => {
       })
       .eq("id", influencer_id);
 
-    console.log("Creating reference image from character description...");
-    const referenceTaskId = await createReferenceImageFromVideo(videoUrl, influencer, kieApiKey);
-
-    console.log("Reference image task created:", referenceTaskId);
-
-    await new Promise(resolve => setTimeout(resolve, 5000));
-
-    const refStatusResponse = await fetch(
-      `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${referenceTaskId}`,
-      {
-        headers: {
-          "Authorization": `Bearer ${kieApiKey}`,
-        },
-      }
-    );
-
-    if (!refStatusResponse.ok) {
-      throw new Error("Failed to check reference image status");
-    }
-
-    const refStatusData = await refStatusResponse.json();
-
-    if (refStatusData.code !== 200 || refStatusData.data?.state !== 'success') {
-      console.log("Reference image not ready yet, will retry later");
-      return new Response(
-        JSON.stringify({
-          success: true,
-          status: 'creating_profile_image',
-          message: 'Creating reference image'
-        }),
-        {
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
-
-    let referenceFrameUrl: string | undefined;
-    if (refStatusData.data?.resultJson) {
-      try {
-        const parsedResult = typeof refStatusData.data.resultJson === 'string'
-          ? JSON.parse(refStatusData.data.resultJson)
-          : refStatusData.data.resultJson;
-        referenceFrameUrl = parsedResult.resultUrls?.[0];
-      } catch (error) {
-        console.error("Failed to parse reference resultJson:", error);
-      }
-    }
-
-    if (!referenceFrameUrl) {
-      throw new Error("No reference image URL in response");
-    }
-
-    console.log("Reference image ready:", referenceFrameUrl);
-
-    await supabase
-      .from("influencers")
-      .update({
-        reference_frame_url: referenceFrameUrl,
-        creation_status: 'optimizing_identity'
-      })
-      .eq("id", influencer_id);
-
     console.log("Starting profile image generation...");
 
-    const profilePrompt = buildProfileImagePrompt(influencer, referenceFrameUrl);
+    const profilePrompt = buildProfileImagePrompt(influencer);
 
     const profileImageResponse = await fetch(
       `${supabaseUrl}/functions/v1/influencer-image`,
@@ -293,7 +168,6 @@ Deno.serve(async (req: Request) => {
         body: JSON.stringify({
           influencerId: influencer_id,
           prompt: profilePrompt,
-          referenceImage: referenceFrameUrl,
           type: 'profile'
         }),
       }
@@ -329,9 +203,8 @@ Deno.serve(async (req: Request) => {
       JSON.stringify({
         success: true,
         status: 'creating_profile_image',
-        reference_frame_url: referenceFrameUrl,
         profile_task_id: taskId,
-        message: 'Reference extracted. Creating profile image.'
+        message: 'Video ready. Creating profile image.'
       }),
       {
         headers: {

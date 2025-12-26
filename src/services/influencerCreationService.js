@@ -2,8 +2,6 @@ import { supabase } from '../lib/supabase';
 
 const statusLabels = {
   creating_video: 'Criando vídeo de apresentação...',
-  extracting_frame: 'Extraindo referência do vídeo...',
-  optimizing_identity: 'Processando referência...',
   creating_profile_image: 'Gerando foto de perfil...',
   creating_bodymap: 'Gerando mapa corporal...',
   completed: 'Influencer pronta!',

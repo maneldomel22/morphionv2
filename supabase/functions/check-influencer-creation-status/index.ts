@@ -225,23 +225,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (currentStatus === 'extracting_frame') {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          status: 'extracting_frame',
-          influencer,
-          progress: 35
-        }),
-        {
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
-
     if (currentStatus === 'creating_profile_image' && influencer.profile_image_task_id) {
       const profileStatus = await checkKieTaskStatus(influencer.profile_image_task_id, kieApiKey);
 
@@ -328,23 +311,6 @@ Deno.serve(async (req: Request) => {
           influencer,
           progress: 50,
           kieState: profileStatus.state
-        }),
-        {
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
-
-    if (currentStatus === 'optimizing_identity') {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          status: 'optimizing_identity',
-          influencer,
-          progress: 45
         }),
         {
           headers: {
