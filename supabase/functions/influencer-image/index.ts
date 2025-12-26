@@ -8,13 +8,9 @@ const corsHeaders = {
 };
 
 interface InfluencerImageRequest {
-  influencer_id?: string;
-  influencerId?: string;
-  model?: string;
-  prompt?: string;
-  referenceImage?: string;
-  type?: 'profile' | 'bodymap' | 'post';
-  payload?: {
+  influencer_id: string;
+  model: string;
+  payload: {
     model: string;
     callBackUrl: string;
     input: {
@@ -27,7 +23,7 @@ interface InfluencerImageRequest {
       quality?: string;
     };
   };
-  mode?: string;
+  mode: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -36,83 +32,26 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const requestData: InfluencerImageRequest = await req.json();
+    const { influencer_id, model, payload, mode }: InfluencerImageRequest = await req.json();
 
-    const influencer_id = requestData.influencer_id || requestData.influencerId;
-    const type = requestData.type || 'post';
-    const mode = requestData.mode || 'safe';
-
-    let model: string;
-    let payload: any;
-    let promptText: string;
-    let imageUrls: string[] = [];
-
-    if (requestData.payload) {
-      model = requestData.model || requestData.payload.model;
-      payload = requestData.payload;
-      promptText = payload.input.prompt;
-      imageUrls = payload.input.image_urls || [];
-    } else {
-      // Use nano-banana-pro for profile and bodymap creation (no reference), seedream for posts
-      if (type === 'profile') {
-        model = requestData.model || 'nano-banana-pro';
-      } else if (type === 'bodymap') {
-        model = requestData.model || 'nano-banana-pro';
-      } else {
-        model = requestData.model || 'seedream/4.5-edit';
-      }
-
-      promptText = requestData.prompt || '';
-
-      if (requestData.referenceImage) {
-        imageUrls = [requestData.referenceImage];
-      }
-
-      const supabaseUrl = Deno.env.get("SUPABASE_URL");
-      const callbackUrl = `${supabaseUrl}/functions/v1/check-influencer-post?influencer_id=${influencer_id}&type=${type}`;
-
-      const inputPayload: any = {
-        prompt: promptText,
-        aspect_ratio: type === 'profile' ? '1:1' : (type === 'bodymap' ? '16:9' : '9:16'),
-        quality: 'high'
-      };
-
-      // Add 4K resolution for bodymaps
-      if (type === 'bodymap') {
-        inputPayload.resolution = '4K';
-        inputPayload.output_format = 'png';
-      }
-
-      // For bodymap with reference, use image_input (nano-banana-pro format)
-      if (type === 'bodymap' && imageUrls.length > 0) {
-        inputPayload.image_input = imageUrls;
-      } else if (imageUrls.length > 0) {
-        inputPayload.image_urls = imageUrls;
-      }
-
-      payload = {
-        model: model,
-        callBackUrl: callbackUrl,
-        input: inputPayload
-      };
-    }
-
-    console.log('📥 Received request:', { influencer_id, model, mode, type });
+    console.log('📥 Received request:', { influencer_id, model, mode });
     console.log('📥 Payload input:', {
-      hasPrompt: !!promptText,
-      hasImageUrls: imageUrls.length > 0,
-      imageUrlsCount: imageUrls.length
+      hasPrompt: !!payload?.input?.prompt,
+      hasImageUrls: !!payload?.input?.image_urls,
+      hasImageInput: !!payload?.input?.image_input,
+      imageUrlsCount: payload?.input?.image_urls?.length || 0,
+      imageInputCount: payload?.input?.image_input?.length || 0
     });
 
-    if (!influencer_id || !promptText) {
+    if (!influencer_id || !payload?.input?.prompt) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: influencer_id, prompt" }),
+        JSON.stringify({ error: "Missing required fields: influencer_id, payload.input.prompt" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Validate image_urls for Seedream (only for non-creation flows)
-    if (model === 'seedream/4.5-edit' && type === 'post') {
+    // Validate image_urls for Seedream (required by KIE API)
+    if (model === 'seedream/4.5-edit') {
       if (!payload.input.image_urls || payload.input.image_urls.length === 0) {
         return new Response(
           JSON.stringify({
@@ -130,15 +69,6 @@ Deno.serve(async (req: Request) => {
         console.warn('⚠️ Nano Banana Pro called without image_input - this is optional but recommended');
       }
     }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error("Missing Supabase configuration");
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const kieApiKey = Deno.env.get("KIE_API_KEY");
     if (!kieApiKey) {
@@ -237,75 +167,11 @@ Deno.serve(async (req: Request) => {
 
     console.log('✅ Image generation task created:', taskId);
 
-    // Get user from auth header to insert in generated_images
-    const authHeader = req.headers.get("Authorization");
-    let userId: string | null = null;
-
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      const { data: { user } } = await supabase.auth.getUser(token);
-      userId = user?.id || null;
-    }
-
-    // If no auth header or user, try to get from influencer
-    if (!userId && influencer_id) {
-      const { data: influencer } = await supabase
-        .from("influencers")
-        .select("user_id")
-        .eq("id", influencer_id)
-        .maybeSingle();
-
-      userId = influencer?.user_id || null;
-    }
-
-    if (!userId) {
-      console.error('No user_id found for image generation');
-      throw new Error('Could not determine user_id for image generation');
-    }
-
-    // Map type to image_type for generated_images table
-    let imageType: string;
-    if (type === 'profile') {
-      imageType = 'influencer_profile';
-    } else if (type === 'bodymap') {
-      imageType = 'influencer_bodymap';
-    } else {
-      imageType = 'influencer_post';
-    }
-
-    // Insert into generated_images table (reusing existing infrastructure)
-    const { data: imageRecord, error: insertError } = await supabase
-      .from("generated_images")
-      .insert({
-        user_id: userId,
-        influencer_id: influencer_id,
-        image_type: imageType,
-        status: 'generating',
-        task_id: taskId,
-        prompt: promptText,
-        original_prompt: promptText,
-        aspect_ratio: payload.input.aspect_ratio || '1:1',
-        image_model: model === 'nano-banana-pro' ? 'nano_banana' : (model.includes('seedream') ? 'seedream_4_5' : model),
-        kie_model: model,
-        generation_mode: imageUrls.length > 0 ? 'image-to-image' : 'text-to-image',
-        source_image_url: imageUrls[0] || null
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error('Failed to insert into generated_images:', insertError);
-      throw insertError;
-    }
-
-    console.log('✅ Image record created in generated_images:', imageRecord.id);
-
+    // Return immediately with taskId - let background polling handle the rest
     return new Response(
       JSON.stringify({
         success: true,
-        task_id: taskId,
         taskId: taskId,
-        image_id: imageRecord.id,
         kieResponse: kieResult
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

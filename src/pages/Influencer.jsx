@@ -7,7 +7,6 @@ import DeleteInfluencerModal from '../components/influencer/DeleteInfluencerModa
 import InfluencerProfile from '../components/influencer/InfluencerProfile';
 import InfluencerCard from '../components/influencer/InfluencerCard';
 import InfluencerCardSkeleton from '../components/influencer/InfluencerCardSkeleton';
-import InfluencerLoadingCard from '../components/influencer/InfluencerLoadingCard';
 import ContentTypeSelector from '../components/influencer/ContentTypeSelector';
 import SafeImageQuiz from '../components/influencer/SafeImageQuiz';
 import HotImageQuiz from '../components/influencer/HotImageQuiz';
@@ -41,7 +40,6 @@ const VIDEO_LOADING_MESSAGES = [
 export default function Influencer() {
   const [view, setView] = useState('grid');
   const [influencers, setInfluencers] = useState([]);
-  const [creatingInfluencerIds, setCreatingInfluencerIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedInfluencer, setSelectedInfluencer] = useState(null);
   const [showCreateInfluencerModal, setShowCreateInfluencerModal] = useState(false);
@@ -68,19 +66,7 @@ export default function Influencer() {
     try {
       setLoading(true);
       const data = await influencerService.getInfluencersWithPostCount();
-
-      // Separate creating influencers from ready ones
-      const creating = data.filter(inf => inf.creation_status && inf.creation_status !== 'ready' && inf.creation_status !== 'completed');
-      const ready = data.filter(inf => !inf.creation_status || inf.creation_status === 'ready' || inf.creation_status === 'completed');
-
-      // Add creating influencers to the creating list if not already there
-      const creatingIds = creating.map(inf => inf.id);
-      setCreatingInfluencerIds(prev => {
-        const newIds = creatingIds.filter(id => !prev.includes(id));
-        return [...prev, ...newIds];
-      });
-
-      setInfluencers(ready);
+      setInfluencers(data);
     } catch (error) {
       console.error('Error loading influencers:', error);
     } finally {
@@ -96,33 +82,11 @@ export default function Influencer() {
     }
   };
 
-  const handleInfluencerCreated = (influencerId) => {
-    // Add to creating list
-    setCreatingInfluencerIds(prev => [...prev, influencerId]);
-  };
-
-  const handleInfluencerCreationComplete = (influencer) => {
-    // Remove from creating list
-    setCreatingInfluencerIds(prev => prev.filter(id => id !== influencer.id));
-    // Reload influencers to get the completed one
+  const handleInfluencerCreated = (influencer) => {
     loadInfluencers();
-  };
-
-  const handleInfluencerCreationError = (influencerId) => {
-    // Remove from creating list
-    setCreatingInfluencerIds(prev => prev.filter(id => id !== influencerId));
-    alert('Falha ao criar influencer. Por favor, tente novamente.');
-  };
-
-  const handleDeleteCreatingInfluencer = async (influencerId) => {
-    try {
-      await influencerService.deleteInfluencer(influencerId);
-      // Remove from creating list
-      setCreatingInfluencerIds(prev => prev.filter(id => id !== influencerId));
-    } catch (error) {
-      console.error('Error deleting creating influencer:', error);
-      alert('Erro ao cancelar criação do influencer.');
-    }
+    setSelectedInfluencer(influencer);
+    setShowSelectInfluencerModal(false);
+    setShowContentTypeSelector(true);
   };
 
   const handleInfluencerSelected = (influencer) => {
@@ -335,7 +299,7 @@ export default function Influencer() {
                 <InfluencerCardSkeleton key={i} />
               ))}
             </div>
-          ) : influencers.length === 0 && creatingInfluencerIds.length === 0 ? (
+          ) : influencers.length === 0 ? (
             <div className="text-center py-8 sm:py-12">
               <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
                 <Plus className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" />
@@ -353,16 +317,6 @@ export default function Influencer() {
             </div>
           ) : (
             <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-              {creatingInfluencerIds.map((influencerId) => (
-                <InfluencerLoadingCard
-                  key={`creating-${influencerId}`}
-                  influencerId={influencerId}
-                  onComplete={handleInfluencerCreationComplete}
-                  onError={() => handleInfluencerCreationError(influencerId)}
-                  onDelete={handleDeleteCreatingInfluencer}
-                />
-              ))}
-
               {influencers.map((influencer, index) => (
                 <InfluencerCard
                   key={influencer.id}
